@@ -1,0 +1,41 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import Encabezado from "@/components/Encabezado";
+import FormPedido from "../../FormPedido";
+import { datosFormularioPedido, includePedidoCompleto } from "@/lib/datosPedido";
+import { requerirUsuario } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { fechaInput } from "@/lib/pedidos";
+import type { PedidoForm } from "../../tipos";
+
+export default async function EditarPedidoPage({ params }: { params: Promise<{ id: string }> }) {
+  const u = await requerirUsuario();
+  const { id } = await params;
+  const p = await db.pedido.findUnique({ where: { id }, include: includePedidoCompleto });
+  if (!p) notFound();
+  const datos = await datosFormularioPedido();
+  const inicial: PedidoForm = {
+    cliente: { id: p.cliente.id, numero: p.cliente.numero, nombre: p.cliente.nombre, telefono: p.cliente.telefono ?? "", instagram: p.cliente.instagram ?? "", email: p.cliente.email ?? "" },
+    tipo: p.tipo,
+    items: p.items.map((i) => ({
+      key: i.id, productoId: i.productoId, nombre: i.nombre, persona: i.persona ?? "", cantidad: i.cantidad,
+      precioUnitario: i.precioUnitario, bordadoTexto: i.bordadoTexto ?? "", bordadoUbicacion: i.bordadoUbicacion ?? "",
+      hilo: i.hilo ?? "", notas: i.notas ?? "",
+      prendas: i.prendas.map((pr) => ({ productoId: pr.productoId, nombre: pr.nombre, color: pr.color ?? "", talle: pr.talle ?? "", bordada: pr.bordada })),
+      eleccionId: i.prendas.find((pr) => datos.productos.find((x) => x.id === i.productoId)?.componentes.some((c) => c.aEleccion && c.componente.id === pr.productoId))?.productoId ?? null,
+    })),
+    disenos: p.disenos.map((d) => d.disenoId),
+    fechaEvento: fechaInput(p.fechaEvento), evento: p.evento ?? "", eventoDetalle: p.eventoDetalle ?? "",
+    fechaEntrega: fechaInput(p.fechaEntrega), envio: p.envio, formaEnvio: p.formaEnvio ?? "",
+    direccionEnvio: p.direccionEnvio ?? "", localidad: p.localidad ?? "", prioridad: p.prioridad,
+    notas: p.notas ?? "", vendedorId: p.vendedorId ?? u.id, estado: p.estado, sena: 0, medioSena: "TRANSFERENCIA",
+  };
+  return (
+    <>
+      <Encabezado titulo={`Editar pedido N° ${p.numero}`} subtitulo={p.cliente.nombre}>
+        <Link href={`/pedidos/${p.id}`} className="btn-suave">Cancelar</Link>
+      </Encabezado>
+      <FormPedido {...datos} usuarioId={u.id} inicial={inicial} pedidoId={p.id} numero={p.numero} />
+    </>
+  );
+}

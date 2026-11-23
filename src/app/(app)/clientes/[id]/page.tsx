@@ -7,14 +7,16 @@ import BotonBorrar from "@/components/BotonBorrar";
 import { actualizarCliente, borrarCliente } from "../acciones";
 import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth";
-import { fecha, linkWhatsApp } from "@/lib/formato";
+import { fecha, linkWhatsApp, pesos } from "@/lib/formato";
+import { saldo } from "@/lib/pedidos";
+import EstadoChip from "@/components/EstadoChip";
 
 export default async function FichaClientaPage({
   params, searchParams,
 }: { params: Promise<{ id: string }>; searchParams: Promise<{ creada?: string }> }) {
   const { id } = await params;
   const { creada } = await searchParams;
-  const c = await db.cliente.findUnique({ where: { id }, include: { creadoPor: true } });
+  const c = await db.cliente.findUnique({ where: { id }, include: { creadoPor: true, pedidos: { orderBy: { fechaPedido: "desc" }, include: { pagos: { select: { monto: true } }, items: { select: { nombre: true } } } } } });
   if (!c) notFound();
   const u = await usuarioActual();
   const wa = linkWhatsApp(c.telefono, `¡Hola ${c.nombre.split(" ")[0]}! Te escribimos de Micaela Diseño 🌸`);
@@ -42,8 +44,34 @@ export default async function FichaClientaPage({
 
         <div className="space-y-6">
           <section className="tarjeta p-5 md:p-6">
-            <h2 className="text-2xl mb-2">Historial de pedidos</h2>
-            <p className="text-sm text-texto-2">Todavía no hay pedidos. Cuando armemos el módulo de Pedidos (Etapa 2), acá vas a ver todos los pedidos de esta clienta.</p>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-2xl">Historial de pedidos</h2>
+              <Link href={`/pedidos/nuevo?cliente=${c.id}`} className="btn-primario min-h-10 px-4">+ Pedido</Link>
+            </div>
+            {c.pedidos.length === 0 ? (
+              <p className="text-sm text-texto-2">Todavía no tiene pedidos.</p>
+            ) : (
+              <>
+                <p className="text-sm text-texto-2 mb-2">{c.pedidos.length} pedido{c.pedidos.length === 1 ? "" : "s"} · total comprado {pesos(c.pedidos.filter((p) => p.estado !== "CANCELADO").reduce((s, p) => s + p.total, 0))}</p>
+                <ul className="divide-y divide-borde">
+                  {c.pedidos.map((p) => {
+                    const s = saldo(p.total, p.pagos);
+                    return (
+                      <li key={p.id}>
+                        <Link href={`/pedidos/${p.id}`} className="block py-3 hover:text-acento">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">N° {p.numero} <span className="text-texto-2 font-normal text-sm">· {fecha(p.fechaPedido)}</span></span>
+                            <EstadoChip estado={p.estado} />
+                          </div>
+                          <p className="text-sm text-texto-2 truncate">{p.items.map((i) => i.nombre).join(", ")}</p>
+                          <p className="text-sm">{pesos(p.total)}{s > 0 && <span className="text-estado-alerta-txt font-medium"> · debe {pesos(s)}</span>}</p>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
           </section>
           {u?.rol === "ADMIN" && (
             <section className="tarjeta p-5 md:p-6">

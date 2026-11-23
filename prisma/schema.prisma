@@ -20,6 +20,34 @@ enum TipoProducto {
   ADICIONAL
 }
 
+enum EstadoPedido {
+  NUEVO
+  EN_PRODUCCION
+  LISTO
+  ENTREGADO
+  CANCELADO
+}
+
+enum TipoPedido {
+  INDIVIDUAL
+  BOX
+  EVENTO
+}
+
+enum MedioPago {
+  TRANSFERENCIA
+  EFECTIVO
+  TARJETA
+  MERCADO_PAGO
+  OTRO
+}
+
+enum OrigenPedido {
+  SISTEMA
+  FORMULARIO
+  IMPORTADO
+}
+
 enum CategoriaDiseno {
   PRODUCTO
   COLOR
@@ -37,6 +65,10 @@ model Usuario {
 
   clientesCreados Cliente[]  @relation("ClienteCreadoPor")
   registros       Registro[]
+  pedidosVendidos Pedido[]   @relation("PedidoVendedor")
+  pedidosCreados  Pedido[]   @relation("PedidoCreadoPor")
+  pedidosModif    Pedido[]   @relation("PedidoModificadoPor")
+  pagosCargados   Pago[]
 }
 
 model Cliente {
@@ -53,6 +85,8 @@ model Cliente {
   actualizadoEn DateTime @updatedAt
   creadoPorId String?
   creadoPor   Usuario? @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  localidad   String?
+  pedidos     Pedido[]
 }
 
 model Producto {
@@ -71,6 +105,8 @@ model Producto {
   actualizadoEn DateTime   @updatedAt
 
   componentes  ComponenteBox[] @relation("Box")
+  itemsPedido  PedidoItem[]
+  prendasPedido PrendaItem[]
   enBoxes      ComponenteBox[] @relation("Componente")
   disenos      Diseno[]
 }
@@ -97,6 +133,7 @@ model Diseno {
   productoId  String?
   producto    Producto?       @relation(fields: [productoId], references: [id], onDelete: SetNull)
   creadoEn    DateTime        @default(now())
+  pedidos     DisenoPedido[]
 }
 
 // Registro de cambios: quién hizo qué y cuándo
@@ -109,4 +146,114 @@ model Registro {
   entidadId String?
   detalle   String?
   fecha     DateTime @default(now())
+}
+
+model Pedido {
+  id             String       @id @default(cuid())
+  numero         Int          @unique @default(autoincrement())
+  clienteId      String
+  cliente        Cliente      @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  tipo           TipoPedido   @default(INDIVIDUAL)
+  estado         EstadoPedido @default(NUEVO)
+  fechaPedido    DateTime     @default(now())
+  fechaEntrega   DateTime?
+  fechaEvento    DateTime?
+  evento         String?      // "XV", "Boda", "Cumpleaños", u otro texto
+  eventoDetalle  String?      // ej: "XV de Mía", "evento en enero"
+  envio          Boolean      @default(true) // true = envío, false = retira
+  formaEnvio     String?      // Correo Argentino, Motomensajería, Retira…
+  direccionEnvio String?
+  localidad      String?
+  prioridad      Boolean      @default(false)
+  total          Int          @default(0)
+  notas          String?
+  origen         OrigenPedido @default(SISTEMA)
+  revisar        String?      // avisos de importación para revisar
+  vendedorId     String?
+  vendedor       Usuario?     @relation("PedidoVendedor", fields: [vendedorId], references: [id], onDelete: SetNull)
+  creadoPorId    String?
+  creadoPor      Usuario?     @relation("PedidoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  modificadoPorId String?
+  modificadoPor  Usuario?     @relation("PedidoModificadoPor", fields: [modificadoPorId], references: [id], onDelete: SetNull)
+  creadoEn       DateTime     @default(now())
+  actualizadoEn  DateTime     @updatedAt
+
+  items          PedidoItem[]
+  pagos          Pago[]
+  disenos        DisenoPedido[]
+
+  @@index([estado])
+  @@index([fechaEntrega])
+  @@index([fechaEvento])
+}
+
+// Cada producto vendido dentro del pedido (un box, una bata, un adicional…)
+model PedidoItem {
+  id               String     @id @default(cuid())
+  pedidoId         String
+  pedido           Pedido     @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  productoId       String?
+  producto         Producto?  @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  nombre           String     // nombre al momento de la venta
+  persona          String?    // para quién es (ej: "Abuela", "Mamá")
+  cantidad         Int        @default(1)
+  precioUnitario   Int        @default(0)
+  bordadoTexto     String?
+  bordadoUbicacion String?
+  hilo             String?
+  notas            String?
+  orden            Int        @default(0)
+  prendas          PrendaItem[]
+}
+
+// Cada prenda con su color y talle (bata, pantufla, pijama…)
+model PrendaItem {
+  id         String     @id @default(cuid())
+  itemId     String
+  item       PedidoItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  productoId String?
+  producto   Producto?  @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  nombre     String
+  color      String?
+  talle      String?
+  bordada    Boolean    @default(true)
+  orden      Int        @default(0)
+}
+
+model DisenoPedido {
+  pedidoId String
+  pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  disenoId String
+  diseno   Diseno @relation(fields: [disenoId], references: [id], onDelete: Cascade)
+  @@id([pedidoId, disenoId])
+}
+
+model Pago {
+  id          String    @id @default(cuid())
+  pedidoId    String
+  pedido      Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  monto       Int
+  medio       MedioPago @default(TRANSFERENCIA)
+  fecha       DateTime  @default(now())
+  esSena      Boolean   @default(false)
+  nota        String?
+  creadoPorId String?
+  creadoPor   Usuario?  @relation(fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoEn    DateTime  @default(now())
+}
+
+model Taller {
+  id           String  @id @default(cuid())
+  nombre       String
+  especialidad String?
+  telefono     String?
+  activo       Boolean @default(true)
+  orden        Int     @default(0)
+}
+
+// Plantillas de mensajes de WhatsApp (editables)
+model Plantilla {
+  clave   String @id
+  titulo  String
+  texto   String
 }

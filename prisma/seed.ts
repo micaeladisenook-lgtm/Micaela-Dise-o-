@@ -15,6 +15,50 @@ async function main() {
     create: { nombre: "Micaela", login: "micaela", rol: "ADMIN", passwordHash: await bcrypt.hash("micaela2026", 10) },
   });
 
+  // Vendedora
+  await db.usuario.upsert({
+    where: { login: "ludmila" },
+    update: {},
+    create: { nombre: "Ludmila", login: "ludmila", rol: "VENDEDOR", passwordHash: await bcrypt.hash("ludmila2026", 10) },
+  });
+
+  // Talleres
+  if ((await db.taller.count()) === 0) {
+    await db.taller.createMany({
+      data: [
+        { nombre: "Gery", especialidad: "Confección: batas, pijamas de tiras, camiseros y camisolines", orden: 1 },
+        { nombre: "Héctor", especialidad: "Bordados", orden: 2 },
+        { nombre: "Richard", especialidad: "Arma las pantuflas", orden: 3 },
+        { nombre: "Pedro", especialidad: "Pega las pantuflas", orden: 4 },
+      ],
+    });
+  }
+
+  // Plantillas de WhatsApp (solo se crean si no existen, para no pisar cambios)
+  const plantillas = [
+    {
+      clave: "confirmacion",
+      titulo: "Confirmación del pedido",
+      texto: "¡Hola {nombre}! 💕 Gracias por elegir Micaela Diseño.\n\nTe confirmamos tu pedido N° {pedido}:\n{detalle}\n\n🗓️ Evento: {fecha_evento}\n📦 Entrega: {entrega}\n\n💰 Total: {total}\n✅ Abonado: {pagado}\n⏳ Saldo: {saldo}\n\nSi hay que corregir algo, avisanos por acá 🙌",
+    },
+    {
+      clave: "saldo",
+      titulo: "Recordatorio de saldo pendiente",
+      texto: "¡Hola {nombre}! ¿Cómo estás? 🌸 Te escribimos de Micaela Diseño por tu pedido N° {pedido}.\n\nTe recordamos que queda un saldo pendiente de {saldo}.\n{link_pago}\n\n¡Muchas gracias!",
+    },
+    {
+      clave: "listo",
+      titulo: "Tu pedido está listo",
+      texto: "¡Hola {nombre}! 🎉 Tu pedido N° {pedido} de Micaela Diseño ya está listo.\n\n{saldo_texto}Coordinamos por acá la entrega 📦 ({entrega}).\n\n¡Esperamos que lo disfrutes muchísimo! 💕",
+    },
+    {
+      clave: "taller",
+      titulo: "Lista de trabajos para el taller",
+      texto: "¡Hola {taller}! Te paso los trabajos de la semana del {semana}:\n\n{trabajos}\n\n¡Gracias! 🙌",
+    },
+  ];
+  for (const pl of plantillas) await db.plantilla.upsert({ where: { clave: pl.clave }, update: {}, create: pl });
+
   // 2) Catálogo real (solo si está vacío, para no pisar precios editados)
   if ((await db.producto.count()) === 0) {
     const INCLUYE = "Incluye scrunchies de regalo, caja para regalar y tarjeta de presentación.";
