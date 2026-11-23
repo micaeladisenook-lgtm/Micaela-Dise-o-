@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import FormPublico from "./FormPublico";
 import { db } from "@/lib/db";
+import { fotosDeColores } from "@/lib/colores";
 
 export const metadata: Metadata = {
   title: "Hacé tu pedido · Micaela Diseño",
@@ -33,7 +34,7 @@ export default async function PedidoPublicoPage() {
           <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-3">Hacé tu pedido</p>
           <p className="text-sm text-texto-2 mt-3">Elegí tu box, personalizalo y completá los datos de envío. Te escribimos por WhatsApp para confirmar, pasarte el costo del envío y coordinar la seña 💕</p>
         </header>
-        <FormPublico productos={datos} precioBordadoExtra={extra?.precio ?? 10000} avisoEnvio={aviso("aviso_envio")} avisoPedido={aviso("aviso_pedido")} />
+        <FormPublico productos={datos} precioBordadoExtra={extra?.precio ?? 10000} avisoEnvio={aviso("aviso_envio")} avisoPedido={aviso("aviso_pedido")} fotosColores={await fotosDeColores()} />
       </div>
     </main>
   );

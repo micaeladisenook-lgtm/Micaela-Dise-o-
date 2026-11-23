@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import FormCompletar from "../FormCompletar";
 import { pedidoParaCompletar } from "../datos";
 import { db } from "@/lib/db";
+import { fotosDeColores } from "@/lib/colores";
 import { fecha, pesos } from "@/lib/formato";
 import { pagado, saldo } from "@/lib/pedidos";
 
@@ -65,6 +66,7 @@ export default async function CompletarPage({ params }: { params: Promise<{ toke
               conEvento={!!p.evento || !!p.fechaEvento}
               avisoEnvio={aviso("aviso_envio")}
               avisoPedido={aviso("aviso_pedido")}
+              fotosColores={await fotosDeColores()}
             />
           </>
         )}

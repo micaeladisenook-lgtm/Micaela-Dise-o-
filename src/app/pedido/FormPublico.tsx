@@ -5,7 +5,8 @@ import AvisoTexto from "@/components/AvisoTexto";
 import { useFormulario } from "@/lib/useFormulario";
 import { enviarPedidoPublico } from "./acciones";
 import { pesos } from "@/lib/formato";
-import { prendasDelProducto, esAccesorio, PROVINCIAS_AR } from "@/lib/prendasProducto";
+import { prendasDelProducto, esAccesorio, telaDe, PROVINCIAS_AR } from "@/lib/prendasProducto";
+import SelectorColor from "@/components/SelectorColor";
 
 type Comp = { componenteId: string; cantidad: number; aEleccion: boolean; componente: { id: string; nombre: string; colores: string[]; talles: string[] } };
 type P = {
@@ -44,7 +45,7 @@ function Seccion({ n, titulo, children, ayuda }: { n: number; titulo: string; ay
 
 const opcion = "rounded-xl border border-borde min-h-11 flex items-center gap-2 px-3 cursor-pointer has-[:checked]:border-acento has-[:checked]:bg-acento-suave/50";
 
-export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio = "", avisoPedido = "" }: { productos: P[]; precioBordadoExtra: number; avisoEnvio?: string; avisoPedido?: string }) {
+export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio = "", avisoPedido = "", fotosColores = {} }: { productos: P[]; precioBordadoExtra: number; avisoEnvio?: string; avisoPedido?: string; fotosColores?: Record<string, Record<string, string>> }) {
   const [estado, onSubmit, enviando] = useFormulario(enviarPedidoPublico, null);
   const [pid, setPid] = useState("");
   const [eleccion, setEleccion] = useState("");
@@ -151,6 +152,19 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
             {elegibles.map((pr, k) => (
               <div key={`${pr.productoId}-${pr.i}`} className="rounded-xl border border-borde p-3 bg-white">
                 <p className="font-medium mb-2">{pr.nombre}{elegibles.filter((x) => x.nombre === pr.nombre).length > 1 ? ` ${elegibles.filter((x, j) => x.nombre === pr.nombre && j <= k).length}` : ""}</p>
+                {pr.colores.length > 0 && Object.keys(fotosColores[telaDe(pr.nombre)] ?? {}).length > 0 ? (
+                  <div className="space-y-3">
+                    {pr.talles.length > 0 && (
+                      <Campo etiqueta="Talle *">
+                        <select name={`talle_${pr.i}`} className="campo" required defaultValue="">
+                          <option value="">Elegí…</option>
+                          {pr.talles.map((t) => <option key={t}>{t}</option>)}
+                        </select>
+                      </Campo>
+                    )}
+                    <SelectorColor name={`color_${pr.i}`} colores={pr.colores} fotos={fotosColores[telaDe(pr.nombre)] ?? {}} valor={colores[pr.i] ?? ""} onChange={(c) => elegirColor(pr.i, c)} />
+                  </div>
+                ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Campo etiqueta="Color *">
                     {pr.colores.length ? (
@@ -171,6 +185,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
                     </Campo>
                   )}
                 </div>
+                )}
               </div>
             ))}
           </div>

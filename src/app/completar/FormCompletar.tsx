@@ -5,7 +5,8 @@ import { useFormulario } from "@/lib/useFormulario";
 import { completarDatos, subirFotoCompletar, type EstadoCompletar } from "./acciones";
 import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
 import AvisoTexto from "@/components/AvisoTexto";
-import { PROVINCIAS_AR } from "@/lib/prendasProducto";
+import { PROVINCIAS_AR, telaDe } from "@/lib/prendasProducto";
+import SelectorColor from "@/components/SelectorColor";
 
 type Prenda = { id: string; nombre: string; color: string | null; talle: string | null; colores: string[]; talles: string[] };
 type Item = {
@@ -22,8 +23,8 @@ function Campo({ etiqueta, children, ayuda }: { etiqueta: string; children: Reac
   return <div><label className="etiqueta">{etiqueta}</label>{children}{ayuda && <p className="ayuda">{ayuda}</p>}</div>;
 }
 
-export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento, avisoEnvio, avisoPedido }: {
-  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean; avisoEnvio: string; avisoPedido: string;
+export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento, avisoEnvio, avisoPedido, fotosColores }: {
+  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean; avisoEnvio: string; avisoPedido: string; fotosColores: Record<string, Record<string, string>>;
 }) {
   const [ubic, setUbic] = useState<Record<string, { bordadoDetalle: string; bordadoFotos: string[] }>>(
     () => Object.fromEntries(items.map((i) => [i.id, { bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [] }])),
@@ -65,6 +66,18 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
           {it.prendas.map((pr) => (
             <div key={pr.id} className="rounded-xl border border-borde p-3 bg-white">
               <p className="font-medium mb-2">{pr.nombre}</p>
+              {pr.colores.length > 0 && Object.keys(fotosColores[telaDe(pr.nombre)] ?? {}).length > 0 ? (
+                <div className="space-y-3">
+                  {pr.talles.length > 0 && (
+                    <Campo etiqueta="Talle *">
+                      <select name={`talle_${pr.id}`} className="campo" required defaultValue={pr.talle && pr.talles.includes(pr.talle) ? pr.talle : ""}>
+                        <option value="">Elegí…</option>{pr.talles.map((x) => <option key={x}>{x}</option>)}
+                      </select>
+                    </Campo>
+                  )}
+                  <SelectorColor name={`color_${pr.id}`} colores={pr.colores} fotos={fotosColores[telaDe(pr.nombre)] ?? {}} valor={colores[pr.id] ?? ""} onChange={(c) => elegirColor(pr.id, c)} />
+                </div>
+              ) : (
               <div className="grid grid-cols-2 gap-2">
                 <Campo etiqueta="Color *">
                   {pr.colores.length ? (
@@ -81,6 +94,7 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
                   </Campo>
                 )}
               </div>
+              )}
             </div>
           ))}
           {it.conBordado && (

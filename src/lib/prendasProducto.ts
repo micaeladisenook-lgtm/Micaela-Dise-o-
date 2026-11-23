@@ -24,3 +24,6 @@ export const PROVINCIAS_AR = [
   "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis",
   "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán",
 ];
+
+// Tela de una prenda según su nombre (todo lo que no es plush es satén)
+export const telaDe = (nombrePrenda: string): "Satén" | "Plush" => (/plush/i.test(nombrePrenda) ? "Plush" : "Satén");

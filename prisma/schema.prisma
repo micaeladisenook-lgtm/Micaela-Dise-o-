@@ -266,6 +266,14 @@ model PrendaItem {
   orden      Int        @default(0)
 }
 
+// Foto de muestra de cada color de tela (se muestra a la clienta al elegir el color)
+model FotoColor {
+  color   String  // tal cual figura en los colores de los productos (ej: "Rosa viejo")
+  tela    String  // "Satén" o "Plush"
+  imagen  String
+  @@id([color, tela])
+}
+
 model DisenoPedido {
   pedidoId String
   pedido   Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
