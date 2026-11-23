@@ -5,6 +5,7 @@ import EstadoChip from "@/components/EstadoChip";
 import { Acciones } from "./Tarjeta";
 import Configuracion from "./Configuracion";
 import { cpOrigen, estadoCorreos } from "@/lib/cotizador";
+import { paqarConfigurado } from "@/lib/paqar";
 import { db } from "@/lib/db";
 import { requerirPermiso } from "@/lib/acceso";
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
@@ -14,6 +15,8 @@ import { datosEnvio, faltantes, textoParaCopiar } from "@/lib/envios";
 export default async function EnviosPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const u = await requerirPermiso("ver_pedidos");
   const origen = await cpOrigen();
+  const remitente = Object.fromEntries((await db.configuracion.findMany({ where: { clave: { startsWith: "remitente_" } } })).map((c) => [c.clave.replace("remitente_", ""), c.valor]));
+  const paqarActivo = paqarConfigurado();
   const { tab = "pendientes" } = await searchParams;
   const despachados = tab === "despachados";
   const [pedidos, plantilla] = await Promise.all([
@@ -38,7 +41,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
           <a href={`/imprimir-rotulos?ids=${listos.join(",")}`} target="_blank" className="btn-primario"><Printer size={16} /> Rótulos de los listos ({listos.length})</a>
         )}
       </Encabezado>
-      <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={u.rol === "ADMIN"} />
+      <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={u.rol === "ADMIN"} remitente={remitente} />
       <div className="inline-flex gap-1 bg-menu rounded-full p-1 mb-5">
         <Link href="/envios" className={chip(!despachados)}>Para despachar</Link>
         <Link href="/envios?tab=despachados" className={chip(despachados)}>Despachados</Link>
@@ -83,7 +86,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
                 {!despachados && falta.length > 0 && (
                   <p className="text-xs text-estado-produccion-txt bg-estado-produccion rounded-lg px-3 py-2 mb-3 flex gap-1.5"><AlertTriangle size={14} className="shrink-0 mt-0.5" /> Falta: {falta.join(", ")}</p>
                 )}
-                <Acciones id={p.id} datos={d} copiar={textoParaCopiar(d)} formaEnvio={p.formaEnvio} despachado={!!p.despachadoEn} avisoWa={aviso} />
+                <Acciones id={p.id} datos={d} copiar={textoParaCopiar(d)} formaEnvio={p.formaEnvio} despachado={!!p.despachadoEn} avisoWa={aviso} paqar={paqarActivo} seguimiento={p.numeroSeguimiento} />
               </section>
             );
           })}

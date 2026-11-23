@@ -137,6 +137,11 @@ export function estadoCorreos() {
     { empresa: "Correo Argentino", ok: ca, nota: ca ? "Conectado (MiCorreo)" : "Falta cargar las credenciales de MiCorreo" },
     { empresa: "Andreani", ok: an, nota: an ? "Conectado (contrato propio)" : "Falta cargar usuario, contrato y cliente" },
     { empresa: "Vía Cargo", ok: false, nota: "Cotización manual (no tiene API pública)" },
+    {
+      empresa: "Correo Arg. · despacho (Paq.ar)",
+      ok: !!(e.PAQAR_API_KEY && e.PAQAR_AGREEMENT),
+      nota: e.PAQAR_API_KEY && e.PAQAR_AGREEMENT ? "Conectado: genera envío, rótulo y seguimiento" : "Falta acuerdo comercial y API-Key",
+    },
   ];
 }
 

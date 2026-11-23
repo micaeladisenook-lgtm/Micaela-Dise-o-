@@ -2,15 +2,18 @@
 import { useState, useTransition } from "react";
 import { Copy, Pencil, Truck, Printer, Undo2, MessageCircle, Calculator } from "lucide-react";
 import Cotizador from "./Cotizador";
+import { generarEnvioCorreo } from "./paqar";
 import { useFormulario } from "@/lib/useFormulario";
 import { guardarDatosEnvio, marcarDespachado, deshacerDespacho } from "./acciones";
 import { FORMAS_ENVIO } from "@/lib/pedidos";
 
 type D = { nombre: string; dni: string | null; telefono: string | null; direccion: string | null; entreCalles: string | null; localidad: string | null; provincia: string | null; codigoPostal: string | null };
 
-export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa }: {
-  id: string; datos: D; copiar: string; formaEnvio: string | null; despachado: boolean; avisoWa: string | null;
+export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa, paqar, seguimiento }: {
+  id: string; datos: D; copiar: string; formaEnvio: string | null; despachado: boolean; avisoWa: string | null; paqar: boolean; seguimiento: string | null;
 }) {
+  const [generando, startG] = useTransition();
+  const [msgCorreo, setMsgCorreo] = useState<{ ok?: string; error?: string } | null>(null);
   const [modo, setModo] = useState<"" | "editar" | "despachar" | "cotizar">("");
   const [copiado, setCopiado] = useState(false);
   const [e1, onEditar, p1] = useFormulario(guardarDatosEnvio.bind(null, id), null);
@@ -26,11 +29,19 @@ export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa }:
         <a href={`/imprimir-rotulos?ids=${id}`} target="_blank" className="btn-suave min-h-10 px-3"><Printer size={15} /> Rótulo</a>
         {!despachado && <button type="button" className="btn-secundario min-h-10 px-3" onClick={() => setModo(modo === "cotizar" ? "" : "cotizar")}><Calculator size={15} /> Cotizar</button>}
         {!despachado && <button type="button" className="btn-suave min-h-10 px-3" onClick={() => setModo(modo === "editar" ? "" : "editar")}><Pencil size={15} /> Editar datos</button>}
+        {!despachado && paqar && !seguimiento && (
+          <button type="button" disabled={generando} className="btn-secundario min-h-10 px-3" onClick={() => startG(async () => setMsgCorreo(await generarEnvioCorreo(id)))}>
+            <Truck size={15} /> {generando ? "Generando…" : "Generar en Correo Argentino"}
+          </button>
+        )}
+        {paqar && seguimiento && <a href={`/api/paqar/rotulo/${id}`} target="_blank" className="btn-secundario min-h-10 px-3"><Printer size={15} /> Rótulo oficial</a>}
         {!despachado && <button type="button" className="btn-primario min-h-10 px-3" onClick={() => setModo(modo === "despachar" ? "" : "despachar")}><Truck size={15} /> Despachar</button>}
         {despachado && avisoWa && <a href={avisoWa} target="_blank" className="btn-secundario min-h-10 px-3"><MessageCircle size={15} /> Avisar envío</a>}
         {despachado && <button type="button" disabled={p3} className="btn-suave min-h-10 px-3" onClick={() => confirm("¿Volver este pedido a pendiente de envío?") && start(() => deshacerDespacho(id))}><Undo2 size={15} /> Deshacer</button>}
       </div>
 
+      {msgCorreo?.ok && <p className="text-sm text-estado-listo-txt">{msgCorreo.ok}</p>}
+      {msgCorreo?.error && <p className="text-sm text-estado-alerta-txt">{msgCorreo.error}</p>}
       {modo === "cotizar" && <Cotizador pedidoId={id} cpInicial={datos.codigoPostal} />}
       {modo === "editar" && (
         <form onSubmit={onEditar} className="grid sm:grid-cols-2 gap-2 rounded-xl bg-fondo p-3">
@@ -52,7 +63,7 @@ export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa }:
       )}
       {modo === "despachar" && (
         <form onSubmit={onDespachar} className="grid sm:grid-cols-2 gap-2 rounded-xl bg-fondo p-3">
-          <input name="seguimiento" className="campo" placeholder="N° de seguimiento (opcional)" />
+          <input name="seguimiento" className="campo" placeholder="N° de seguimiento (opcional)" defaultValue={seguimiento ?? ""} />
           <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-texto-2">$</span><input name="costoEnvio" className="campo pl-7" inputMode="numeric" placeholder="Costo del envío (opc.)" /></div>
           <div className="sm:col-span-2 flex items-center gap-3">
             <button className="btn-primario min-h-10" disabled={p2}>{p2 ? "Guardando…" : "Marcar como despachado"}</button>
