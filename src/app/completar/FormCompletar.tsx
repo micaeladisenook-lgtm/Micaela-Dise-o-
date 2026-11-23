@@ -122,6 +122,9 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
                 onChange={(v) => setUbic((prev) => ({ ...prev, [it.id]: { ...prev[it.id], ...v } }))}
               />
               {it.prendas.length > 0 && <Campo etiqueta="¿Para quién es? (opcional)"><input name={`persona_${it.id}`} className="campo" defaultValue={it.persona ?? ""} /></Campo>}
+              <Campo etiqueta="Detalles extras de este box (opcional)" ayuda="Tipografía, tamaño del bordado, colores especiales, algo para la tarjeta, medidas…">
+                <textarea name={`extras_${it.id}`} rows={3} className="campo py-2.5" />
+              </Campo>
             </div>
           )}
         </section>
@@ -177,9 +180,9 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
       </section>
 
       <section className="tarjeta p-5 space-y-2">
-        <h2 className="text-2xl">Detalles extras</h2>
-        <p className="text-xs text-texto-2">Todo lo que quieras aclarar: ubicación exacta del bordado, tipografía, tamaño, colores especiales, algo para la tarjeta…</p>
-        <textarea name="extras" rows={4} className="campo py-2.5" aria-label="Detalles extras" />
+        <h2 className="text-2xl">Comentarios</h2>
+        <p className="text-xs text-texto-2">Algo más que quieras contarnos sobre tu pedido (opcional).</p>
+        <textarea name="extras" rows={3} className="campo py-2.5" aria-label="Comentarios" />
       </section>
 
       <AvisoTexto texto={avisoPedido} />

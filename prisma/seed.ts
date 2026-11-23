@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 const db = new PrismaClient();
 
 const COLORES = ["Blanco", "Off white", "Nude", "Arena", "Camel", "Champagne", "Rosa claro", "Rosa viejo", "Rosa gold", "Lila", "Celeste", "Verde agua", "Azul francia", "Azul marino", "Petróleo", "Gris perla", "Bordó", "Rojo", "Negro"];
-const TALLES_ROPA = ["XS", "S", "M", "L", "XL", "Kids"];
+const TALLES_ROPA = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "Kids"];
 const TALLES_PANTU = ["35", "36", "37", "38", "39", "40", "41", "42"];
 
 async function main() {

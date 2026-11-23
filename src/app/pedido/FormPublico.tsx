@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { Check, Truck, Store, Gift } from "lucide-react";
 import AvisoTexto from "@/components/AvisoTexto";
 import { useFormulario } from "@/lib/useFormulario";
-import { enviarPedidoPublico } from "./acciones";
+import { enviarPedidoPublico, subirFotoPublica } from "./acciones";
+import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
 import { pesos } from "@/lib/formato";
 import { prendasDelProducto, esAccesorio, telaDe, PROVINCIAS_AR } from "@/lib/prendasProducto";
 import SelectorColor from "@/components/SelectorColor";
@@ -54,6 +55,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
   const [evento, setEvento] = useState("no");
   const [envio, setEnvio] = useState("envio");
   const [extra, setExtra] = useState(false);
+  const [ubic, setUbic] = useState<{ bordadoDetalle: string; bordadoFotos: string[] }>({ bordadoDetalle: "", bordadoFotos: [] });
   const p = productos.find((x) => x.id === pid);
   const prendas = useMemo(() => (p ? prendasDelProducto(p, eleccion || null) : []), [p, eleccion]);
   const opciones = p?.componentes.filter((c) => c.aEleccion) ?? [];
@@ -211,8 +213,18 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
               <select name="ubicacion" className="campo" defaultValue="Espalda">{UBICACIONES.map((u) => <option key={u}>{u}</option>)}</select>
             </Campo>
           </div>
-          <Campo etiqueta="¿Dónde va exactamente? (opcional)" ayuda="Ej: centrado en la espalda · en la pantufla derecha · chiquito en el bolsillo">
-            <textarea name="bordadoDetalle" rows={2} className="campo py-2.5" />
+          <input type="hidden" name="bordadoDetalle" value={ubic.bordadoDetalle} />
+          <input type="hidden" name="fotos" value={JSON.stringify(ubic.bordadoFotos)} />
+          <BordadoUbicacion
+            detalle={ubic.bordadoDetalle}
+            fotos={ubic.bordadoFotos}
+            subir={subirFotoPublica}
+            textoBoton="Subir foto o archivo"
+            ayuda="Si tenés un logo, un diseño o una foto de cómo lo querés, subila acá (JPG o PNG, hasta 6)."
+            onChange={(v) => setUbic((prev) => ({ ...prev, ...v }))}
+          />
+          <Campo etiqueta="Detalles extras de tu box (opcional)" ayuda="Tipografía, tamaño del bordado, colores especiales, algo para la tarjeta, medidas…">
+            <textarea name="extrasItem" rows={3} className="campo py-2.5" />
           </Campo>
           <label className="flex items-center gap-3 rounded-xl border border-borde p-3 cursor-pointer min-h-11">
             <input type="checkbox" className="w-5 h-5 accent-acento" checked={extra} onChange={(e) => setExtra(e.target.checked)} />
@@ -283,7 +295,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
         ) : (
           <p className="text-sm text-texto-2">Te escribimos para coordinar día y horario de retiro.</p>
         )}
-        <Campo etiqueta="Detalles extras (opcional)" ayuda="Ubicación exacta del bordado, tipografía, tamaño, colores especiales, algo para la tarjeta…"><textarea name="comentarios" rows={3} className="campo py-2.5" /></Campo>
+        <Campo etiqueta="Comentarios (opcional)" ayuda="Algo más que quieras contarnos sobre tu pedido"><textarea name="comentarios" rows={3} className="campo py-2.5" /></Campo>
       </Seccion>
 
       {p && (

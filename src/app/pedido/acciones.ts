@@ -7,10 +7,29 @@ import { pesos } from "@/lib/formato";
 import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
 import { prendasDelProducto, esAccesorio } from "@/lib/prendasProducto";
+import { guardarImagen, esUrlPropia } from "@/lib/archivos";
 
 export type EstadoPublico = { error?: string; ok?: boolean; numero?: number } | null;
 
 const t = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
+
+// Foto o archivo de referencia que sube la clienta en el formulario (solo imágenes, hasta 8 MB)
+export async function subirFotoPublica(fd: FormData): Promise<{ url: string } | { error: string }> {
+  const archivo = fd.get("foto");
+  if (!(archivo instanceof File) || archivo.size === 0) return { error: "Elegí una foto." };
+  try {
+    return { url: await guardarImagen(archivo, { permitirSvg: false }) };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+const fotosDelForm = (f: FormData) => {
+  try {
+    const v = JSON.parse(String(f.get("fotos") ?? "[]"));
+    return Array.isArray(v) ? v.filter((u): u is string => typeof u === "string" && esUrlPropia(u)).slice(0, 6) : [];
+  } catch { return []; }
+};
 
 export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Promise<EstadoPublico> {
   if (t(f, "sitio")) return { ok: true }; // trampa para robots: campo oculto
@@ -68,12 +87,13 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
 
   type ItemNuevo = {
     productoId: string | null; nombre: string; precioUnitario: number; orden: number; bordadoTexto: string | null;
-    hilo: string | null; bordadoUbicacion: string; bordadoDetalle: string | null; persona: string | null; prendas: { create: typeof prendas };
+    hilo: string | null; bordadoUbicacion: string; bordadoDetalle: string | null; bordadoFotos: string[]; notas: string | null; persona: string | null; prendas: { create: typeof prendas };
   };
   const items: ItemNuevo[] = [{
     productoId: producto.id, nombre: producto.nombre, precioUnitario: producto.precio ?? 0, orden: 0,
     bordadoTexto: t(f, "bordado") || null, hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacion") || "Espalda",
     bordadoDetalle: t(f, "bordadoDetalle").slice(0, 500) || null, persona: t(f, "persona").slice(0, 80) || null,
+    bordadoFotos: fotosDelForm(f), notas: t(f, "extrasItem").slice(0, 1500) || null,
     prendas: { create: prendas },
   }];
   if (t(f, "bordadoExtra")) {
@@ -81,7 +101,7 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     items.push({
       productoId: extra?.id ?? null, nombre: extra?.nombre ?? "Bordado extra", precioUnitario: extra?.precio ?? 10000, orden: 1,
       bordadoTexto: t(f, "bordadoExtra"), hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacionExtra") || "Adelante",
-      bordadoDetalle: null, persona: null, prendas: { create: [] },
+      bordadoDetalle: null, bordadoFotos: [], notas: null, persona: null, prendas: { create: [] },
     });
   }
   const total = items.reduce((s, i) => s + i.precioUnitario, 0);
@@ -91,7 +111,7 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     envio && t(f, "recibe") ? `Recibe: ${t(f, "recibe")}${dni ? ` (DNI ${dni})` : ""}` : null,
     envio && preferida ? `Prefiere envío por: ${preferida}` : null,
     envio && t(f, "indicaciones") ? `Aclaraciones para el envío: ${t(f, "indicaciones")}` : null,
-    t(f, "comentarios") ? `Detalles extras: ${t(f, "comentarios")}` : null,
+    t(f, "comentarios") ? `Comentarios: ${t(f, "comentarios")}` : null,
   ].filter(Boolean).join("\n") || null;
 
   const p = await db.pedido.create({
