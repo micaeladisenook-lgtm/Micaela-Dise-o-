@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { MessageCircle, Settings2, Link2, MoveHorizontal } from "lucide-react";
+import { MessageCircle, Settings2, Link2 } from "lucide-react";
+import TablaDeslizable from "@/components/TablaDeslizable";
 import Encabezado from "@/components/Encabezado";
 import EstadoChip from "@/components/EstadoChip";
 import Filtros from "./Filtros";
@@ -117,8 +118,7 @@ export default async function PedidosPage({
         <div className="tarjeta p-8 text-center text-texto-2">No hay pedidos con estos filtros.</div>
       ) : (
         <>
-          <p className="text-xs text-texto-2 mb-1.5 lg:hidden flex items-center gap-1"><MoveHorizontal size={14} /> Deslizá la tabla hacia el costado para ver todo</p>
-          <div className="tarjeta overflow-x-auto overscroll-x-contain">
+          <TablaDeslizable>
             <table className="tabla w-full min-w-[1080px]">
               <thead>
                 <tr>
@@ -156,7 +156,7 @@ export default async function PedidosPage({
                 })}
               </tbody>
             </table>
-          </div>
+          </TablaDeslizable>
 
           {visibles.length < lista.length && (
             <div className="text-center mt-4">
