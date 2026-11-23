@@ -10,6 +10,8 @@ import FormPago from "../FormPago";
 import BorrarPago from "../BorrarPago";
 import BotonRevisado from "../BotonRevisado";
 import LinkPago from "../LinkPago";
+import CasillaTarea from "../../talleres/CasillaTarea";
+import { bloqueadaPor, NOMBRE_FUNCION } from "@/lib/produccion";
 import { mercadoPagoConfigurado } from "@/lib/mercadopago";
 import { borrarPedido } from "../acciones";
 import { db } from "@/lib/db";
@@ -109,6 +111,31 @@ export default async function PedidoPage({
               </div>
             )}
           </section>
+
+          {p.tareas.length > 0 && (
+            <section className="tarjeta p-5">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl">Producción</h2>
+                <span className="text-sm text-texto-2">{p.tareas.filter((t) => t.terminada).length} de {p.tareas.length} tareas terminadas</span>
+              </div>
+              <div className="h-2 rounded-full bg-menu overflow-hidden mb-3"><div className="h-full bg-estado-listo-txt" style={{ width: `${(100 * p.tareas.filter((t) => t.terminada).length) / p.tareas.length}%` }} /></div>
+              <ul className="divide-y divide-borde">
+                {p.tareas.map((t) => {
+                  const previa = bloqueadaPor(t, p.tareas);
+                  return (
+                    <li key={t.id} className="flex items-center gap-3 py-2">
+                      <CasillaTarea id={t.id} terminada={t.terminada} bloqueada={!!previa} />
+                      <div className="text-sm min-w-0">
+                        <p className={t.terminada ? "line-through text-texto-2" : ""}><strong>{t.taller.nombre}</strong> · {NOMBRE_FUNCION[t.taller.funcion]} · {t.prenda}{t.color ? ` ${t.color}` : ""}{t.talle ? ` · ${t.talle}` : ""}</p>
+                        {previa && !t.terminada && <p className="text-xs text-estado-produccion-txt">Espera a {previa.taller.nombre}</p>}
+                        {t.terminada && t.terminadaEn && <p className="text-xs text-texto-2">Terminada el {fecha(t.terminadaEn)}</p>}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
           <section className="tarjeta p-5 grid sm:grid-cols-2 gap-4 text-sm">
             <div>

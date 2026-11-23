@@ -48,6 +48,19 @@ enum OrigenPedido {
   IMPORTADO
 }
 
+enum FuncionTaller {
+  CONFECCION_ROPA
+  BORDADO
+  CONFECCION_PANTU
+  PEGADO_PANTU
+  OTRO
+}
+
+enum TipoStock {
+  PRODUCTO
+  INSUMO
+}
+
 enum CategoriaDiseno {
   PRODUCTO
   COLOR
@@ -69,6 +82,8 @@ model Usuario {
   pedidosCreados  Pedido[]   @relation("PedidoCreadoPor")
   pedidosModif    Pedido[]   @relation("PedidoModificadoPor")
   pagosCargados   Pago[]
+  tallerId        String?
+  taller          Taller?    @relation(fields: [tallerId], references: [id], onDelete: SetNull)
 }
 
 model Cliente {
@@ -106,6 +121,8 @@ model Producto {
 
   componentes  ComponenteBox[] @relation("Box")
   itemsPedido  PedidoItem[]
+  stock        ItemStock[]
+  consumos     ConsumoProducto[]
   prendasPedido PrendaItem[]
   enBoxes      ComponenteBox[] @relation("Componente")
   disenos      Diseno[]
@@ -184,6 +201,8 @@ model Pedido {
   items          PedidoItem[]
   pagos          Pago[]
   disenos        DisenoPedido[]
+  tareas         Tarea[]
+  movimientos    MovimientoStock[]
 
   @@index([estado])
   @@index([fechaEntrega])
@@ -246,12 +265,96 @@ model Pago {
 }
 
 model Taller {
-  id           String  @id @default(cuid())
+  id           String        @id @default(cuid())
   nombre       String
   especialidad String?
+  funcion      FuncionTaller @default(OTRO)
   telefono     String?
-  activo       Boolean @default(true)
-  orden        Int     @default(0)
+  activo       Boolean       @default(true)
+  orden        Int           @default(0)
+  tareas       Tarea[]
+  gastos       Gasto[]
+  usuarios     Usuario[]
+}
+
+// Trabajo de un taller sobre una prenda de un pedido (se arma solo)
+model Tarea {
+  id            String     @id @default(cuid())
+  pedidoId      String
+  pedido        Pedido     @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  tallerId      String
+  taller        Taller     @relation(fields: [tallerId], references: [id], onDelete: Cascade)
+  clave         String     // identifica prenda + paso, para conservar lo terminado al editar
+  paso          Int        // orden dentro de la prenda (1, 2, 3)
+  prenda        String
+  color         String?
+  talle         String?
+  bordado       String?
+  detalle       String?
+  terminada     Boolean    @default(false)
+  terminadaEn   DateTime?
+  terminadaPorId String?
+  creadoEn      DateTime   @default(now())
+
+  @@unique([pedidoId, clave])
+  @@index([tallerId, terminada])
+}
+
+model ItemStock {
+  id          String    @id @default(cuid())
+  tipo        TipoStock @default(INSUMO)
+  categoria   String    // Telas, Hilos, Cajas, Tarjetas, Packaging, Producto terminado…
+  nombre      String
+  color       String?
+  talle       String?
+  tela        String?   // Satén / Plush (para telas)
+  unidad      String    @default("unidades")
+  cantidad    Float     @default(0)
+  minimo      Float     @default(0)
+  productoId  String?
+  producto    Producto? @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  activo      Boolean   @default(true)
+  creadoEn    DateTime  @default(now())
+  movimientos MovimientoStock[]
+  consumos    ConsumoProducto[]
+}
+
+model MovimientoStock {
+  id        String    @id @default(cuid())
+  itemId    String
+  item      ItemStock @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  cantidad  Float     // positivo = entra, negativo = sale
+  motivo    String
+  pedidoId  String?
+  pedido    Pedido?   @relation(fields: [pedidoId], references: [id], onDelete: SetNull)
+  usuarioId String?
+  fecha     DateTime  @default(now())
+}
+
+// Qué insumos usa cada producto (se descuentan solos al vender)
+model ConsumoProducto {
+  id          String     @id @default(cuid())
+  productoId  String
+  producto    Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  itemId      String?    // insumo fijo (ej: Caja)
+  item        ItemStock? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tela        String?    // o tela según el color de la prenda (ej: "Satén")
+  cantidad    Float
+}
+
+model Gasto {
+  id          String   @id @default(cuid())
+  fecha       DateTime @default(now())
+  categoria   String
+  descripcion String?
+  monto       Int
+  medio       String?
+  tallerId    String?
+  taller      Taller?  @relation(fields: [tallerId], references: [id], onDelete: SetNull)
+  creadoPorId String?
+  creadoEn    DateTime @default(now())
+
+  @@index([fecha])
 }
 
 // Plantillas de mensajes de WhatsApp (editables)

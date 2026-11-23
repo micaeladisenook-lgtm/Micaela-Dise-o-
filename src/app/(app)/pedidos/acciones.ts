@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requerirUsuario, requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
+import { generarTareas, actualizarEstadoPorTareas } from "@/lib/produccion";
+import { aplicarConsumo, revertirConsumo } from "@/lib/stock";
 import { clientePorTelefono, normalizarInstagram } from "@/lib/clientes";
 import { armarMensaje, leerFecha, ESTADOS, MEDIOS, NOMBRE_ESTADO, NOMBRE_MEDIO } from "@/lib/pedidos";
 import { pesos, leerPesos } from "@/lib/formato";
@@ -145,6 +147,10 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     await registrar(u.id, "Creó pedido", "Pedido", id, `N° ${p.numero} · ${datos.cliente.nombre} · ${pesos(total)}`);
   }
 
+  await generarTareas(id);
+  await aplicarConsumo(id, u.id);
+  if (pedidoId) await actualizarEstadoPorTareas(id, u.id);
+
   const pedido = await db.pedido.findUniqueOrThrow({
     where: { id },
     include: { cliente: true, pagos: true, items: { include: { prendas: { orderBy: { orden: "asc" } } }, orderBy: { orden: "asc" } } },
@@ -169,6 +175,16 @@ export async function cambiarEstado(pedidoId: string, estado: string) {
   if (antes.estado === estado) return;
   await db.pedido.update({ where: { id: pedidoId }, data: { estado: estado as EstadoPedido, modificadoPorId: u.id } });
   await registrar(u.id, "Cambió estado", "Pedido", pedidoId, `N° ${antes.numero} · ${NOMBRE_ESTADO[antes.estado]} → ${NOMBRE_ESTADO[estado]}`);
+  if (estado === "CANCELADO") {
+    await generarTareas(pedidoId);
+    await revertirConsumo(pedidoId, u.id, `Pedido N° ${antes.numero} cancelado`);
+  } else if (antes.estado === "CANCELADO") {
+    await generarTareas(pedidoId);
+    await aplicarConsumo(pedidoId, u.id);
+  } else if (antes.estado === "ENTREGADO") {
+    await generarTareas(pedidoId);
+  }
+  revalidatePath("/talleres");
   revalidatePath("/pedidos");
   revalidatePath(`/pedidos/${pedidoId}`);
 }
@@ -202,6 +218,7 @@ export async function borrarPago(pagoId: string) {
 
 export async function borrarPedido(pedidoId: string) {
   const u = await requerirAdmin();
+  await revertirConsumo(pedidoId, u.id, "Pedido borrado");
   const p = await db.pedido.delete({ where: { id: pedidoId }, include: { cliente: true } });
   await registrar(u.id, "Borró pedido", "Pedido", pedidoId, `N° ${p.numero} · ${p.cliente.nombre}`);
   revalidatePath("/pedidos");

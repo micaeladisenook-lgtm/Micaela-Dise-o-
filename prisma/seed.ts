@@ -26,10 +26,10 @@ async function main() {
   if ((await db.taller.count()) === 0) {
     await db.taller.createMany({
       data: [
-        { nombre: "Gery", especialidad: "Confección: batas, pijamas de tiras, camiseros y camisolines", orden: 1 },
-        { nombre: "Héctor", especialidad: "Bordados", orden: 2 },
-        { nombre: "Richard", especialidad: "Arma las pantuflas", orden: 3 },
-        { nombre: "Pedro", especialidad: "Pega las pantuflas", orden: 4 },
+        { nombre: "Gery", especialidad: "Confección: batas, pijamas de tiras, camiseros y camisolines", funcion: "CONFECCION_ROPA", orden: 1 },
+        { nombre: "Héctor", especialidad: "Bordados", funcion: "BORDADO", orden: 2 },
+        { nombre: "Richard", especialidad: "Confecciona las pantuflas (cuando están los bordados)", funcion: "CONFECCION_PANTU", orden: 3 },
+        { nombre: "Pedro", especialidad: "Pega las pantuflas", funcion: "PEGADO_PANTU", orden: 4 },
       ],
     });
   }
@@ -108,6 +108,30 @@ async function main() {
 
     await db.producto.create({ data: { nombre: "Bordado extra", tipo: "ADICIONAL", orden: 1, precio: 10000, descripcion: "Bordado adicional en otra ubicación o prenda", colores: [], talles: [] } });
     await db.producto.create({ data: { nombre: "Prioridad", tipo: "ADICIONAL", orden: 2, precio: 15000, descripcion: "Entrega prioritaria", colores: [], talles: [] } });
+  }
+
+  // Insumos básicos (sin cantidades: se cargan desde Stock)
+  if ((await db.itemStock.count()) === 0) {
+    const insumos: [string, string, string][] = [
+      ["Cajas de regalo", "Cajas y packaging", "unidades"],
+      ["Papel de seda", "Cajas y packaging", "unidades"],
+      ["Cinta de raso", "Cajas y packaging", "metros"],
+      ["Bolsas", "Cajas y packaging", "unidades"],
+      ["Tarjetas de presentación", "Tarjetas", "unidades"],
+      ["Hilo dorado", "Hilos", "conos"],
+      ["Hilo plateado", "Hilos", "conos"],
+      ["Scrunchies de regalo", "Accesorios", "unidades"],
+    ];
+    for (const [nombre, categoria, unidad] of insumos) await db.itemStock.create({ data: { nombre, categoria, unidad, tipo: "INSUMO" } });
+  }
+  if ((await db.consumoProducto.count()) === 0) {
+    const caja = await db.itemStock.findFirst({ where: { nombre: "Cajas de regalo" } });
+    const tarjeta = await db.itemStock.findFirst({ where: { nombre: "Tarjetas de presentación" } });
+    const boxes = await db.producto.findMany({ where: { tipo: "BOX" } });
+    for (const b of boxes) {
+      if (caja) await db.consumoProducto.create({ data: { productoId: b.id, itemId: caja.id, cantidad: 1 } });
+      if (tarjeta) await db.consumoProducto.create({ data: { productoId: b.id, itemId: tarjeta.id, cantidad: 1 } });
+    }
   }
 
   console.log("Datos iniciales cargados ✔");

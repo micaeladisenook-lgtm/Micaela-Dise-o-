@@ -33,4 +33,5 @@ export const includePedidoCompleto = {
   pagos: { orderBy: { fecha: "asc" as const }, include: { creadoPor: true } },
   items: { orderBy: { orden: "asc" as const }, include: { prendas: { orderBy: { orden: "asc" as const } } } },
   disenos: { include: { diseno: true } },
+  tareas: { include: { taller: true }, orderBy: [{ clave: "asc" as const }] },
 };

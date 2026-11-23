@@ -4,6 +4,8 @@ import { registrar } from "@/lib/registro";
 import { clientePorTelefono, normalizarInstagram } from "@/lib/clientes";
 import { leerFecha } from "@/lib/pedidos";
 import { pesos } from "@/lib/formato";
+import { generarTareas } from "@/lib/produccion";
+import { aplicarConsumo } from "@/lib/stock";
 
 export type EstadoPublico = { error?: string; ok?: boolean; numero?: number } | null;
 
@@ -86,5 +88,7 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     },
   });
   await registrar(null, "Pedido desde formulario público", "Pedido", p.id, `N° ${p.numero} · ${cliente.nombre} · ${pesos(total)}`);
+  await generarTareas(p.id);
+  await aplicarConsumo(p.id, null);
   return { ok: true, numero: p.numero };
 }

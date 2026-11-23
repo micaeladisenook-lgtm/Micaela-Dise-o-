@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requerirUsuario } from "@/lib/auth";
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, atrasado, fechaGuia, hoyAR, saldo, semana, enSemana } from "@/lib/pedidos";
+import { tareasDeSemana } from "@/lib/datosTalleres";
 
 function saludo() {
   const h = parseInt(new Date().toLocaleString("es-AR", { hour: "numeric", hour12: false, timeZone: "America/Argentina/Buenos_Aires" }), 10);
@@ -23,7 +24,7 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
   const finMes = new Date(new Date(inicioMes).setMonth(inicioMes.getMonth() + 1));
   const sem = semana(hoy);
 
-  const [pedidosMes, abiertos, pagosMes, plantilla] = await Promise.all([
+  const [pedidosMes, abiertos, pagosMes, plantilla, gastosMes, tareasSemana, stock] = await Promise.all([
     db.pedido.findMany({ where: { estado: { not: "CANCELADO" }, fechaPedido: { gte: inicioMes, lt: finMes } }, select: { total: true } }),
     db.pedido.findMany({
       where: { estado: { not: "CANCELADO" } },
@@ -34,7 +35,13 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
     }),
     db.pago.aggregate({ where: { fecha: { gte: inicioMes, lt: finMes } }, _sum: { monto: true } }),
     db.plantilla.findUnique({ where: { clave: "saldo" } }),
+    esAdmin ? db.gasto.aggregate({ where: { fecha: { gte: inicioMes, lt: finMes } }, _sum: { monto: true } }) : null,
+    tareasDeSemana(hoy),
+    db.itemStock.findMany({ where: { activo: true, minimo: { gt: 0 } } }),
   ]);
+  const gastos = gastosMes?._sum.monto ?? 0;
+  const talleres = await db.taller.findMany({ where: { activo: true }, orderBy: { orden: "asc" } });
+  const stockBajo = stock.filter((i) => i.cantidad <= i.minimo);
 
   const ventasMes = pedidosMes.reduce((s, p) => s + p.total, 0);
   const conSaldo = abiertos.map((p) => ({ p, s: saldo(p.total, p.pagos) })).filter((x) => x.s > 0);
@@ -51,8 +58,8 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
     { titulo: "Ventas del mes", valor: pesos(ventasMes), detalle: `${pedidosMes.length} pedidos cargados`, href: "/pedidos?estado=todos" },
     { titulo: "Por cobrar", valor: pesos(porCobrar), detalle: `${conSaldo.length} pedidos · cobrado este mes ${pesos(pagosMes._sum.monto ?? 0)}`, href: "/pagos", alerta: true },
     ...(esAdmin ? [
-      { titulo: "Gastos del mes", valor: "—", detalle: "Se activa en la Etapa 4", href: "/gastos" },
-      { titulo: "Ganancia estimada", valor: "—", detalle: "Se activa en la Etapa 4", href: "/gastos" },
+      { titulo: "Gastos del mes", valor: pesos(gastos), detalle: "Ver detalle por categoría", href: "/gastos" },
+      { titulo: "Ganancia estimada", valor: pesos(ventasMes - gastos), detalle: "ventas − gastos del mes", href: "/gastos" },
     ] : []),
   ];
 
@@ -125,17 +132,34 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
               </ul>
             )}
           </section>
-          <section className="tarjeta p-5 grid grid-cols-2 gap-3 text-sm">
-            <Link href="/talleres" className="rounded-xl border border-borde p-3 hover:border-acento">
-              <Scissors size={18} className="text-acento mb-1" />
-              <p className="font-medium">Trabajos por taller</p>
-              <p className="text-xs text-texto-2">Etapa 4</p>
-            </Link>
-            <Link href="/stock" className="rounded-xl border border-borde p-3 hover:border-acento">
-              <Package size={18} className="text-acento mb-1" />
-              <p className="font-medium">Stock bajo</p>
-              <p className="text-xs text-texto-2">Etapa 4</p>
-            </Link>
+          <section className="tarjeta p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-2xl">Talleres esta semana</h2>
+              <Link href="/talleres" className="text-sm text-acento hover:underline">Ver</Link>
+            </div>
+            <ul className="space-y-2">
+              {talleres.map((t) => {
+                const propias = tareasSemana.tareas.filter((x) => x.tallerId === t.id);
+                const pend = propias.filter((x) => !x.terminada).length;
+                return (
+                  <li key={t.id} className="flex items-center gap-3 text-sm">
+                    <Scissors size={16} className="text-acento shrink-0" />
+                    <span className="flex-1">{t.nombre}</span>
+                    <span className={pend ? "font-medium" : "text-texto-2"}>{pend} pendiente{pend === 1 ? "" : "s"}</span>
+                    <span className="text-texto-2 text-xs w-16 text-right">{propias.length - pend} hechas</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+          <section className="tarjeta p-5">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-2xl">Stock bajo</h2>
+              <Link href="/stock" className="text-sm text-acento hover:underline">Stock</Link>
+            </div>
+            {stockBajo.length === 0 ? <p className="text-sm text-texto-2 flex items-center gap-2"><Package size={16} /> Todo en orden{stock.length === 0 ? " (todavía no hay mínimos configurados)" : ""}.</p> : (
+              <ul className="text-sm space-y-1">{stockBajo.map((i) => <li key={i.id} className="flex justify-between"><Link href={`/stock/${i.id}`} className="hover:text-acento">{i.nombre}</Link><span className="text-estado-alerta-txt font-medium">{i.cantidad.toLocaleString("es-AR")} {i.unidad}</span></li>)}</ul>
+            )}
           </section>
         </div>
       </div>
