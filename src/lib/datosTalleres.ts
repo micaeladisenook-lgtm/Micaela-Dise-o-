@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { fechaGuia, semana, hoyAR } from "./pedidos";
 import { fecha } from "./formato";
+import { vistaTarea, itemDeTarea } from "./vistaTaller";
 
 export async function tareasDeSemana(base: Date, tallerId?: string) {
   const sem = semana(base);
@@ -13,7 +14,12 @@ export async function tareasDeSemana(base: Date, tallerId?: string) {
     },
     include: {
       taller: true,
-      pedido: { select: { id: true, numero: true, fechaEvento: true, fechaEntrega: true, prioridad: true, estado: true, cliente: { select: { nombre: true } }, disenos: { include: { diseno: true } } } },
+      pedido: {
+        select: {
+          id: true, numero: true, fechaEvento: true, fechaEntrega: true, prioridad: true, estado: true, disenos: { include: { diseno: true } },
+          items: { select: { orden: true, nombre: true, persona: true, bordadoTexto: true, bordadoUbicacion: true, hilo: true, notas: true } },
+        },
+      },
     },
     orderBy: [{ pedido: { numero: "asc" } }, { clave: "asc" }],
   });
@@ -39,16 +45,19 @@ export async function tareasDeSemana(base: Date, tallerId?: string) {
 
 export type TareaSemana = Awaited<ReturnType<typeof tareasDeSemana>>["tareas"][number];
 
+// Una línea por trabajo para el WhatsApp del taller (solo lo que le toca, sin datos de la clienta)
 export function lineaTarea(t: TareaSemana) {
-  const g = fechaGuia(t.pedido);
+  const v = vistaTarea(t.taller.funcion, t, itemDeTarea(t.clave, t.pedido.items));
   return [
     `• N° ${t.pedido.numero}`,
-    t.prenda,
-    t.color,
-    t.talle ? `talle ${t.talle}` : null,
-    t.bordado ? `bordado ${t.bordado}` : null,
-    t.detalle,
-    g ? `evento ${fecha(g).slice(0, 5)}` : null,
+    `${v.accion}: ${v.prenda}`,
+    ...v.datos.map((d) => `${d.etiqueta.toLowerCase()} ${d.valor}`),
+    ...v.notas,
+    fechasTexto(t.pedido),
     t.pedido.prioridad ? "PRIORIDAD" : null,
   ].filter(Boolean).join(" · ");
+}
+
+export function fechasTexto(p: { fechaEntrega: Date | null; fechaEvento: Date | null }) {
+  return [p.fechaEntrega ? `entrega ${fecha(p.fechaEntrega)}` : null, p.fechaEvento ? `evento ${fecha(p.fechaEvento)}` : null].filter(Boolean).join(" · ") || "sin fecha";
 }

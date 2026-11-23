@@ -4,18 +4,15 @@ import { useOptimistic, useTransition } from "react";
 import { Check, Clock, Undo2, Inbox, Scissors, PackageCheck } from "lucide-react";
 import { moverTarea } from "./acciones";
 import { ETAPAS, NOMBRE_ETAPA, siguienteEtapa, etapaAnterior, type Etapa } from "@/lib/etapas";
+import type { VistaTarea } from "@/lib/vistaTaller";
 
 export type Tarjeta = {
   id: string;
   etapa: Etapa;
-  prenda: string;
-  color: string | null;
-  talle: string | null;
-  bordado: string | null;
-  detalle: string | null;
+  vista: VistaTarea;
   pedidoId: string;
   numero: number;
-  cliente: string;
+  entrega: string | null;
   evento: string | null;
   atrasada: boolean;
   prioridad: boolean;
@@ -29,13 +26,8 @@ const ESTILO: Record<Etapa, { icono: typeof Inbox; cabeza: string; fondo: string
   LISTO: { icono: PackageCheck, cabeza: "bg-estado-listo text-estado-listo-txt", fondo: "bg-estado-listo/40", casilla: "" },
 };
 
-const AYUDA: Record<Etapa, string> = {
-  RECIBIDO: "Tildá cuando empiecen a trabajarlo",
-  EN_PRODUCCION: "Tildá cuando esté terminado",
-  LISTO: "Listo para retirar del taller",
-};
-
-export default function TableroTaller({ tarjetas }: { tarjetas: Tarjeta[] }) {
+export default function TableroTaller({ tarjetas, ayuda, verPedido }: { tarjetas: Tarjeta[]; ayuda: { empezar: string; terminar: string }; verPedido: boolean }) {
+  const AYUDA: Record<Etapa, string> = { RECIBIDO: ayuda.empezar, EN_PRODUCCION: ayuda.terminar, LISTO: "Listo para retirar del taller" };
   const [, start] = useTransition();
   const [lista, mover] = useOptimistic(tarjetas, (actual: Tarjeta[], m: { id: string; etapa: Etapa }) =>
     actual.map((t) => (t.id === m.id ? { ...t, etapa: m.etapa } : t)),
@@ -58,7 +50,7 @@ export default function TableroTaller({ tarjetas }: { tarjetas: Tarjeta[] }) {
               <p className="text-xs text-texto-2 text-center py-6">Nada por acá</p>
             ) : (
               <ul className="space-y-2 mt-1.5">
-                {propias.map((t) => <Ficha key={t.id} t={t} onMover={pasarA} />)}
+                {propias.map((t) => <Ficha key={t.id} t={t} onMover={pasarA} verPedido={verPedido} />)}
               </ul>
             )}
           </div>
@@ -68,7 +60,7 @@ export default function TableroTaller({ tarjetas }: { tarjetas: Tarjeta[] }) {
   );
 }
 
-function Ficha({ t, onMover }: { t: Tarjeta; onMover: (id: string, e: Etapa) => void }) {
+function Ficha({ t, onMover, verPedido }: { t: Tarjeta; onMover: (id: string, e: Etapa) => void; verPedido: boolean }) {
   const sig = siguienteEtapa(t.etapa);
   const ant = etapaAnterior(t.etapa);
   const listo = t.etapa === "LISTO";
@@ -88,18 +80,28 @@ function Ficha({ t, onMover }: { t: Tarjeta; onMover: (id: string, e: Etapa) => 
           {t.prioridad && <span className="text-[10px] font-bold uppercase tracking-wide bg-acento text-white rounded px-1.5 py-0.5">Prioridad</span>}
           {t.atrasada && !listo && <span className="text-[10px] font-bold uppercase tracking-wide bg-estado-alerta text-estado-alerta-txt rounded px-1.5 py-0.5">Atrasada</span>}
         </div>
-        <p className="font-medium leading-snug">
-          {t.prenda}{t.color ? ` · ${t.color}` : ""}{t.talle ? ` · talle ${t.talle}` : ""}
-        </p>
-        {t.bordado && <p className="text-acento-oscuro text-xs mt-0.5">Bordado: {t.bordado}</p>}
-        {t.detalle && <p className="text-texto-2 text-xs mt-0.5">{t.detalle}</p>}
-        <p className="text-xs text-texto-2 mt-0.5">
-          <Link href={`/pedidos/${t.pedidoId}`} className="text-acento hover:underline">N° {t.numero}</Link> · {t.cliente}
-          {t.evento ? ` · evento ${t.evento}` : " · sin fecha"}
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-acento">{t.vista.accion}</p>
+        <p className="font-medium leading-snug">{t.vista.prenda}</p>
+        {t.vista.datos.length > 0 && (
+          <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs">
+            {t.vista.datos.map((d) => (
+              <div key={d.etiqueta} className="contents">
+                <dt className="text-texto-2">{d.etiqueta}</dt>
+                <dd className={d.destacado ? "font-semibold text-texto" : "text-texto"}>{d.valor}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        {t.vista.notas.map((n, i) => <p key={i} className="text-xs text-texto-2 mt-0.5">{n}</p>)}
+        <p className="text-xs text-texto-2 mt-1.5 pt-1.5 border-t border-borde">
+          {verPedido ? <Link href={`/pedidos/${t.pedidoId}`} className="text-acento hover:underline">Pedido N° {t.numero}</Link> : <span>Pedido N° {t.numero}</span>}
+          {t.entrega && <> · Entrega <strong className="text-texto">{t.entrega}</strong></>}
+          {t.evento && <> · Evento <strong className="text-texto">{t.evento}</strong></>}
+          {!t.entrega && !t.evento && " · sin fecha"}
         </p>
         {t.espera && !listo && <p className="text-xs text-estado-produccion-txt flex items-center gap-1 mt-0.5"><Clock size={12} /> Espera a {t.espera}</p>}
-        {t.bordado && t.disenos.length > 0 && (
-          <div className="flex gap-1 mt-1">{t.disenos.map((d) => <img key={d.id} src={d.imagen} alt={d.nombre} title={d.nombre} className="w-10 h-10 rounded-lg object-cover border border-borde" />)}</div>
+        {t.vista.conDisenos && t.disenos.length > 0 && (
+          <div className="flex gap-1 mt-1">{t.disenos.map((d) => <img key={d.id} src={d.imagen} alt={d.nombre} title={d.nombre} className="w-14 h-14 rounded-lg object-cover border border-borde" />)}</div>
         )}
         {ant && !listo && (
           <button type="button" onClick={() => onMover(t.id, ant)} className="mt-1 text-[11px] text-texto-2 hover:text-acento flex items-center gap-1 cursor-pointer">
