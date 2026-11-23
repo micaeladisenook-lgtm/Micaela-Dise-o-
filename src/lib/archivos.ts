@@ -13,6 +13,12 @@ const BUCKET = "disenos";
 
 const TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/svg+xml": "svg" };
 
+// Las claves nuevas de Supabase ("sb_secret_…") van solo en "apikey"; las viejas (JWT) también en Authorization
+export function cabecerasSupabase(extra: Record<string, string> = {}): Record<string, string> {
+  const k = SUPABASE_KEY ?? "";
+  return k.startsWith("sb_") ? { apikey: k, ...extra } : { apikey: k, Authorization: `Bearer ${k}`, ...extra };
+}
+
 export function usaSupabase() {
   return !!(SUPABASE_URL && SUPABASE_KEY);
 }
@@ -20,7 +26,7 @@ export function usaSupabase() {
 export async function subirASupabase(bucket: string, nombre: string, datos: Buffer | string, tipo: string) {
   const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${nombre}`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY!, "Content-Type": tipo, "x-upsert": "true" },
+    headers: cabecerasSupabase({ "Content-Type": tipo, "x-upsert": "true" }),
     body: typeof datos === "string" ? datos : new Uint8Array(datos),
   });
   if (!r.ok) throw new Error(`No se pudo guardar el archivo (${r.status}).`);
@@ -45,7 +51,7 @@ export async function borrarImagen(url: string) {
   const nombre = url.split("/").pop();
   if (!nombre || nombre.includes("..")) return;
   if (url.startsWith("http") && usaSupabase()) {
-    await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${nombre}`, { method: "DELETE", headers: { Authorization: `Bearer ${SUPABASE_KEY}`, apikey: SUPABASE_KEY! } }).catch(() => {});
+    await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${nombre}`, { method: "DELETE", headers: cabecerasSupabase() }).catch(() => {});
     return;
   }
   try { await unlink(path.join(CARPETA_UPLOADS, nombre)); } catch {}
