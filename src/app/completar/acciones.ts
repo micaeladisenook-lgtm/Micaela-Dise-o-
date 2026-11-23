@@ -8,6 +8,7 @@ import { pedidoParaCompletar } from "./datos";
 import { guardarImagen, esUrlPropia } from "@/lib/archivos";
 
 export type EstadoCompletar = { error?: string; ok?: boolean } | null;
+const hayAvisoPedido = async () => !!(await db.plantilla.findUnique({ where: { clave: "aviso_pedido" } }))?.texto.trim();
 const t = (f: FormData, k: string, max = 200) => String(f.get(k) ?? "").trim().slice(0, max);
 const fotosDe = (f: FormData, id: string) => {
   try {
@@ -35,6 +36,8 @@ export async function completarDatos(token: string, _prev: EstadoCompletar, f: F
   const { p, items } = datos;
   if (p.datosCompletadosEn) return { error: "Ya recibimos tus datos. Si querés cambiar algo, escribinos por WhatsApp." };
   if (p.estado === "CANCELADO" || p.estado === "ENTREGADO") return { error: "Este pedido ya no se puede modificar. Escribinos por WhatsApp." };
+
+  if (await hayAvisoPedido() && f.get("acepto") !== "on") return { error: "Tildá que verificaste talles, colores, bordados, modelos y cantidades." };
 
   // Prendas: color y talle de cada una
   const prendas: { id: string; color: string; talle: string | null }[] = [];

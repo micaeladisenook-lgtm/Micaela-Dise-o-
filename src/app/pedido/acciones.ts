@@ -14,6 +14,9 @@ const t = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 
 export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Promise<EstadoPublico> {
   if (t(f, "sitio")) return { ok: true }; // trampa para robots: campo oculto
+  if ((await db.plantilla.findUnique({ where: { clave: "aviso_pedido" } }))?.texto.trim() && f.get("acepto") !== "on") {
+    return { error: "Tildá que verificaste talles, colores, bordados, modelos y cantidades." };
+  }
   const nombre = t(f, "nombre");
   const telefono = t(f, "telefono");
   if (nombre.length < 3) return { error: "Escribí tu nombre y apellido." };

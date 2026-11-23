@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Check, Truck, Store, Gift, Info } from "lucide-react";
+import { Check, Truck, Store, Gift } from "lucide-react";
+import AvisoTexto from "@/components/AvisoTexto";
 import { useFormulario } from "@/lib/useFormulario";
 import { enviarPedidoPublico } from "./acciones";
 import { pesos } from "@/lib/formato";
@@ -43,7 +44,7 @@ function Seccion({ n, titulo, children, ayuda }: { n: number; titulo: string; ay
 
 const opcion = "rounded-xl border border-borde min-h-11 flex items-center gap-2 px-3 cursor-pointer has-[:checked]:border-acento has-[:checked]:bg-acento-suave/50";
 
-export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio = "" }: { productos: P[]; precioBordadoExtra: number; avisoEnvio?: string }) {
+export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio = "", avisoPedido = "" }: { productos: P[]; precioBordadoExtra: number; avisoEnvio?: string; avisoPedido?: string }) {
   const [estado, onSubmit, enviando] = useFormulario(enviarPedidoPublico, null);
   const [pid, setPid] = useState("");
   const [eleccion, setEleccion] = useState("");
@@ -229,7 +230,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
       </Seccion>
 
       <Seccion n={p ? 6 : 4} titulo="Entrega" ayuda="No hace falta cotizar: te pasamos el costo del envío por WhatsApp.">
-        {avisoEnvio && <p className="text-sm bg-acento-suave/60 border border-acento/20 rounded-xl px-3 py-2.5 whitespace-pre-line flex gap-2"><Info size={16} className="text-acento shrink-0 mt-0.5" /><span>{avisoEnvio}</span></p>}
+        <AvisoTexto texto={avisoEnvio} />
         <div className="grid grid-cols-2 gap-2">
           {([["envio", "Envío", Truck], ["retira", "Retiro", Store]] as const).map(([v, t, Icono]) => (
             <label key={v} className={opcion}>
@@ -280,6 +281,17 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
         </section>
       )}
 
+      {p && (
+        <>
+          <AvisoTexto texto={avisoPedido} />
+          {avisoPedido.trim() && (
+            <label className="flex items-start gap-3 rounded-xl border border-borde bg-white p-3 cursor-pointer has-[:checked]:border-acento">
+              <input type="checkbox" name="acepto" required className="w-5 h-5 mt-0.5 shrink-0 accent-acento" />
+              <span className="text-sm">Verifiqué talles, colores, bordados, modelos y cantidades, y estoy de acuerdo.</span>
+            </label>
+          )}
+        </>
+      )}
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-4 py-3">{estado.error}</p>}
       <button className="btn-primario w-full text-base min-h-12" disabled={enviando || !p}>{enviando ? "Enviando…" : p ? "Enviar pedido" : "Elegí un producto para continuar"}</button>
       <p className="text-xs text-center text-texto-2">Envíos a todo el país 📦</p>

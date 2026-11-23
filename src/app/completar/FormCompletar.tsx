@@ -4,7 +4,7 @@ import { Truck, Store } from "lucide-react";
 import { useFormulario } from "@/lib/useFormulario";
 import { completarDatos, subirFotoCompletar, type EstadoCompletar } from "./acciones";
 import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
-import { Info } from "lucide-react";
+import AvisoTexto from "@/components/AvisoTexto";
 import { PROVINCIAS_AR } from "@/lib/prendasProducto";
 
 type Prenda = { id: string; nombre: string; color: string | null; talle: string | null; colores: string[]; talles: string[] };
@@ -22,8 +22,8 @@ function Campo({ etiqueta, children, ayuda }: { etiqueta: string; children: Reac
   return <div><label className="etiqueta">{etiqueta}</label>{children}{ayuda && <p className="ayuda">{ayuda}</p>}</div>;
 }
 
-export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento, avisoEnvio }: {
-  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean; avisoEnvio: string;
+export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento, avisoEnvio, avisoPedido }: {
+  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean; avisoEnvio: string; avisoPedido: string;
 }) {
   const [ubic, setUbic] = useState<Record<string, { bordadoDetalle: string; bordadoFotos: string[] }>>(
     () => Object.fromEntries(items.map((i) => [i.id, { bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [] }])),
@@ -124,7 +124,7 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
           <h2 className="text-2xl">Entrega</h2>
           <p className="text-xs text-texto-2">No hace falta cotizar: si falta, te pasamos el costo del envío por WhatsApp.</p>
         </div>
-        {avisoEnvio && <p className="text-sm bg-acento-suave/60 border border-acento/20 rounded-xl px-3 py-2.5 whitespace-pre-line flex gap-2"><Info size={16} className="text-acento shrink-0 mt-0.5" /><span>{avisoEnvio}</span></p>}
+        <AvisoTexto texto={avisoEnvio} />
         <div className="grid grid-cols-2 gap-2">
           {([["envio", "Envío", Truck], ["retira", "Retiro", Store]] as const).map(([v, t, Icono]) => (
             <label key={v} className={opcion}><input type="radio" name="envio" value={v} checked={envio === v} onChange={() => setEnvio(v)} className="accent-acento w-4 h-4" /> <Icono size={16} className="text-acento" /> {t}</label>
@@ -168,6 +168,13 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
         <textarea name="extras" rows={4} className="campo py-2.5" aria-label="Detalles extras" />
       </section>
 
+      <AvisoTexto texto={avisoPedido} />
+      {avisoPedido.trim() && (
+        <label className="flex items-start gap-3 rounded-xl border border-borde bg-white p-3 cursor-pointer has-[:checked]:border-acento">
+          <input type="checkbox" name="acepto" required className="w-5 h-5 mt-0.5 shrink-0 accent-acento" />
+          <span className="text-sm">Verifiqué talles, colores, bordados, modelos y cantidades, y estoy de acuerdo.</span>
+        </label>
+      )}
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-4 py-3">{estado.error}</p>}
       <button className="btn-primario w-full text-base min-h-12" disabled={enviando}>{enviando ? "Enviando…" : "Enviar mis datos"}</button>
       <p className="text-xs text-center text-texto-2">Una vez enviados, si necesitás cambiar algo escribinos por WhatsApp.</p>

@@ -15,7 +15,8 @@ export default async function CompletarPage({ params }: { params: Promise<{ toke
   const { token } = await params;
   const datos = await pedidoParaCompletar(token);
   if (!datos) notFound();
-  const aviso = (await db.plantilla.findUnique({ where: { clave: "aviso_envio" } }))?.texto ?? "";
+  const avisos = await db.plantilla.findMany({ where: { clave: { in: ["aviso_envio", "aviso_pedido"] } } });
+  const aviso = (k: string) => avisos.find((a) => a.clave === k)?.texto ?? "";
   const { p, items } = datos;
   const nombre = p.cliente.nombre.split(" ")[0];
   const cerrado = p.estado === "CANCELADO" || p.estado === "ENTREGADO";
@@ -62,7 +63,8 @@ export default async function CompletarPage({ params }: { params: Promise<{ toke
               }}
               fechaEvento={fechaInput(p.fechaEvento)}
               conEvento={!!p.evento || !!p.fechaEvento}
-              avisoEnvio={aviso}
+              avisoEnvio={aviso("aviso_envio")}
+              avisoPedido={aviso("aviso_pedido")}
             />
           </>
         )}
