@@ -21,3 +21,9 @@ Usuario inicial: `micaela` / `micaela2026` (cambiarla al publicar).
 - [ ] Etapa 3: Pagos, Mercado Pago, calendario, panel
 - [ ] Etapa 4: Talleres, stock, gastos
 - [ ] Etapa 5: Usuarios y permisos, publicación y copias de seguridad
+
+## Cómo trabaja Micaela Diseño (reglas del negocio)
+- **Prioridad semanal por fecha del evento:** la lista de trabajo de cada semana (lunes a domingo) son los pedidos cuyo evento cae en esa semana.
+- **Telas:** todo es de satén, salvo lo que dice plush. Box de invierno = bata de plush manga larga + pantu de plush + camisero largo de satén.
+- **Talleres:** Gery confecciona (batas, pijamas de tiras, camiseros, camisolines) · Héctor borda · Richard confecciona las pantuflas cuando los bordados de pantufla están listos · Pedro pega las pantuflas.
+- **Vendedoras:** Micaela (administradora) y Ludmila.

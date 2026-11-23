@@ -5,10 +5,12 @@ import EstadoChip from "@/components/EstadoChip";
 import Filtros from "./Filtros";
 import { db } from "@/lib/db";
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
-import { atrasado, saldo, armarMensaje } from "@/lib/pedidos";
+import { atrasado, saldo, armarMensaje, semana, hoyAR, enSemana, fechaGuia } from "@/lib/pedidos";
 import type { Prisma } from "@prisma/client";
 
 const VISTAS = [
+  { k: "semana", t: "Esta semana" },
+  { k: "proxima", t: "Próxima semana" },
   { k: "activos", t: "Activos" },
   { k: "NUEVO", t: "Nuevos" },
   { k: "EN_PRODUCCION", t: "En producción" },
@@ -25,7 +27,9 @@ export default async function PedidosPage({
   searchParams,
 }: { searchParams: Promise<{ q?: string; estado?: string; vendedora?: string; pago?: string; pagina?: string }> }) {
   const sp = await searchParams;
-  const vista = sp.estado ?? "activos";
+  const vista = sp.estado ?? "semana";
+  const estaSemana = semana();
+  const proxima = semana(hoyAR(), 1);
   const q = (sp.q ?? "").trim();
   const num = /^\D{0,3}\d+$/.test(q) ? parseInt(q.replace(/\D/g, ""), 10) : NaN;
 
@@ -65,13 +69,15 @@ export default async function PedidosPage({
   const enVista = (p: (typeof todos)[number], v: string) => {
     if (v === "todos") return true;
     if (v === "activos") return ["NUEVO", "EN_PRODUCCION", "LISTO"].includes(p.estado);
+    if (v === "semana") return p.estado !== "CANCELADO" && enSemana(fechaGuia(p), estaSemana);
+    if (v === "proxima") return p.estado !== "CANCELADO" && enSemana(fechaGuia(p), proxima);
     if (v === "atrasados") return atrasado(p);
     if (v === "revisar") return !!p.revisar;
     return p.estado === v;
   };
   const cuentas = Object.fromEntries(VISTAS.map((v) => [v.k, conPago.filter((p) => enVista(p, v.k)).length]));
 
-  const clave = (p: (typeof todos)[number]) => (p.fechaEntrega ?? p.fechaEvento)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+  const clave = (p: (typeof todos)[number]) => fechaGuia(p)?.getTime() ?? Number.MAX_SAFE_INTEGER;
   const lista = conPago
     .filter((p) => enVista(p, vista))
     .sort((a, b) => (["ENTREGADO", "CANCELADO", "todos"].includes(vista) ? clave(b) - clave(a) : clave(a) - clave(b)));
@@ -85,7 +91,7 @@ export default async function PedidosPage({
 
   return (
     <>
-      <Encabezado titulo="Pedidos" subtitulo={`${todos.length} pedidos en total`}>
+      <Encabezado titulo="Pedidos" subtitulo={vista === "semana" ? `Prioridad de esta semana: eventos del ${fecha(estaSemana.inicio)} al ${fecha(estaSemana.fin)}` : vista === "proxima" ? `Eventos del ${fecha(proxima.inicio)} al ${fecha(proxima.fin)}` : `${todos.length} pedidos en total`}>
         <Link href="/pedidos/mensajes" className="btn-suave"><Settings2 size={16} /> Mensajes de WhatsApp</Link>
         <Link href="/pedido" target="_blank" className="btn-suave"><Link2 size={16} /> Formulario para clientas</Link>
         <Link href="/pedidos/nuevo" className="btn-primario">+ Nuevo pedido</Link>
@@ -112,7 +118,7 @@ export default async function PedidosPage({
           <div className="tarjeta overflow-x-auto hidden lg:block">
             <table className="tabla w-full min-w-[1000px]">
               <thead>
-                <tr><th>Pedido</th><th>Clienta</th><th>Productos</th><th>Entrega</th><th>Vendedora</th><th className="text-right!">Total</th><th className="text-right!">Saldo</th><th>Estado</th><th></th></tr>
+                <tr><th>Pedido</th><th>Clienta</th><th>Productos</th><th>Evento</th><th>Vendedora</th><th className="text-right!">Total</th><th className="text-right!">Saldo</th><th>Estado</th><th></th></tr>
               </thead>
               <tbody>
                 {visibles.map((p) => {
@@ -129,8 +135,9 @@ export default async function PedidosPage({
                         {p.items[0]?.bordadoTexto && <span className="block text-xs text-texto-2 truncate">“{p.items[0].bordadoTexto}”</span>}
                       </td>
                       <td className={tarde ? "text-estado-alerta-txt font-medium" : ""}>
-                        {p.fechaEntrega ? fecha(p.fechaEntrega) : "—"}
-                        {p.fechaEvento && <span className="block text-xs text-texto-2">Evento {fecha(p.fechaEvento)}</span>}
+                        {p.fechaEvento ? fecha(p.fechaEvento) : <span className="text-texto-2">Sin fecha</span>}
+                        {p.evento && <span className="block text-xs text-texto-2">{p.evento}</span>}
+                        {p.fechaEntrega && <span className="block text-xs text-texto-2">Entrega {fecha(p.fechaEntrega)}</span>}
                       </td>
                       <td className="text-texto-2">{p.vendedor?.nombre ?? "—"}</td>
                       <td className="text-right whitespace-nowrap">{pesos(p.total)}</td>
@@ -158,7 +165,7 @@ export default async function PedidosPage({
                     <EstadoChip estado={p.estado} atrasado={tarde} />
                   </div>
                   <div className="flex justify-between text-sm mt-2">
-                    <span className="text-texto-2">{p.fechaEntrega ? `Entrega ${fecha(p.fechaEntrega)}` : p.fechaEvento ? `Evento ${fecha(p.fechaEvento)}` : "Sin fecha"}</span>
+                    <span className="text-texto-2">{p.fechaEvento ? `Evento ${fecha(p.fechaEvento)}` : p.fechaEntrega ? `Entrega ${fecha(p.fechaEntrega)}` : "Sin fecha"}</span>
                     <span>{pesos(p.total)}{s > 0 && <span className="text-estado-alerta-txt font-medium"> · debe {pesos(s)}</span>}</span>
                   </div>
                 </Link>

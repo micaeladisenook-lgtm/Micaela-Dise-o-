@@ -69,13 +69,13 @@ async function main() {
 
     // Prendas (las batas se venden sueltas; el resto son partes de los boxes)
     const bataSaten = await prenda("Bata diseñada de satén", 1, TALLES_ROPA, { precio: 89900, descripcion: "Color y bordado a elección", enListaPrecios: true });
-    const bataPlush = await prenda("Bata diseñada de plush", 2, TALLES_ROPA, { precio: 98000, descripcion: "Color y bordado a elección", enListaPrecios: true });
+    const bataPlush = await prenda("Bata diseñada de plush (manga larga)", 2, TALLES_ROPA, { precio: 98000, descripcion: "Color y bordado a elección", enListaPrecios: true });
     const pantuSaten = await prenda("Pantufla de satén", 3, TALLES_PANTU);
     const pantuPlush = await prenda("Pantufla de plush", 4, TALLES_PANTU);
     const camisolin = await prenda("Camisolín", 5, TALLES_ROPA);
     const pijamaTiras = await prenda("Pijama de tiras y short", 6, TALLES_ROPA);
     const camiseroCorto = await prenda("Pijama camisero corto", 7, TALLES_ROPA);
-    const camiseroLargo = await prenda("Pijama camisero largo", 8, TALLES_ROPA);
+    const camiseroLargo = await prenda("Pijama camisero largo de satén", 8, TALLES_ROPA);
     const antifaz = await prenda("Antifaz", 9, []);
     await prenda("Scrunchie", 10, []);
 
@@ -96,15 +96,15 @@ async function main() {
     await box("Box completo", 4, 169900, "Bata + pantu + pijama camisero o camisolín", [
       { id: bataSaten.id }, { id: pantuSaten.id }, { id: camiseroCorto.id, aEleccion: true }, { id: camisolin.id, aEleccion: true },
     ]);
-    await box("Box de invierno", 5, 185000, "Bata + pantu de plush bordada + camisero largo", [
+    await box("Box de invierno", 5, 185000, "Bata de plush manga larga + pantu de plush bordada + camisero largo de satén", [
       { id: bataPlush.id }, { id: pantuPlush.id }, { id: camiseroLargo.id },
     ], 202000);
     await box("Mega box satén", 6, 176000, "Bata + pantu + antifaz bordados + pijama camisero corto", [
       { id: bataSaten.id }, { id: pantuSaten.id }, { id: antifaz.id }, { id: camiseroCorto.id },
     ], 190000);
 
-    await db.producto.create({ data: { nombre: "Kit ondas sin calor", tipo: "KIT", orden: 1, precio: 16000, descripcion: "Tubo rizador + 2 scrunchies", colores: COLORES, talles: [] } });
-    await db.producto.create({ data: { nombre: "Kit de cuidado personal", tipo: "KIT", orden: 2, precio: 30000, descripcion: "Antifaz + funda + cofia + scrunchie", colores: COLORES, talles: [] } });
+    await db.producto.create({ data: { nombre: "Kit ondas sin calor", tipo: "KIT", orden: 1, precio: 20000, descripcion: "Tubo rizador + 2 scrunchies", colores: COLORES, talles: [] } });
+    await db.producto.create({ data: { nombre: "Kit de cuidado personal", tipo: "KIT", orden: 2, precio: 49000, descripcion: "Antifaz + funda + cofia + scrunchie", colores: COLORES, talles: [] } });
 
     await db.producto.create({ data: { nombre: "Bordado extra", tipo: "ADICIONAL", orden: 1, precio: 10000, descripcion: "Bordado adicional en otra ubicación o prenda", colores: [], talles: [] } });
     await db.producto.create({ data: { nombre: "Prioridad", tipo: "ADICIONAL", orden: 2, precio: 15000, descripcion: "Entrega prioritaria", colores: [], talles: [] } });

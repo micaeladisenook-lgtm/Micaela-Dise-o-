@@ -47,12 +47,38 @@ export function saldo(total: number, pagos: PagoLike[]) {
   return Math.max(0, total - pagado(pagos));
 }
 
-// ¿Está atrasado? (fecha de entrega pasada y todavía no entregado/cancelado)
-export function atrasado(p: { estado: string; fechaEntrega: Date | null }) {
-  if (!p.fechaEntrega || p.estado === "ENTREGADO" || p.estado === "CANCELADO") return false;
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  return p.fechaEntrega < hoy;
+// La fecha que guía la producción: la del evento (si no hay, la de entrega)
+export function fechaGuia(p: { fechaEvento: Date | null; fechaEntrega: Date | null }) {
+  return p.fechaEvento ?? p.fechaEntrega;
+}
+
+// Fecha de hoy en Buenos Aires, a mediodía
+export function hoyAR() {
+  const s = new Date().toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+  return new Date(`${s}T12:00:00-03:00`);
+}
+
+// Semana de lunes a domingo que contiene la fecha (desplazada n semanas)
+export function semana(base: Date = hoyAR(), n = 0) {
+  const d = new Date(base);
+  const diaSemana = new Date(d.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" })).getDay(); // 0 = domingo
+  const desdeLunes = (diaSemana + 6) % 7;
+  const lunes = new Date(d.getTime() - desdeLunes * 864e5 + n * 7 * 864e5);
+  const s = lunes.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+  const inicio = new Date(`${s}T00:00:00-03:00`);
+  const fin = new Date(inicio.getTime() + 7 * 864e5 - 1);
+  return { inicio, fin };
+}
+
+export function enSemana(d: Date | null, sem: { inicio: Date; fin: Date }) {
+  return !!d && d >= sem.inicio && d <= sem.fin;
+}
+
+// ¿Está atrasado? (la fecha guía ya pasó y todavía no se entregó ni canceló)
+export function atrasado(p: { estado: string; fechaEntrega: Date | null; fechaEvento?: Date | null }) {
+  const guia = fechaGuia({ fechaEvento: p.fechaEvento ?? null, fechaEntrega: p.fechaEntrega });
+  if (!guia || p.estado === "ENTREGADO" || p.estado === "CANCELADO") return false;
+  return guia.getTime() < hoyAR().getTime() - 12 * 3600e3; // antes de hoy a las 00:00
 }
 
 type ItemTexto = {

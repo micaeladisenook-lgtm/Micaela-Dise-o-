@@ -92,7 +92,7 @@ def producto_catalogo(texto):
     if "bata" in p and re.search(r"camisol|camisero|pijama", p):
         return "Bata + camisolín (o pijama o camisero)"
     if "bata" in p:
-        return "Bata diseñada de plush" if "plush" in p else "Bata diseñada de satén"
+        return "Bata diseñada de plush (manga larga)" if "plush" in p else "Bata diseñada de satén"
     return None
 
 
@@ -103,7 +103,7 @@ def eleccion(texto):
     if "tiras" in p or "short" in p:
         return "Pijama de tiras y short"
     if "largo" in p:
-        return "Pijama camisero largo"
+        return "Pijama camisero largo de satén"
     if "camisero" in p or "pijama" in p:
         return "Pijama camisero corto"
     return None
