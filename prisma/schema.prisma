@@ -169,6 +169,9 @@ model Pedido {
   notas          String?
   origen         OrigenPedido @default(SISTEMA)
   revisar        String?      // avisos de importación para revisar
+  linkPago       String?      // último link de Mercado Pago generado
+  linkPagoMonto  Int?
+  linkPagoFecha  DateTime?
   vendedorId     String?
   vendedor       Usuario?     @relation("PedidoVendedor", fields: [vendedorId], references: [id], onDelete: SetNull)
   creadoPorId    String?

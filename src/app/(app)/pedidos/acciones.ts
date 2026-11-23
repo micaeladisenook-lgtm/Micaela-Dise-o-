@@ -215,3 +215,22 @@ export async function marcarRevisado(pedidoId: string) {
   revalidatePath(`/pedidos/${pedidoId}`);
   revalidatePath("/pedidos");
 }
+
+export async function generarLinkPago(pedidoId: string, monto: number): Promise<{ ok: true; link: string } | { ok: false; error: string }> {
+  const u = await requerirUsuario();
+  const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: { cliente: true } });
+  if (!monto || monto <= 0) return { ok: false, error: "El monto tiene que ser mayor a cero." };
+  try {
+    const { crearLinkMercadoPago } = await import("@/lib/mercadopago");
+    const link = await crearLinkMercadoPago({
+      titulo: `Pedido N° ${p.numero} · Micaela Diseño`, monto, referencia: p.id, email: p.cliente.email,
+    });
+    await db.pedido.update({ where: { id: pedidoId }, data: { linkPago: link, linkPagoMonto: monto, linkPagoFecha: new Date() } });
+    await registrar(u.id, "Generó link de Mercado Pago", "Pedido", pedidoId, `N° ${p.numero} · ${pesos(monto)}`);
+    revalidatePath(`/pedidos/${pedidoId}`);
+    revalidatePath("/pagos");
+    return { ok: true, link };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}

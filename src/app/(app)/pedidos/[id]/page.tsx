@@ -9,6 +9,8 @@ import BotonesEstado from "../BotonesEstado";
 import FormPago from "../FormPago";
 import BorrarPago from "../BorrarPago";
 import BotonRevisado from "../BotonRevisado";
+import LinkPago from "../LinkPago";
+import { mercadoPagoConfigurado } from "@/lib/mercadopago";
 import { borrarPedido } from "../acciones";
 import { db } from "@/lib/db";
 import { includePedidoCompleto } from "@/lib/datosPedido";
@@ -134,7 +136,7 @@ export default async function PedidoPage({
             <div className="space-y-1 text-sm">
               <div className="flex justify-between text-base"><span>Total</span><strong>{pesos(p.total)}</strong></div>
               <div className="flex justify-between"><span>Pagado</span><span>{pesos(pagado(p.pagos))}</span></div>
-              <div className={`flex justify-between font-medium ${sal > 0 ? "text-estado-alerta-txt" : "text-estado-listo-txt"}`}><span>Saldo</span><span>{sal > 0 ? pesos(sal) : "Pagado ✓"}</span></div>
+              <div className={`flex justify-between font-medium ${sal > 0 || p.total === 0 ? "text-estado-alerta-txt" : "text-estado-listo-txt"}`}><span>Saldo</span><span>{p.total === 0 ? "Sin precio" : sal > 0 ? pesos(sal) : "Pagado ✓"}</span></div>
             </div>
             {p.pagos.length > 0 && (
               <ul className="mt-3 border-t border-borde pt-3 space-y-1 text-sm">
@@ -147,6 +149,14 @@ export default async function PedidoPage({
               </ul>
             )}
             {sal > 0 && <div className="mt-4 no-imprimir"><FormPago pedidoId={p.id} saldo={sal} hoy={fechaInput(new Date())} /></div>}
+            {sal > 0 && (
+              <div className="mt-4 pt-4 border-t border-borde no-imprimir">
+                <p className="text-sm font-medium mb-2">Link de Mercado Pago</p>
+                <LinkPago pedidoId={p.id} total={p.total} saldo={sal} linkActual={p.linkPago} montoActual={p.linkPagoMonto}
+                  telefono={p.cliente.telefono} configurado={mercadoPagoConfigurado()}
+                  mensajeSaldo={armarMensaje(tpl("saldo"), { ...p, linkPago: null }, { link_pago: "__LINK__" })} />
+              </div>
+            )}
           </section>
 
           <section className="tarjeta p-5 no-imprimir">

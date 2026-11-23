@@ -108,6 +108,7 @@ type PedidoTexto = {
   cliente: { nombre: string };
   items: ItemTexto[];
   pagos: PagoLike[];
+  linkPago?: string | null;
 };
 
 export function textoEntrega(p: Pick<PedidoTexto, "envio" | "formaEnvio" | "direccionEnvio" | "localidad" | "fechaEntrega">) {
@@ -132,7 +133,7 @@ export function armarMensaje(plantilla: string, p: PedidoTexto, extra: Record<st
     fecha_evento: p.fechaEvento ? fecha(p.fechaEvento) : "a confirmar",
     fecha_entrega: p.fechaEntrega ? fecha(p.fechaEntrega) : "a confirmar",
     entrega: textoEntrega(p),
-    link_pago: "",
+    link_pago: p.linkPago ? `💳 Podés pagar con Mercado Pago acá: ${p.linkPago}` : "",
     ...extra,
   };
   return plantilla
