@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Encabezado from "@/components/Encabezado";
 import { FormInvitar, TablaPermisos } from "./Formularios";
+import Copias from "./Copias";
 import { db } from "@/lib/db";
 import { requerirAdmin, NOMBRE_ROL } from "@/lib/auth";
 import { permisosDeRol } from "@/lib/acceso";
@@ -54,6 +55,11 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
           <p className="text-sm text-texto-2">La administradora siempre tiene todo. Tildá lo que puede hacer cada rol.</p>
         </div>
         <TablaPermisos permisos={PERMISOS.map((p) => ({ ...p }))} valores={valores} />
+      </section>
+
+      <section className="tarjeta p-5 mb-8">
+        <h2 className="text-2xl mb-3">Copias de seguridad</h2>
+        <Copias automaticas={!!process.env.COPIA_TOKEN} />
       </section>
 
       <section>

@@ -1,5 +1,6 @@
 import { PrismaClient, TipoProducto } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 
 const db = new PrismaClient();
 
@@ -8,19 +9,12 @@ const TALLES_ROPA = ["XS", "S", "M", "L", "XL", "Kids"];
 const TALLES_PANTU = ["35", "36", "37", "38", "39", "40", "41", "42"];
 
 async function main() {
-  // 1) Usuaria administradora
-  const admin = await db.usuario.upsert({
-    where: { login: "micaela" },
-    update: {},
-    create: { nombre: "Micaela", login: "micaela", rol: "ADMIN", passwordHash: await bcrypt.hash("micaela2026", 10) },
-  });
-
-  // Vendedora
-  await db.usuario.upsert({
-    where: { login: "ludmila" },
-    update: {},
-    create: { nombre: "Ludmila", login: "ludmila", rol: "VENDEDOR", passwordHash: await bcrypt.hash("ludmila2026", 10) },
-  });
+  // 1) Usuaria administradora (solo si no hay ninguna). La contraseña inicial sale de ADMIN_CLAVE_INICIAL.
+  if ((await db.usuario.count({ where: { rol: "ADMIN" } })) === 0) {
+    const clave = process.env.ADMIN_CLAVE_INICIAL || randomUUID().slice(0, 12);
+    await db.usuario.create({ data: { nombre: "Micaela", login: "micaela", rol: "ADMIN", passwordHash: await bcrypt.hash(clave, 10), debeCambiarClave: true } });
+    if (!process.env.ADMIN_CLAVE_INICIAL) console.log(`Usuario "micaela" creado con contraseña provisoria: ${clave}`);
+  }
 
   // Talleres
   if ((await db.taller.count()) === 0) {

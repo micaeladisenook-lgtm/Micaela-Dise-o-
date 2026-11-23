@@ -16,6 +16,7 @@ export async function crearLinkMercadoPago(opts: { titulo: string; monto: number
       items: [{ title: opts.titulo, quantity: 1, unit_price: opts.monto, currency_id: "ARS" }],
       external_reference: opts.referencia,
       statement_descriptor: "MICAELA DISENO",
+      ...(process.env.APP_URL ? { notification_url: `${process.env.APP_URL.replace(/\/$/, "")}/api/mercadopago/webhook` } : {}),
       ...(opts.email ? { payer: { email: opts.email } } : {}),
     }),
   });
