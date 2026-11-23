@@ -74,6 +74,8 @@ model Usuario {
   passwordHash String
   rol          Rol      @default(VENDEDOR)
   activo       Boolean  @default(true)
+  ultimoAcceso DateTime?
+  debeCambiarClave Boolean @default(false)
   creadoEn     DateTime @default(now())
 
   clientesCreados Cliente[]  @relation("ClienteCreadoPor")
@@ -362,4 +364,12 @@ model Plantilla {
   clave   String @id
   titulo  String
   texto   String
+}
+
+// Permisos configurables por rol (la administradora siempre tiene todos)
+model Permiso {
+  rol       Rol
+  clave     String
+  permitido Boolean @default(false)
+  @@id([rol, clave])
 }

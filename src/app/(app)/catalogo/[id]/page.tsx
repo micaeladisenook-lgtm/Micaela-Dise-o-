@@ -5,11 +5,12 @@ import BotonBorrar from "@/components/BotonBorrar";
 import ProductoForm from "../ProductoForm";
 import { actualizarProducto, borrarProducto } from "../acciones";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
 import { NOMBRE_TIPO_SINGULAR } from "@/lib/catalogo";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function EditarProductoPage({ params }: { params: Promise<{ id: string }> }) {
-  await requerirAdmin();
+  await requerirPermiso("editar_precios");
   const { id } = await params;
   const p = await db.producto.findUnique({ where: { id }, include: { componentes: true } });
   if (!p) notFound();

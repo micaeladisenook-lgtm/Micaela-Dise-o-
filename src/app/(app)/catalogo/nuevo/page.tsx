@@ -3,10 +3,11 @@ import Encabezado from "@/components/Encabezado";
 import ProductoForm from "../ProductoForm";
 import { crearProducto } from "../acciones";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function NuevoProductoPage() {
-  await requerirAdmin();
+  await requerirPermiso("editar_precios");
   const sueltos = await db.producto.findMany({ where: { tipo: "SUELTO" }, orderBy: [{ orden: "asc" }, { nombre: "asc" }], select: { id: true, nombre: true } });
   return (
     <>

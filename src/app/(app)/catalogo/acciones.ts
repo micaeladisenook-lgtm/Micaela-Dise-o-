@@ -2,10 +2,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
 import { registrar } from "@/lib/registro";
 import { leerPesos, pesos } from "@/lib/formato";
 import type { TipoProducto } from "@prisma/client";
+import { exigirPermiso } from "@/lib/acceso";
 
 export type EstadoForm = { error?: string; ok?: string } | null;
 
@@ -40,7 +41,7 @@ function revalidar() {
 }
 
 export async function crearProducto(_prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("editar_precios");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const p = await db.producto.create({
@@ -52,7 +53,7 @@ export async function crearProducto(_prev: EstadoForm, form: FormData): Promise<
 }
 
 export async function actualizarProducto(id: string, _prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("editar_precios");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const antes = await db.producto.findUniqueOrThrow({ where: { id } });
@@ -67,7 +68,7 @@ export async function actualizarProducto(id: string, _prev: EstadoForm, form: Fo
 }
 
 export async function borrarProducto(id: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("editar_precios");
   const p = await db.producto.delete({ where: { id } });
   await registrar(u.id, "Borró producto", "Producto", id, p.nombre);
   revalidar();
@@ -75,7 +76,7 @@ export async function borrarProducto(id: string) {
 }
 
 export async function guardarPrecios(_prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("editar_precios");
   const productos = await db.producto.findMany();
   const cambios: string[] = [];
   for (const p of productos) {

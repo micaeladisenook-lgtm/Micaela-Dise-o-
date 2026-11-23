@@ -5,9 +5,10 @@ import CasillaTarea from "./CasillaTarea";
 import { db } from "@/lib/db";
 import { requerirUsuario } from "@/lib/auth";
 import { fecha, linkWhatsApp } from "@/lib/formato";
-import { fechaGuia, hoyAR, semana } from "@/lib/pedidos";
+import { fechaGuia, hoyAR } from "@/lib/pedidos";
 import { bloqueadaPor } from "@/lib/produccion";
 import { tareasDeSemana, lineaTarea, type TareaSemana } from "@/lib/datosTalleres";
+import { requerirPermiso } from "@/lib/acceso";
 
 const iso = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
 const GRUPOS = [
@@ -18,6 +19,7 @@ const GRUPOS = [
 
 export default async function TalleresPage({ searchParams }: { searchParams: Promise<{ fecha?: string }> }) {
   const u = await requerirUsuario();
+  if (u.rol !== "TALLER") await requerirPermiso("ver_talleres");
   const sp = await searchParams;
   const base = sp.fecha && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) ? new Date(`${sp.fecha}T12:00:00-03:00`) : hoyAR();
   const { sem, tareas, esActual } = await tareasDeSemana(base, u.rol === "TALLER" ? u.tallerId ?? "-" : undefined);

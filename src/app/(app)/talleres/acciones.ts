@@ -1,13 +1,14 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirUsuario, requerirAdmin } from "@/lib/auth";
+import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { actualizarEstadoPorTareas } from "@/lib/produccion";
 import type { FuncionTaller } from "@prisma/client";
+import { exigirPermiso } from "@/lib/acceso";
 
 export async function marcarTarea(id: string, terminada: boolean) {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("marcar_tareas");
   const t = await db.tarea.findUniqueOrThrow({ where: { id }, include: { pedido: true, taller: true } });
   if (u.rol === "TALLER" && u.tallerId !== t.tallerId) return;
   await db.tarea.update({ where: { id }, data: { terminada, terminadaEn: terminada ? new Date() : null, terminadaPorId: terminada ? u.id : null } });

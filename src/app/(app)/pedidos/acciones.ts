@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requerirUsuario, requerirAdmin } from "@/lib/auth";
+
 import { registrar } from "@/lib/registro";
 import { generarTareas, actualizarEstadoPorTareas } from "@/lib/produccion";
 import { aplicarConsumo, revertirConsumo } from "@/lib/stock";
@@ -11,9 +11,10 @@ import { armarMensaje, leerFecha, ESTADOS, MEDIOS, NOMBRE_ESTADO, NOMBRE_MEDIO }
 import { pesos, leerPesos } from "@/lib/formato";
 import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
+import { exigirPermiso } from "@/lib/acceso";
 
 export async function buscarClientes(q: string) {
-  await requerirUsuario();
+  await exigirPermiso("crear_pedidos");
   const t = q.trim();
   if (t.length < 2) return [];
   const num = parseInt(t.replace(/^n[°º]?\s*/i, ""), 10);
@@ -36,7 +37,7 @@ export async function buscarClientes(q: string) {
 const txt = (s: string | null | undefined) => (s ?? "").trim() || null;
 
 export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promise<ResultadoGuardar> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("crear_pedidos");
   const items = datos.items.filter((i) => i.nombre.trim());
   if (!datos.cliente.nombre.trim()) return { ok: false, error: "Falta el nombre de la clienta (paso 1)." };
   if (items.length === 0) return { ok: false, error: "Agregá al menos un producto (paso 3)." };
@@ -169,7 +170,7 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
 }
 
 export async function cambiarEstado(pedidoId: string, estado: string) {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("crear_pedidos");
   if (!(ESTADOS as readonly string[]).includes(estado)) return;
   const antes = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId } });
   if (antes.estado === estado) return;
@@ -190,7 +191,7 @@ export async function cambiarEstado(pedidoId: string, estado: string) {
 }
 
 export async function registrarPago(pedidoId: string, _prev: { error?: string; ok?: string } | null, form: FormData) {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("registrar_pagos");
   const monto = leerPesos(String(form.get("monto") ?? ""));
   const medio = String(form.get("medio") ?? "TRANSFERENCIA");
   if (!monto || monto <= 0) return { error: "Ingresá el monto." };
@@ -210,14 +211,14 @@ export async function registrarPago(pedidoId: string, _prev: { error?: string; o
 }
 
 export async function borrarPago(pagoId: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("registrar_pagos");
   const pago = await db.pago.delete({ where: { id: pagoId }, include: { pedido: true } });
   await registrar(u.id, "Borró pago", "Pedido", pago.pedidoId, `N° ${pago.pedido.numero} · ${pesos(pago.monto)}`);
   revalidatePath(`/pedidos/${pago.pedidoId}`);
 }
 
 export async function borrarPedido(pedidoId: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("borrar_pedidos");
   await revertirConsumo(pedidoId, u.id, "Pedido borrado");
   const p = await db.pedido.delete({ where: { id: pedidoId }, include: { cliente: true } });
   await registrar(u.id, "Borró pedido", "Pedido", pedidoId, `N° ${p.numero} · ${p.cliente.nombre}`);
@@ -226,7 +227,7 @@ export async function borrarPedido(pedidoId: string) {
 }
 
 export async function marcarRevisado(pedidoId: string) {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("crear_pedidos");
   const p = await db.pedido.update({ where: { id: pedidoId }, data: { revisar: null, modificadoPorId: u.id } });
   await registrar(u.id, "Marcó como revisado", "Pedido", pedidoId, `N° ${p.numero}`);
   revalidatePath(`/pedidos/${pedidoId}`);
@@ -234,7 +235,7 @@ export async function marcarRevisado(pedidoId: string) {
 }
 
 export async function generarLinkPago(pedidoId: string, monto: number): Promise<{ ok: true; link: string } | { ok: false; error: string }> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("registrar_pagos");
   const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: { cliente: true } });
   if (!monto || monto <= 0) return { ok: false, error: "El monto tiene que ser mayor a cero." };
   try {

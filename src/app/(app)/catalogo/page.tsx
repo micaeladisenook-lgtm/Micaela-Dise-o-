@@ -3,13 +3,14 @@ import { FileDown, Pencil } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
 import Pestanas from "./Pestanas";
 import { db } from "@/lib/db";
-import { usuarioActual } from "@/lib/auth";
+
 import { pesos } from "@/lib/formato";
 import { NOMBRE_TIPO, ORDEN_TIPOS } from "@/lib/catalogo";
+import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 export default async function CatalogoPage() {
-  const u = await usuarioActual();
-  const esAdmin = u?.rol === "ADMIN";
+  const u = await requerirPermiso("ver_catalogo");
+  const esAdmin = (await permisosDeRol(u.rol)).has("editar_precios");
   const productos = await db.producto.findMany({
     orderBy: [{ orden: "asc" }, { nombre: "asc" }],
     include: { componentes: { include: { componente: true } } },

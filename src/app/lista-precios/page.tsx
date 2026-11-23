@@ -1,14 +1,15 @@
 import Link from "next/link";
 import BotonImprimir from "./BotonImprimir";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+
 import { fecha, pesos } from "@/lib/formato";
 import { NOMBRE_TIPO, ORDEN_TIPOS } from "@/lib/catalogo";
+import { requerirPermiso } from "@/lib/acceso";
 
 export const metadata = { title: "Lista de precios · Micaela Diseño" };
 
 export default async function ListaPreciosPage() {
-  await requerirUsuario();
+  await requerirPermiso("ver_catalogo");
   const productos = await db.producto.findMany({
     where: { activo: true, enListaPrecios: true },
     orderBy: [{ orden: "asc" }, { nombre: "asc" }],

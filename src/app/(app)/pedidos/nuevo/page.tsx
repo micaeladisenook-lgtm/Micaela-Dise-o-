@@ -1,11 +1,12 @@
 import Encabezado from "@/components/Encabezado";
 import FormPedido from "../FormPedido";
 import { datosFormularioPedido } from "@/lib/datosPedido";
-import { requerirUsuario } from "@/lib/auth";
+
 import { db } from "@/lib/db";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function NuevoPedidoPage({ searchParams }: { searchParams: Promise<{ cliente?: string }> }) {
-  const u = await requerirUsuario();
+  const u = await requerirPermiso("crear_pedidos");
   const { cliente } = await searchParams;
   const datos = await datosFormularioPedido();
   const c = cliente ? await db.cliente.findUnique({ where: { id: cliente } }) : null;

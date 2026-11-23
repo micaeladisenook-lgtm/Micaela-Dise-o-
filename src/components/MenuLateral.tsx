@@ -7,20 +7,20 @@ import {
 } from "lucide-react";
 import { salir } from "@/app/login/acciones";
 
-type Item = { href: string; texto: string; icono: React.ElementType; soloAdmin?: boolean };
+type Item = { href: string; texto: string; icono: React.ElementType; clave: string };
 
 const ITEMS: Item[] = [
-  { href: "/", texto: "Panel", icono: LayoutDashboard },
-  { href: "/pedidos", texto: "Pedidos", icono: ClipboardList },
-  { href: "/pedidos/nuevo", texto: "Nuevo pedido", icono: PlusCircle },
-  { href: "/calendario", texto: "Calendario", icono: CalendarDays },
-  { href: "/talleres", texto: "Talleres", icono: Scissors },
-  { href: "/clientes", texto: "Clientes", icono: Users },
-  { href: "/catalogo", texto: "Catálogo y precios", icono: Tags },
-  { href: "/stock", texto: "Stock", icono: Package },
-  { href: "/pagos", texto: "Pagos", icono: Wallet },
-  { href: "/gastos", texto: "Gastos", icono: Receipt, soloAdmin: true },
-  { href: "/usuarios", texto: "Usuarios y permisos", icono: ShieldCheck, soloAdmin: true },
+  { href: "/", texto: "Panel", icono: LayoutDashboard, clave: "ver_panel" },
+  { href: "/pedidos", texto: "Pedidos", icono: ClipboardList, clave: "ver_pedidos" },
+  { href: "/pedidos/nuevo", texto: "Nuevo pedido", icono: PlusCircle, clave: "crear_pedidos" },
+  { href: "/calendario", texto: "Calendario", icono: CalendarDays, clave: "ver_calendario" },
+  { href: "/talleres", texto: "Talleres", icono: Scissors, clave: "talleres" },
+  { href: "/clientes", texto: "Clientes", icono: Users, clave: "ver_clientes" },
+  { href: "/catalogo", texto: "Catálogo y precios", icono: Tags, clave: "ver_catalogo" },
+  { href: "/stock", texto: "Stock", icono: Package, clave: "ver_stock" },
+  { href: "/pagos", texto: "Pagos", icono: Wallet, clave: "ver_pagos" },
+  { href: "/gastos", texto: "Gastos", icono: Receipt, clave: "ver_gastos" },
+  { href: "/usuarios", texto: "Usuarios y permisos", icono: ShieldCheck, clave: "admin" },
 ];
 
 function activo(path: string, href: string) {
@@ -29,9 +29,9 @@ function activo(path: string, href: string) {
   return path === href || path.startsWith(href + "/");
 }
 
-export default function MenuLateral({ nombre, rol, esAdmin }: { nombre: string; rol: string; esAdmin: boolean }) {
+export default function MenuLateral({ nombre, rol, permisos }: { nombre: string; rol: string; permisos: string[] }) {
   const path = usePathname();
-  const items = ITEMS.filter((i) => !i.soloAdmin || esAdmin);
+  const items = ITEMS.filter((i) => permisos.includes(i.clave));
 
   return (
     <aside className="no-imprimir bg-menu border-b md:border-b-0 md:border-r border-borde md:fixed md:inset-y-0 md:left-0 md:w-64 flex flex-col">
@@ -41,10 +41,10 @@ export default function MenuLateral({ nombre, rol, esAdmin }: { nombre: string; 
           <p className="text-xs text-texto-2 mt-1 hidden md:block">Gestión del emprendimiento</p>
         </div>
         {/* En el celular, usuario arriba a la derecha */}
-        <div className="md:hidden text-right">
+        <Link href="/cuenta" className="md:hidden text-right">
           <p className="text-sm font-medium leading-tight">{nombre}</p>
           <p className="text-xs text-texto-2">{rol}</p>
-        </div>
+        </Link>
       </div>
 
       <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible px-3 md:px-3 pb-3 md:pb-0 md:flex-1">
@@ -67,10 +67,10 @@ export default function MenuLateral({ nombre, rol, esAdmin }: { nombre: string; 
       </nav>
 
       <div className="hidden md:flex items-center justify-between gap-2 border-t border-borde px-6 py-4">
-        <div className="min-w-0">
+        <Link href="/cuenta" className="min-w-0 hover:text-acento" title="Mi cuenta">
           <p className="text-sm font-medium truncate">{nombre}</p>
           <p className="text-xs text-texto-2">{rol}</p>
-        </div>
+        </Link>
         <form action={salir}>
           <button title="Cerrar sesión" className="w-11 h-11 rounded-full flex items-center justify-center text-texto-2 hover:bg-borde cursor-pointer">
             <LogOut size={18} />

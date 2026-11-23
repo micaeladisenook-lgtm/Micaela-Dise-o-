@@ -2,9 +2,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requerirUsuario, requerirAdmin } from "@/lib/auth";
+import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import type { TipoStock } from "@prisma/client";
+import { exigirPermiso } from "@/lib/acceso";
 
 type Estado = { ok?: string; error?: string } | null;
 const num = (v: FormDataEntryValue | null) => {
@@ -14,7 +15,7 @@ const num = (v: FormDataEntryValue | null) => {
 const txt = (v: FormDataEntryValue | null) => String(v ?? "").trim() || null;
 
 export async function guardarItem(id: string | null, _prev: Estado, f: FormData): Promise<Estado> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("editar_stock");
   const nombre = txt(f.get("nombre"));
   const categoria = txt(f.get("categoria"));
   if (!nombre || !categoria) return { error: "Completá nombre y categoría." };
@@ -42,7 +43,7 @@ export async function guardarItem(id: string | null, _prev: Estado, f: FormData)
 }
 
 export async function moverStock(id: string, _prev: Estado, f: FormData): Promise<Estado> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("editar_stock");
   const cant = num(f.get("cantidad"));
   const tipo = String(f.get("tipo"));
   if (!cant || cant <= 0) return { error: "Poné una cantidad." };

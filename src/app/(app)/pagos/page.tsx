@@ -5,8 +5,10 @@ import EstadoChip from "@/components/EstadoChip";
 import { db } from "@/lib/db";
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, saldo, pagado, NOMBRE_MEDIO, hoyAR, fechaGuia, atrasado } from "@/lib/pedidos";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function PagosPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
+  await requerirPermiso("ver_pagos");
   const sp = await searchParams;
   const hoy = hoyAR();
   const [anio, mes] = (sp.mes && /^\d{4}-\d{2}$/.test(sp.mes) ? sp.mes : hoy.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0, 7)).split("-").map(Number);

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
 import { atrasado, saldo, armarMensaje, semana, hoyAR, enSemana, fechaGuia } from "@/lib/pedidos";
 import type { Prisma } from "@prisma/client";
+import { requerirPermiso } from "@/lib/acceso";
 
 const VISTAS = [
   { k: "semana", t: "Esta semana" },
@@ -26,6 +27,7 @@ const POR_PAGINA = 60;
 export default async function PedidosPage({
   searchParams,
 }: { searchParams: Promise<{ q?: string; estado?: string; vendedora?: string; pago?: string; pagina?: string }> }) {
+  await requerirPermiso("ver_pedidos");
   const sp = await searchParams;
   const vista = sp.estado ?? "semana";
   const estaSemana = semana();

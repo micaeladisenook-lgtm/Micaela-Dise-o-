@@ -16,9 +16,10 @@ import { mercadoPagoConfigurado } from "@/lib/mercadopago";
 import { borrarPedido } from "../acciones";
 import { db } from "@/lib/db";
 import { includePedidoCompleto } from "@/lib/datosPedido";
-import { usuarioActual } from "@/lib/auth";
+
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, atrasado, pagado, saldo, textoEntrega, NOMBRE_MEDIO, NOMBRE_TIPO_PEDIDO, fechaInput } from "@/lib/pedidos";
+import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 export default async function PedidoPage({
   params, searchParams,
@@ -27,7 +28,8 @@ export default async function PedidoPage({
   const sp = await searchParams;
   const p = await db.pedido.findUnique({ where: { id }, include: includePedidoCompleto });
   if (!p) notFound();
-  const u = await usuarioActual();
+  const u = await requerirPermiso("ver_pedidos");
+  const permisos = await permisosDeRol(u.rol);
   const [plantillas, historial] = await Promise.all([
     db.plantilla.findMany(),
     db.registro.findMany({ where: { entidad: "Pedido", entidadId: id }, include: { usuario: true }, orderBy: { fecha: "desc" }, take: 30 }),
@@ -170,13 +172,13 @@ export default async function PedidoPage({
                 {p.pagos.map((pg) => (
                   <li key={pg.id} className="flex items-center justify-between gap-2">
                     <span>{fecha(pg.fecha)} · {NOMBRE_MEDIO[pg.medio]}{pg.esSena ? " · seña" : ""}{pg.nota ? <span className="text-texto-2"> · {pg.nota}</span> : null}</span>
-                    <span className="flex items-center gap-1 whitespace-nowrap">{pesos(pg.monto)}{u?.rol === "ADMIN" && <BorrarPago id={pg.id} />}</span>
+                    <span className="flex items-center gap-1 whitespace-nowrap">{pesos(pg.monto)}{permisos.has("registrar_pagos") && <BorrarPago id={pg.id} />}</span>
                   </li>
                 ))}
               </ul>
             )}
-            {sal > 0 && <div className="mt-4 no-imprimir"><FormPago pedidoId={p.id} saldo={sal} hoy={fechaInput(new Date())} /></div>}
-            {sal > 0 && (
+            {sal > 0 && permisos.has("registrar_pagos") && <div className="mt-4 no-imprimir"><FormPago pedidoId={p.id} saldo={sal} hoy={fechaInput(new Date())} /></div>}
+            {sal > 0 && permisos.has("registrar_pagos") && (
               <div className="mt-4 pt-4 border-t border-borde no-imprimir">
                 <p className="text-sm font-medium mb-2">Link de Mercado Pago</p>
                 <LinkPago pedidoId={p.id} total={p.total} saldo={sal} linkActual={p.linkPago} montoActual={p.linkPagoMonto}
@@ -213,7 +215,7 @@ export default async function PedidoPage({
             </ul>
           </section>
 
-          {u?.rol === "ADMIN" && (
+          {permisos.has("borrar_pedidos") && (
             <div className="no-imprimir">
               <BotonBorrar accion={borrarPedido.bind(null, p.id)} texto="Borrar pedido" confirmacion={`¿Borrar el pedido N° ${p.numero}? Se borran también sus pagos. Si solo no va, mejor marcalo como Cancelado.`} />
             </div>

@@ -5,12 +5,14 @@ import EstadoChip from "@/components/EstadoChip";
 import { db } from "@/lib/db";
 import { fecha, pesos } from "@/lib/formato";
 import { COLOR_ESTADO, NOMBRE_ESTADO, ESTADOS, atrasado, fechaGuia, hoyAR, semana, saldo } from "@/lib/pedidos";
+import { requerirPermiso } from "@/lib/acceso";
 
 const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const iso = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
 const diaDe = (d: Date) => new Date(`${iso(d)}T12:00:00-03:00`);
 
 export default async function CalendarioPage({ searchParams }: { searchParams: Promise<{ vista?: string; fecha?: string }> }) {
+  await requerirPermiso("ver_calendario");
   const sp = await searchParams;
   const vista = sp.vista === "mes" ? "mes" : "semana";
   const hoy = hoyAR();

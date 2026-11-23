@@ -4,8 +4,10 @@ import Encabezado from "@/components/Encabezado";
 import { db } from "@/lib/db";
 import { fecha, linkWhatsApp } from "@/lib/formato";
 import type { Prisma } from "@prisma/client";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  await requerirPermiso("ver_clientes");
   const { q = "" } = await searchParams;
   const busqueda = q.trim();
   const numero = parseInt(busqueda.replace(/^n[°º]?\s*/i, ""), 10);

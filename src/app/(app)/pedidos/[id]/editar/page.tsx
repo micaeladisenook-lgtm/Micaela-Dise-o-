@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import Encabezado from "@/components/Encabezado";
 import FormPedido from "../../FormPedido";
 import { datosFormularioPedido, includePedidoCompleto } from "@/lib/datosPedido";
-import { requerirUsuario } from "@/lib/auth";
+
 import { db } from "@/lib/db";
 import { fechaInput } from "@/lib/pedidos";
 import type { PedidoForm } from "../../tipos";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function EditarPedidoPage({ params }: { params: Promise<{ id: string }> }) {
-  const u = await requerirUsuario();
+  const u = await requerirPermiso("crear_pedidos");
   const { id } = await params;
   const p = await db.pedido.findUnique({ where: { id }, include: includePedidoCompleto });
   if (!p) notFound();

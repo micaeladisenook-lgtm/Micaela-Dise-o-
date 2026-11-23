@@ -6,10 +6,11 @@ import ClienteForm from "../ClienteForm";
 import BotonBorrar from "@/components/BotonBorrar";
 import { actualizarCliente, borrarCliente } from "../acciones";
 import { db } from "@/lib/db";
-import { usuarioActual } from "@/lib/auth";
+
 import { fecha, linkWhatsApp, pesos } from "@/lib/formato";
 import { saldo } from "@/lib/pedidos";
 import EstadoChip from "@/components/EstadoChip";
+import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 export default async function FichaClientaPage({
   params, searchParams,
@@ -18,7 +19,8 @@ export default async function FichaClientaPage({
   const { creada } = await searchParams;
   const c = await db.cliente.findUnique({ where: { id }, include: { creadoPor: true, pedidos: { orderBy: { fechaPedido: "desc" }, include: { pagos: { select: { monto: true } }, items: { select: { nombre: true } } } } } });
   if (!c) notFound();
-  const u = await usuarioActual();
+  const u = await requerirPermiso("ver_clientes");
+  const puedeBorrar = (await permisosDeRol(u.rol)).has("borrar_clientes");
   const wa = linkWhatsApp(c.telefono, `¡Hola ${c.nombre.split(" ")[0]}! Te escribimos de Micaela Diseño 🌸`);
 
   return (
@@ -73,7 +75,7 @@ export default async function FichaClientaPage({
               </>
             )}
           </section>
-          {u?.rol === "ADMIN" && (
+          {puedeBorrar && (
             <section className="tarjeta p-5 md:p-6">
               <h2 className="text-xl mb-2">Zona peligrosa</h2>
               <BotonBorrar accion={borrarCliente.bind(null, c.id)} texto="Borrar clienta" confirmacion={`¿Seguro que querés borrar a ${c.nombre}? No se puede deshacer.`} />

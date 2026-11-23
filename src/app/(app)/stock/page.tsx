@@ -3,13 +3,15 @@ import { AlertTriangle } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
 import { FormItem, FormConsumo, BorrarConsumo, BotonTelas } from "./Formularios";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+
+import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 const fmt = (n: number) => n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 
 export default async function StockPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const u = await requerirUsuario();
+  const u = await requerirPermiso("ver_stock");
   const esAdmin = u.rol === "ADMIN";
+  const editar = (await permisosDeRol(u.rol)).has("editar_stock");
   const { tab = "insumos" } = await searchParams;
   const [items, productos, consumos, bata] = await Promise.all([
     db.itemStock.findMany({ orderBy: [{ categoria: "asc" }, { nombre: "asc" }] }),
@@ -84,10 +86,10 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
             ))}
           </div>
           <aside className="space-y-4 lg:sticky lg:top-6">
-            <div className="tarjeta p-5">
+            {editar && <div className="tarjeta p-5">
               <h2 className="text-2xl mb-3">Agregar</h2>
               <FormItem item={null} productos={productos} colores={bata?.colores ?? []} />
-            </div>
+            </div>}
             {esAdmin && tab === "insumos" && (
               <div className="tarjeta p-5 space-y-2">
                 <p className="text-sm">Atajo: crear una fila de tela por cada color del catálogo.</p>

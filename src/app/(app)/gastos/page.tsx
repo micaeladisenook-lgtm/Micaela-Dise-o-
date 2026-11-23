@@ -2,12 +2,13 @@ import Link from "next/link";
 import Encabezado from "@/components/Encabezado";
 import { FormGasto, BorrarGasto } from "./Formularios";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
 import { fecha, pesos } from "@/lib/formato";
 import { hoyAR, fechaInput } from "@/lib/pedidos";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function GastosPage({ searchParams }: { searchParams: Promise<{ mes?: string }> }) {
-  await requerirAdmin();
+  await requerirPermiso("ver_gastos");
   const sp = await searchParams;
   const hoy = hoyAR();
   const mesIso = sp.mes && /^\d{4}-\d{2}$/.test(sp.mes) ? sp.mes : fechaInput(hoy).slice(0, 7);

@@ -2,11 +2,12 @@ import Link from "next/link";
 import Encabezado from "@/components/Encabezado";
 import FormPrecios from "./FormPrecios";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
 import { NOMBRE_TIPO, ORDEN_TIPOS } from "@/lib/catalogo";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function EditarPreciosPage() {
-  await requerirAdmin();
+  await requerirPermiso("editar_precios");
   const productos = await db.producto.findMany({ orderBy: [{ orden: "asc" }, { nombre: "asc" }] });
   const grupos = ORDEN_TIPOS.map((t) => ({
     titulo: NOMBRE_TIPO[t],

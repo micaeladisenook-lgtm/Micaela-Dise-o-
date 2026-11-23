@@ -6,10 +6,12 @@ import BorrarDiseno from "./BorrarDiseno";
 import { db } from "@/lib/db";
 import { NOMBRE_CATEGORIA_DISENO } from "@/lib/catalogo";
 import type { CategoriaDiseno } from "@prisma/client";
+import { requerirPermiso } from "@/lib/acceso";
 
 const CATS = ["BORDADO", "COLOR", "PRODUCTO"] as const;
 
 export default async function GaleriaPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
+  await requerirPermiso("ver_catalogo");
   const { cat } = await searchParams;
   const filtro = CATS.includes(cat as never) ? (cat as CategoriaDiseno) : undefined;
   const [disenos, productos, conteos] = await Promise.all([

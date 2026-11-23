@@ -2,8 +2,9 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirUsuario, requerirAdmin } from "@/lib/auth";
+
 import { registrar } from "@/lib/registro";
+import { exigirPermiso } from "@/lib/acceso";
 
 export type EstadoForm = { error?: string; ok?: string } | null;
 
@@ -36,7 +37,7 @@ async function telefonoRepetido(telefono: string | null, excluirId?: string) {
 }
 
 export async function crearCliente(_prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("ver_clientes");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const repetida = await telefonoRepetido(datos.telefono);
@@ -50,7 +51,7 @@ export async function crearCliente(_prev: EstadoForm, form: FormData): Promise<E
 }
 
 export async function actualizarCliente(id: string, _prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await requerirUsuario();
+  const u = await exigirPermiso("ver_clientes");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const c = await db.cliente.update({ where: { id }, data: datos });
@@ -61,7 +62,8 @@ export async function actualizarCliente(id: string, _prev: EstadoForm, form: For
 }
 
 export async function borrarCliente(id: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("borrar_clientes");
+  if (await db.pedido.count({ where: { clienteId: id } })) throw new Error("La clienta tiene pedidos: no se puede borrar.");
   const c = await db.cliente.delete({ where: { id } });
   await registrar(u.id, "Borró clienta", "Cliente", id, `N° ${c.numero} · ${c.nombre}`);
   revalidatePath("/clientes");

@@ -1,13 +1,14 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+
 import { registrar } from "@/lib/registro";
 import { leerPesos, pesos } from "@/lib/formato";
 import { leerFecha } from "@/lib/pedidos";
+import { exigirPermiso } from "@/lib/acceso";
 
 export async function crearGasto(_prev: { ok?: string; error?: string } | null, f: FormData) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("ver_gastos");
   const monto = leerPesos(String(f.get("monto") ?? ""));
   const categoria = String(f.get("categoria") ?? "").trim();
   if (!monto) return { error: "Poné el monto." };
@@ -29,7 +30,7 @@ export async function crearGasto(_prev: { ok?: string; error?: string } | null, 
 }
 
 export async function borrarGasto(id: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("ver_gastos");
   const g = await db.gasto.delete({ where: { id } });
   await registrar(u.id, "Borró gasto", "Gasto", id, `${g.categoria} · ${pesos(g.monto)}`);
   revalidatePath("/gastos");

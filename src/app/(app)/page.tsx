@@ -2,10 +2,11 @@ import Link from "next/link";
 import { MessageCircle, Scissors, Package } from "lucide-react";
 import EstadoChip from "@/components/EstadoChip";
 import { db } from "@/lib/db";
-import { requerirUsuario } from "@/lib/auth";
+
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, atrasado, fechaGuia, hoyAR, saldo, semana, enSemana } from "@/lib/pedidos";
 import { tareasDeSemana } from "@/lib/datosTalleres";
+import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 function saludo() {
   const h = parseInt(new Date().toLocaleString("es-AR", { hour: "numeric", hour12: false, timeZone: "America/Argentina/Buenos_Aires" }), 10);
@@ -15,9 +16,9 @@ function saludo() {
 }
 
 export default async function PanelPage({ searchParams }: { searchParams: Promise<{ "sin-permiso"?: string }> }) {
-  const u = await requerirUsuario();
+  const u = await requerirPermiso("ver_panel");
   const sp = await searchParams;
-  const esAdmin = u.rol === "ADMIN";
+  const esAdmin = (await permisosDeRol(u.rol)).has("ver_gastos");
   const hoy = hoyAR();
   const mesIso = hoy.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0, 7);
   const inicioMes = new Date(`${mesIso}-01T00:00:00-03:00`);
