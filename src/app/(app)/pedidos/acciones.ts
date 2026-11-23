@@ -207,3 +207,11 @@ export async function borrarPedido(pedidoId: string) {
   revalidatePath("/pedidos");
   redirect("/pedidos");
 }
+
+export async function marcarRevisado(pedidoId: string) {
+  const u = await requerirUsuario();
+  const p = await db.pedido.update({ where: { id: pedidoId }, data: { revisar: null, modificadoPorId: u.id } });
+  await registrar(u.id, "Marcó como revisado", "Pedido", pedidoId, `N° ${p.numero}`);
+  revalidatePath(`/pedidos/${pedidoId}`);
+  revalidatePath("/pedidos");
+}

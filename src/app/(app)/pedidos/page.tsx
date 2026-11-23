@@ -14,6 +14,7 @@ const VISTAS = [
   { k: "EN_PRODUCCION", t: "En producción" },
   { k: "LISTO", t: "Listos" },
   { k: "atrasados", t: "Atrasados" },
+  { k: "revisar", t: "Para revisar" },
   { k: "ENTREGADO", t: "Entregados" },
   { k: "CANCELADO", t: "Cancelados" },
   { k: "todos", t: "Todos" },
@@ -65,6 +66,7 @@ export default async function PedidosPage({
     if (v === "todos") return true;
     if (v === "activos") return ["NUEVO", "EN_PRODUCCION", "LISTO"].includes(p.estado);
     if (v === "atrasados") return atrasado(p);
+    if (v === "revisar") return !!p.revisar;
     return p.estado === v;
   };
   const cuentas = Object.fromEntries(VISTAS.map((v) => [v.k, conPago.filter((p) => enVista(p, v.k)).length]));
@@ -96,7 +98,7 @@ export default async function PedidosPage({
           const on = v.k === vista;
           return (
             <Link key={v.k} href={urlCon({ estado: v.k, pagina: "1" })}
-              className={`shrink-0 min-h-11 px-4 inline-flex items-center gap-2 rounded-full text-sm border ${on ? "bg-acento text-white border-acento" : v.k === "atrasados" && cuentas[v.k] ? "bg-estado-alerta text-estado-alerta-txt border-transparent" : "bg-white border-borde hover:border-acento"}`}>
+              className={`shrink-0 min-h-11 px-4 inline-flex items-center gap-2 rounded-full text-sm border ${on ? "bg-acento text-white border-acento" : (v.k === "atrasados" || v.k === "revisar") && cuentas[v.k] ? "bg-estado-alerta text-estado-alerta-txt border-transparent" : "bg-white border-borde hover:border-acento"}`}>
               {v.t} <span className={on ? "opacity-80" : "text-texto-2"}>{cuentas[v.k]}</span>
             </Link>
           );

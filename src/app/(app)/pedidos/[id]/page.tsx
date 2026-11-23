@@ -8,6 +8,7 @@ import BotonImprimir from "@/components/BotonImprimir";
 import BotonesEstado from "../BotonesEstado";
 import FormPago from "../FormPago";
 import BorrarPago from "../BorrarPago";
+import BotonRevisado from "../BotonRevisado";
 import { borrarPedido } from "../acciones";
 import { db } from "@/lib/db";
 import { includePedidoCompleto } from "@/lib/datosPedido";
@@ -43,9 +44,10 @@ export default async function PedidoPage({
       {sp.aviso && <p className="mb-3 text-sm text-estado-produccion-txt bg-estado-produccion rounded-xl px-4 py-3">{sp.aviso}</p>}
       {sp.sinTelefono && <p className="mb-3 text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-4 py-3">La clienta no tiene WhatsApp cargado, por eso no se abrió el mensaje. Agregalo en su ficha.</p>}
       {p.revisar && (
-        <p className="mb-3 text-sm text-estado-produccion-txt bg-estado-produccion rounded-xl px-4 py-3 flex gap-2">
-          <AlertTriangle size={18} className="shrink-0" /> <span><strong>Revisar (importado):</strong> {p.revisar}</span>
-        </p>
+        <div className="mb-3 text-sm text-estado-produccion-txt bg-estado-produccion rounded-xl px-4 py-3 flex flex-wrap items-center gap-2 justify-between">
+          <span className="flex gap-2"><AlertTriangle size={18} className="shrink-0" /> <span><strong>Revisar (importado):</strong> {p.revisar}. Si hace falta, corregilo con &quot;Editar&quot; o registrá el pago.</span></span>
+          <BotonRevisado id={p.id} />
+        </div>
       )}
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
