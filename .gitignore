@@ -43,3 +43,6 @@ next-env.d.ts
 /uploads
 /capturas
 /mudanza-*.json
+
+# carpeta local de la herramienta de publicación de Netlify
+.netlify
