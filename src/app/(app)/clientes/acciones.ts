@@ -21,6 +21,11 @@ function leer(form: FormData) {
     instagram,
     email: t("email")?.toLowerCase() ?? null,
     direccion: t("direccion"),
+    localidad: t("localidad"),
+    provincia: t("provincia"),
+    codigoPostal: t("codigoPostal"),
+    entreCalles: t("entreCalles"),
+    dni: t("dni")?.replace(/\D/g, "") || null,
     notas: t("notas"),
   };
 }

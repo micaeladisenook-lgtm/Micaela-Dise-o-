@@ -7,7 +7,7 @@ import { buscarClientes, guardarPedido } from "./acciones";
 import type { ClienteForm, ItemForm, PedidoForm, PrendaForm } from "./tipos";
 import { pesos, linkWhatsApp } from "@/lib/formato";
 import {
-  armarMensaje, EVENTOS, FORMAS_ENVIO, HILOS, MEDIOS, NOMBRE_MEDIO, UBICACIONES, ESTADOS, NOMBRE_ESTADO,
+  armarMensaje, conLinkResumen, EVENTOS, FORMAS_ENVIO, HILOS, MEDIOS, NOMBRE_MEDIO, UBICACIONES, ESTADOS, NOMBRE_ESTADO,
 } from "@/lib/pedidos";
 
 type Prod = {
@@ -106,7 +106,7 @@ export default function FormPedido({
     items: [itemVacio()],
     disenos: [],
     fechaEvento: "", evento: "", eventoDetalle: "", fechaEntrega: "",
-    envio: true, formaEnvio: "Correo Argentino", direccionEnvio: "", localidad: "",
+    envio: true, formaEnvio: "Correo Argentino", direccionEnvio: "", localidad: "", provincia: "", codigoPostal: "", entreCalles: "",
     prioridad: false, notas: "", vendedorId: usuarioId, estado: "NUEVO",
     sena: 0, medioSena: "TRANSFERENCIA",
     ...inicial,
@@ -131,6 +131,9 @@ export default function FormPedido({
       cliente: { id: c.id, numero: c.numero, nombre: c.nombre, telefono: c.telefono ?? "", instagram: c.instagram ?? "", email: c.email ?? "" },
       direccionEnvio: x.direccionEnvio || c.direccion || "",
       localidad: x.localidad || c.localidad || "",
+      provincia: x.provincia || c.provincia || "",
+      codigoPostal: x.codigoPostal || c.codigoPostal || "",
+      entreCalles: x.entreCalles || c.entreCalles || "",
     }));
     setResultados([]); setBusqueda("");
   }
@@ -204,7 +207,7 @@ export default function FormPedido({
   // ---------- Totales y mensaje ----------
   const total = f.items.reduce((s, i) => s + (i.nombre ? i.precioUnitario * i.cantidad : 0), 0);
   const saldoFinal = Math.max(0, total - (pedidoId ? 0 : f.sena));
-  const vistaPrevia = armarMensaje(plantilla, {
+  const vistaPrevia = armarMensaje(conLinkResumen(plantilla), {
     numero: numero ?? 0,
     total,
     fechaEvento: f.fechaEvento ? new Date(f.fechaEvento + "T12:00:00-03:00") : null,
@@ -213,7 +216,7 @@ export default function FormPedido({
     cliente: { nombre: f.cliente.nombre || "Clienta" },
     items: f.items.filter((i) => i.nombre).map((i) => ({ ...i, persona: i.persona || null, bordadoTexto: i.bordadoTexto || null, bordadoUbicacion: i.bordadoUbicacion || null, hilo: i.hilo || null })),
     pagos: pedidoId ? [] : f.sena > 0 ? [{ monto: f.sena }] : [],
-  }).replace(/N° 0\b/, numero ? `N° ${numero}` : "N° (se asigna al guardar)");
+  }, { link_resumen: "(link al resumen, se crea al guardar)" }).replace(/N° 0\b/, numero ? `N° ${numero}` : "N° (se asigna al guardar)");
 
   function guardar(enviar: boolean) {
     setError(null);
@@ -474,7 +477,19 @@ export default function FormPedido({
                 </div>
                 <div className="sm:col-span-2">
                   <label className="etiqueta">Dirección de envío</label>
-                  <input className="campo" placeholder="Calle, número, entre calles, CP" value={f.direccionEnvio} onChange={(e) => set("direccionEnvio", e.target.value)} />
+                  <input className="campo" placeholder="Calle, número, piso/depto, entre calles" value={f.direccionEnvio} onChange={(e) => set("direccionEnvio", e.target.value)} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="etiqueta">Entre calles</label>
+                  <input className="campo" placeholder="Ej: entre Av. Cabildo y Amenábar" value={f.entreCalles} onChange={(e) => set("entreCalles", e.target.value)} />
+                </div>
+                <div>
+                  <label className="etiqueta">Provincia</label>
+                  <input className="campo" value={f.provincia} onChange={(e) => set("provincia", e.target.value)} />
+                </div>
+                <div>
+                  <label className="etiqueta">Código postal</label>
+                  <input className="campo" inputMode="numeric" value={f.codigoPostal} onChange={(e) => set("codigoPostal", e.target.value)} />
                 </div>
               </>
             )}

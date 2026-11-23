@@ -111,9 +111,9 @@ type PedidoTexto = {
   linkPago?: string | null;
 };
 
-export function textoEntrega(p: Pick<PedidoTexto, "envio" | "formaEnvio" | "direccionEnvio" | "localidad" | "fechaEntrega">) {
+export function textoEntrega(p: Pick<PedidoTexto, "envio" | "formaEnvio" | "direccionEnvio" | "localidad" | "fechaEntrega"> & { entreCalles?: string | null; provincia?: string | null; codigoPostal?: string | null }) {
   const como = p.envio ? (p.formaEnvio || "Envío") : "Retira";
-  const donde = [p.direccionEnvio, p.localidad].filter(Boolean).join(", ");
+  const donde = [p.direccionEnvio, p.entreCalles ? `entre ${p.entreCalles.replace(/^entre\s+/i, "")}` : null, p.localidad, p.provincia, p.codigoPostal ? `CP ${p.codigoPostal}` : null].filter(Boolean).join(", ");
   const cuando = p.fechaEntrega ? ` · ${fecha(p.fechaEntrega)}` : "";
   return `${como}${donde ? ` a ${donde}` : ""}${cuando}`;
 }
@@ -134,12 +134,18 @@ export function armarMensaje(plantilla: string, p: PedidoTexto, extra: Record<st
     fecha_entrega: p.fechaEntrega ? fecha(p.fechaEntrega) : "a confirmar",
     entrega: textoEntrega(p),
     link_pago: p.linkPago ? `💳 Podés pagar con Mercado Pago acá: ${p.linkPago}` : "",
+    link_resumen: "",
     ...extra,
   };
   return plantilla
     .replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m))
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+// Si la plantilla no menciona el link del resumen, se agrega al final
+export function conLinkResumen(plantilla: string) {
+  return plantilla.includes("{link_resumen}") ? plantilla : `${plantilla.trim()}\n\n📄 Resumen de tu compra (para ver o descargar en PDF): {link_resumen}`;
 }
 
 export const VARIABLES_PLANTILLA: { clave: string; texto: string }[] = [
@@ -154,7 +160,10 @@ export const VARIABLES_PLANTILLA: { clave: string; texto: string }[] = [
   { clave: "{fecha_evento}", texto: "Fecha del evento" },
   { clave: "{fecha_entrega}", texto: "Fecha de entrega" },
   { clave: "{entrega}", texto: "Cómo y dónde se entrega" },
-  { clave: "{link_pago}", texto: "Link de Mercado Pago (Etapa 3)" },
+  { clave: "{link_pago}", texto: "Link de Mercado Pago" },
+  { clave: "{link_resumen}", texto: "Link al resumen de compra (se descarga en PDF)" },
+  { clave: "{forma_envio}", texto: "Forma de envío (solo aviso de envío)" },
+  { clave: "{seguimiento}", texto: "N° de seguimiento (solo aviso de envío)" },
   { clave: "{taller}", texto: "Nombre del taller (solo mensaje de taller)" },
   { clave: "{semana}", texto: "Semana (solo mensaje de taller)" },
   { clave: "{trabajos}", texto: "Lista de trabajos (solo mensaje de taller)" },

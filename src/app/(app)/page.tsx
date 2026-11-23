@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageCircle, Scissors, Package } from "lucide-react";
 import EstadoChip from "@/components/EstadoChip";
+import SaldoMP from "./panel/SaldoMP";
 import { db } from "@/lib/db";
 
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
@@ -110,6 +111,7 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
         </section>
 
         <div className="space-y-4 md:space-y-6">
+          {esAdmin && <SaldoMP />}
           <section className="tarjeta p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl">Pagos pendientes</h2>

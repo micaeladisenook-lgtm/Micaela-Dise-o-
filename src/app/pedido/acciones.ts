@@ -30,6 +30,9 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
       data: {
         nombre, telefono, instagram: normalizarInstagram(t(f, "instagram")),
         direccion: t(f, "direccion") || null, localidad: t(f, "localidad") || null,
+        provincia: t(f, "provincia") || null, codigoPostal: t(f, "codigoPostal") || null,
+        dni: t(f, "dni").replace(/\D/g, "") || null,
+        entreCalles: t(f, "entreCalles") || null,
       },
     });
     await registrar(null, "Creó clienta", "Cliente", cliente.id, `N° ${cliente.numero} · ${cliente.nombre} (formulario público)`);
@@ -82,6 +85,9 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
       formaEnvio: envio ? "A coordinar" : "Retira",
       direccionEnvio: envio ? t(f, "direccion") || null : null,
       localidad: t(f, "localidad") || null,
+      provincia: t(f, "provincia") || null,
+      codigoPostal: t(f, "codigoPostal") || null,
+      entreCalles: envio ? t(f, "entreCalles") || null : null,
       notas: t(f, "comentarios") || null,
       total,
       items: { create: items },

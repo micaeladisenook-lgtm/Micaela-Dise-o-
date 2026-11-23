@@ -46,6 +46,11 @@ async function main() {
       texto: "¡Hola {nombre}! 🎉 Tu pedido N° {pedido} de Micaela Diseño ya está listo.\n\n{saldo_texto}Coordinamos por acá la entrega 📦 ({entrega}).\n\n¡Esperamos que lo disfrutes muchísimo! 💕",
     },
     {
+      clave: "envio",
+      titulo: "Aviso de envío despachado",
+      texto: "¡Hola {nombre}! 📦 Tu pedido N° {pedido} de Micaela Diseño ya fue despachado por {forma_envio}.\n{seguimiento}\n\n¡Gracias por elegirnos! 💕",
+    },
+    {
       clave: "taller",
       titulo: "Lista de trabajos para el taller",
       texto: "¡Hola {taller}! Te paso los trabajos de la semana del {semana}:\n\n{trabajos}\n\n¡Gracias! 🙌",

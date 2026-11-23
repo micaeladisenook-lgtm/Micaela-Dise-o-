@@ -105,6 +105,10 @@ model Cliente {
   creadoPorId String?
   creadoPor   Usuario? @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   localidad   String?
+  provincia   String?
+  codigoPostal String?
+  dni         String?
+  entreCalles String?
   pedidos     Pedido[]
 }
 
@@ -185,6 +189,13 @@ model Pedido {
   formaEnvio     String?      // Correo Argentino, Motomensajería, Retira…
   direccionEnvio String?
   localidad      String?
+  provincia      String?
+  codigoPostal   String?
+  entreCalles    String?
+  costoEnvio     Int?
+  numeroSeguimiento String?
+  despachadoEn   DateTime?
+  tokenPublico   String?      @unique // para el link del resumen que se le manda a la clienta
   prioridad      Boolean      @default(false)
   total          Int          @default(0)
   notas          String?

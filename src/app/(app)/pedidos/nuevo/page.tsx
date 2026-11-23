@@ -18,7 +18,7 @@ export default async function NuevoPedidoPage({ searchParams }: { searchParams: 
         usuarioId={u.id}
         inicial={c ? {
           cliente: { id: c.id, numero: c.numero, nombre: c.nombre, telefono: c.telefono ?? "", instagram: c.instagram ?? "", email: c.email ?? "" },
-          direccionEnvio: c.direccion ?? "", localidad: c.localidad ?? "",
+          direccionEnvio: c.direccion ?? "", localidad: c.localidad ?? "", provincia: c.provincia ?? "", codigoPostal: c.codigoPostal ?? "", entreCalles: c.entreCalles ?? "",
         } : undefined}
       />
     </>

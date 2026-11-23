@@ -64,3 +64,15 @@ export function textoLista(texto: string | null | undefined): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+// Usuario de Instagram sin @ ni dirección web
+export function usuarioInstagram(ig: string | null | undefined): string | null {
+  if (!ig) return null;
+  const u = ig.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/^@+/, "").replace(/[/?#].*$/, "");
+  return /^[\w.]{1,30}$/.test(u) ? u : null;
+}
+// Abre el chat directo (mensaje privado) de Instagram con esa persona
+export function linkInstagram(ig: string | null | undefined): string | null {
+  const u = usuarioInstagram(ig);
+  return u ? `https://ig.me/m/${u}` : null;
+}

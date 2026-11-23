@@ -121,8 +121,14 @@ export default function FormPublico({ productos, precioBordadoExtra }: { product
         </Campo>
         {envio === "envio" && (
           <>
-            <Campo etiqueta="Dirección"><input name="direccion" className="campo" placeholder="Calle, número, entre calles, CP" autoComplete="street-address" /></Campo>
-            <Campo etiqueta="Localidad y provincia"><input name="localidad" className="campo" /></Campo>
+            <Campo etiqueta="Dirección"><input name="direccion" className="campo" placeholder="Calle, número, piso/depto" autoComplete="street-address" /></Campo>
+            <Campo etiqueta="Entre calles" ayuda="Ayuda al repartidor a encontrar la casa"><input name="entreCalles" className="campo" placeholder="Ej: entre Av. Cabildo y Amenábar" /></Campo>
+            <div className="grid grid-cols-2 gap-3">
+              <Campo etiqueta="Localidad"><input name="localidad" className="campo" /></Campo>
+              <Campo etiqueta="Provincia"><input name="provincia" className="campo" /></Campo>
+              <Campo etiqueta="Código postal"><input name="codigoPostal" className="campo" inputMode="numeric" /></Campo>
+              <Campo etiqueta="DNI (para el correo)"><input name="dni" className="campo" inputMode="numeric" /></Campo>
+            </div>
           </>
         )}
         <Campo etiqueta="Comentarios"><textarea name="comentarios" rows={3} className="campo py-2.5" placeholder="Medidas especiales, dudas, detalles…" /></Campo>

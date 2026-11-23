@@ -44,6 +44,9 @@ export type PedidoForm = {
   formaEnvio: string;
   direccionEnvio: string;
   localidad: string;
+  provincia: string;
+  codigoPostal: string;
+  entreCalles: string;
   prioridad: boolean;
   notas: string;
   vendedorId: string;

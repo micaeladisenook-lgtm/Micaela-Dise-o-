@@ -5,6 +5,7 @@ import type { EstadoForm } from "./acciones";
 type Cliente = {
   nombre: string; telefono: string | null; instagram: string | null;
   email: string | null; direccion: string | null; notas: string | null;
+  localidad?: string | null; provincia?: string | null; codigoPostal?: string | null; dni?: string | null; entreCalles?: string | null;
 };
 
 export default function ClienteForm({
@@ -41,8 +42,30 @@ export default function ClienteForm({
         </div>
         <div>
           <label className="etiqueta" htmlFor="direccion">Dirección</label>
-          <input id="direccion" name="direccion" className="campo" placeholder="Calle, número, barrio" defaultValue={cliente?.direccion ?? ""} />
+          <input id="direccion" name="direccion" className="campo" placeholder="Calle, número, piso/depto" defaultValue={cliente?.direccion ?? ""} />
         </div>
+      </div>
+      <div>
+        <label className="etiqueta" htmlFor="entreCalles">Entre calles</label>
+        <input id="entreCalles" name="entreCalles" className="campo" placeholder="Ej: entre Av. Cabildo y Amenábar" defaultValue={cliente?.entreCalles ?? ""} />
+      </div>
+      <div className="grid sm:grid-cols-4 gap-4">
+        <div className="sm:col-span-2">
+          <label className="etiqueta" htmlFor="localidad">Localidad</label>
+          <input id="localidad" name="localidad" className="campo" defaultValue={cliente?.localidad ?? ""} />
+        </div>
+        <div>
+          <label className="etiqueta" htmlFor="provincia">Provincia</label>
+          <input id="provincia" name="provincia" className="campo" defaultValue={cliente?.provincia ?? ""} />
+        </div>
+        <div>
+          <label className="etiqueta" htmlFor="codigoPostal">Código postal</label>
+          <input id="codigoPostal" name="codigoPostal" className="campo" inputMode="numeric" defaultValue={cliente?.codigoPostal ?? ""} />
+        </div>
+      </div>
+      <div className="sm:w-1/2">
+        <label className="etiqueta" htmlFor="dni">DNI (para envíos)</label>
+        <input id="dni" name="dni" className="campo" inputMode="numeric" defaultValue={cliente?.dni ?? ""} />
       </div>
       <div>
         <label className="etiqueta" htmlFor="notas">Notas</label>

@@ -28,7 +28,7 @@ export default async function EditarPedidoPage({ params }: { params: Promise<{ i
     disenos: p.disenos.map((d) => d.disenoId),
     fechaEvento: fechaInput(p.fechaEvento), evento: p.evento ?? "", eventoDetalle: p.eventoDetalle ?? "",
     fechaEntrega: fechaInput(p.fechaEntrega), envio: p.envio, formaEnvio: p.formaEnvio ?? "",
-    direccionEnvio: p.direccionEnvio ?? "", localidad: p.localidad ?? "", prioridad: p.prioridad,
+    direccionEnvio: p.direccionEnvio ?? "", localidad: p.localidad ?? "", provincia: p.provincia ?? "", codigoPostal: p.codigoPostal ?? "", entreCalles: p.entreCalles ?? "", prioridad: p.prioridad,
     notas: p.notas ?? "", vendedorId: p.vendedorId ?? u.id, estado: p.estado, sena: 0, medioSena: "TRANSFERENCIA",
   };
   return (

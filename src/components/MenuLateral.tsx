@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ClipboardList, PlusCircle, CalendarDays, Scissors, Users,
-  Tags, Package, Wallet, Receipt, ShieldCheck, LogOut,
+  Tags, Package, Wallet, Receipt, ShieldCheck, LogOut, Truck,
 } from "lucide-react";
 import { salir } from "@/app/login/acciones";
 
@@ -15,6 +15,7 @@ const ITEMS: Item[] = [
   { href: "/pedidos/nuevo", texto: "Nuevo pedido", icono: PlusCircle, clave: "crear_pedidos" },
   { href: "/calendario", texto: "Calendario", icono: CalendarDays, clave: "ver_calendario" },
   { href: "/talleres", texto: "Talleres", icono: Scissors, clave: "talleres" },
+  { href: "/envios", texto: "Envíos", icono: Truck, clave: "ver_pedidos" },
   { href: "/clientes", texto: "Clientes", icono: Users, clave: "ver_clientes" },
   { href: "/catalogo", texto: "Catálogo y precios", icono: Tags, clave: "ver_catalogo" },
   { href: "/stock", texto: "Stock", icono: Package, clave: "ver_stock" },
@@ -47,7 +48,7 @@ export default function MenuLateral({ nombre, rol, permisos }: { nombre: string;
         </Link>
       </div>
 
-      <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible px-3 md:px-3 pb-3 md:pb-0 md:flex-1">
+      <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:overflow-y-auto md:min-h-0 px-3 md:px-3 pb-3 md:pb-3 md:flex-1">
         {items.map((i) => {
           const on = activo(path, i.href);
           const Icono = i.icono;

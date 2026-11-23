@@ -7,7 +7,8 @@ import { registrar } from "@/lib/registro";
 import { generarTareas, actualizarEstadoPorTareas } from "@/lib/produccion";
 import { aplicarConsumo, revertirConsumo } from "@/lib/stock";
 import { clientePorTelefono, normalizarInstagram } from "@/lib/clientes";
-import { armarMensaje, leerFecha, ESTADOS, MEDIOS, NOMBRE_ESTADO, NOMBRE_MEDIO } from "@/lib/pedidos";
+import { armarMensaje, conLinkResumen, leerFecha, ESTADOS, MEDIOS, NOMBRE_ESTADO, NOMBRE_MEDIO } from "@/lib/pedidos";
+import { linkResumen } from "@/lib/resumen";
 import { pesos, leerPesos } from "@/lib/formato";
 import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
@@ -30,7 +31,7 @@ export async function buscarClientes(q: string) {
     },
     take: 8,
     orderBy: { numero: "desc" },
-    select: { id: true, numero: true, nombre: true, telefono: true, instagram: true, email: true, direccion: true, localidad: true },
+    select: { id: true, numero: true, nombre: true, telefono: true, instagram: true, email: true, direccion: true, localidad: true, provincia: true, codigoPostal: true, entreCalles: true },
   });
 }
 
@@ -59,13 +60,16 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
           email: txt(datos.cliente.email)?.toLowerCase() ?? null,
           direccion: txt(datos.direccionEnvio),
           localidad: txt(datos.localidad),
+          provincia: txt(datos.provincia),
+          codigoPostal: txt(datos.codigoPostal),
+          entreCalles: txt(datos.entreCalles),
           creadoPorId: u.id,
         },
       });
       clienteId = c.id;
       await registrar(u.id, "Creó clienta", "Cliente", c.id, `N° ${c.numero} · ${c.nombre} (desde nuevo pedido)`);
     }
-  } else if (datos.cliente.telefono || datos.cliente.instagram) {
+  } else {
     // completar datos que falten en la ficha
     const c = await db.cliente.findUnique({ where: { id: clienteId } });
     if (c) {
@@ -76,6 +80,9 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
           instagram: c.instagram || normalizarInstagram(datos.cliente.instagram),
           direccion: c.direccion || txt(datos.direccionEnvio),
           localidad: c.localidad || txt(datos.localidad),
+          provincia: c.provincia || txt(datos.provincia),
+          codigoPostal: c.codigoPostal || txt(datos.codigoPostal),
+          entreCalles: c.entreCalles || txt(datos.entreCalles),
         },
       });
     }
@@ -95,6 +102,9 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     formaEnvio: datos.envio ? txt(datos.formaEnvio) : "Retira",
     direccionEnvio: datos.envio ? txt(datos.direccionEnvio) : null,
     localidad: txt(datos.localidad),
+    provincia: txt(datos.provincia),
+    codigoPostal: txt(datos.codigoPostal),
+    entreCalles: datos.envio ? txt(datos.entreCalles) : null,
     prioridad: datos.prioridad,
     notas: txt(datos.notas),
     total,
@@ -164,7 +174,7 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     id,
     numero: pedido.numero,
     telefono: pedido.cliente.telefono,
-    mensaje: armarMensaje(plantilla?.texto ?? "", pedido),
+    mensaje: armarMensaje(conLinkResumen(plantilla?.texto ?? ""), pedido, { link_resumen: await linkResumen(id) }),
     avisoCliente,
   };
 }

@@ -10,6 +10,8 @@ import FormPago from "../FormPago";
 import BorrarPago from "../BorrarPago";
 import BotonRevisado from "../BotonRevisado";
 import LinkPago from "../LinkPago";
+import EnviarResumen from "../EnviarResumen";
+import { linkResumen } from "@/lib/resumen";
 import CasillaTarea from "../../talleres/CasillaTarea";
 import { bloqueadaPor, NOMBRE_FUNCION } from "@/lib/produccion";
 import { mercadoPagoConfigurado } from "@/lib/mercadopago";
@@ -18,7 +20,7 @@ import { db } from "@/lib/db";
 import { includePedidoCompleto } from "@/lib/datosPedido";
 
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
-import { armarMensaje, atrasado, pagado, saldo, textoEntrega, NOMBRE_MEDIO, NOMBRE_TIPO_PEDIDO, fechaInput } from "@/lib/pedidos";
+import { armarMensaje, conLinkResumen, atrasado, pagado, saldo, textoEntrega, NOMBRE_MEDIO, NOMBRE_TIPO_PEDIDO, fechaInput } from "@/lib/pedidos";
 import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
 
 export default async function PedidoPage({
@@ -36,7 +38,8 @@ export default async function PedidoPage({
   ]);
   const tpl = (k: string) => plantillas.find((x) => x.clave === k)?.texto ?? "";
   const sal = saldo(p.total, p.pagos);
-  const wa = (k: string) => linkWhatsApp(p.cliente.telefono, armarMensaje(tpl(k), p));
+  const resumen = await linkResumen(p.id);
+  const wa = (k: string) => linkWhatsApp(p.cliente.telefono, armarMensaje(k === "confirmacion" ? conLinkResumen(tpl(k)) : tpl(k), p, { link_resumen: resumen }));
   const tarde = atrasado(p);
 
   return (
@@ -186,6 +189,14 @@ export default async function PedidoPage({
                   mensajeSaldo={armarMensaje(tpl("saldo"), { ...p, linkPago: null }, { link_pago: "__LINK__" })} />
               </div>
             )}
+          </section>
+
+          <section className="tarjeta p-5 no-imprimir">
+            <h2 className="text-2xl mb-1">Resumen para la clienta</h2>
+            <p className="text-xs text-texto-2 mb-3">Detalle de la compra con link y PDF para descargar.</p>
+            <EnviarResumen link={resumen} asunto={`Tu pedido N° ${p.numero} en Micaela Diseño`}
+              mensaje={armarMensaje(conLinkResumen(tpl("confirmacion")), p, { link_resumen: resumen })}
+              telefono={p.cliente.telefono} email={p.cliente.email} instagram={p.cliente.instagram} />
           </section>
 
           <section className="tarjeta p-5 no-imprimir">

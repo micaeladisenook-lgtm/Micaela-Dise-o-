@@ -7,7 +7,8 @@ import BotonBorrar from "@/components/BotonBorrar";
 import { actualizarCliente, borrarCliente } from "../acciones";
 import { db } from "@/lib/db";
 
-import { fecha, linkWhatsApp, pesos } from "@/lib/formato";
+import { fecha, linkWhatsApp, pesos, linkInstagram } from "@/lib/formato";
+import IconoInstagram from "@/components/IconoInstagram";
 import { saldo } from "@/lib/pedidos";
 import EstadoChip from "@/components/EstadoChip";
 import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
@@ -28,6 +29,9 @@ export default async function FichaClientaPage({
       <Encabezado titulo={c.nombre} subtitulo={`Clienta N° ${c.numero} · alta el ${fecha(c.creadoEn)}${c.creadoPor ? ` por ${c.creadoPor.nombre}` : ""}`}>
         {wa && (
           <a href={wa} target="_blank" className="btn-secundario"><MessageCircle size={18} /> WhatsApp</a>
+        )}
+        {linkInstagram(c.instagram) && (
+          <a href={linkInstagram(c.instagram)!} target="_blank" className="btn-secundario"><IconoInstagram /> Instagram</a>
         )}
         <Link href="/clientes" className="btn-suave">Volver</Link>
       </Encabezado>

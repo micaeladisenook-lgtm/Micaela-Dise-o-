@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Search, MessageCircle } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
 import { db } from "@/lib/db";
-import { fecha, linkWhatsApp } from "@/lib/formato";
+import { fecha, linkWhatsApp, linkInstagram } from "@/lib/formato";
+import IconoInstagram from "@/components/IconoInstagram";
 import type { Prisma } from "@prisma/client";
 import { requerirPermiso } from "@/lib/acceso";
 
@@ -55,6 +56,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
               <tbody>
                 {clientes.map((c) => {
                   const wa = linkWhatsApp(c.telefono);
+                  const ig = linkInstagram(c.instagram);
                   return (
                     <tr key={c.id} className="hover:bg-fondo">
                       <td className="text-texto-2 font-medium">N° {c.numero}</td>
@@ -66,7 +68,12 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
                       <td className="text-texto-2">{c.instagram ?? "—"}</td>
                       <td className="text-texto-2">{c.email ?? "—"}</td>
                       <td className="text-texto-2">{fecha(c.creadoEn)}</td>
-                      <td className="text-right">
+                      <td className="text-right whitespace-nowrap">
+                        {ig && (
+                          <a href={ig} target="_blank" className="inline-flex w-11 h-11 items-center justify-center rounded-full text-[#C13584] hover:bg-acento-suave" title="Abrir Instagram">
+                            <IconoInstagram />
+                          </a>
+                        )}
                         {wa && (
                           <a href={wa} target="_blank" className="inline-flex w-11 h-11 items-center justify-center rounded-full text-[#1E8E4E] hover:bg-estado-listo" title="Abrir WhatsApp">
                             <MessageCircle size={18} />
