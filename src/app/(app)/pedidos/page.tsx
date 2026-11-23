@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle, Settings2, Link2 } from "lucide-react";
+import { MessageCircle, Settings2, Link2, MoveHorizontal } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
 import EstadoChip from "@/components/EstadoChip";
 import Filtros from "./Filtros";
@@ -117,10 +117,15 @@ export default async function PedidosPage({
         <div className="tarjeta p-8 text-center text-texto-2">No hay pedidos con estos filtros.</div>
       ) : (
         <>
-          <div className="tarjeta overflow-x-auto hidden lg:block">
-            <table className="tabla w-full min-w-[1000px]">
+          <p className="text-xs text-texto-2 mb-1.5 lg:hidden flex items-center gap-1"><MoveHorizontal size={14} /> Deslizá la tabla hacia el costado para ver todo</p>
+          <div className="tarjeta overflow-x-auto overscroll-x-contain">
+            <table className="tabla w-full min-w-[1080px]">
               <thead>
-                <tr><th>Pedido</th><th>Clienta</th><th>Productos</th><th>Evento</th><th>Vendedora</th><th className="text-right!">Total</th><th className="text-right!">Saldo</th><th>Estado</th><th></th></tr>
+                <tr>
+                  <th className="sticky left-0 z-10 bg-white w-[88px] min-w-[88px]">Pedido</th>
+                  <th className="sticky left-[88px] z-10 bg-white min-w-[150px] max-w-[190px] shadow-[6px_0_8px_-6px_rgba(0,0,0,0.15)]">Clienta</th>
+                  <th>Productos</th><th>Evento</th><th>Vendedora</th><th className="text-right!">Total</th><th className="text-right!">Saldo</th><th>Estado</th><th></th>
+                </tr>
               </thead>
               <tbody>
                 {visibles.map((p) => {
@@ -128,51 +133,29 @@ export default async function PedidosPage({
                   const tarde = atrasado(p);
                   const wa = s > 0 ? linkWhatsApp(p.cliente.telefono, armarMensaje(plantilla?.texto ?? "", { ...p, items: p.items })) : linkWhatsApp(p.cliente.telefono);
                   return (
-                    <tr key={p.id} className="hover:bg-fondo">
-                      <td><Link href={`/pedidos/${p.id}`} className="font-semibold text-acento hover:underline">N° {p.numero}</Link>{p.prioridad && <span className="block text-[11px] text-acento font-medium">PRIORIDAD</span>}</td>
-                      <td><Link href={`/clientes/${p.cliente.id}`} className="hover:text-acento">{p.cliente.nombre}</Link><span className="block text-xs text-texto-2">N° {p.cliente.numero}</span></td>
-                      <td className="max-w-[260px]">
-                        {p.items.slice(0, 3).map((i, k) => <span key={k} className="block truncate">{i.cantidad > 1 ? `${i.cantidad}× ` : ""}{i.nombre}</span>)}
+                    <tr key={p.id} className="group">
+                      <td className="sticky left-0 z-[1] bg-white group-hover:bg-fondo w-[88px] min-w-[88px]"><Link href={`/pedidos/${p.id}`} className="font-semibold text-acento hover:underline whitespace-nowrap">N° {p.numero}</Link>{p.prioridad && <span className="block text-[11px] text-acento font-medium">PRIORIDAD</span>}</td>
+                      <td className="sticky left-[88px] z-[1] bg-white group-hover:bg-fondo min-w-[150px] max-w-[190px] shadow-[6px_0_8px_-6px_rgba(0,0,0,0.15)]"><Link href={`/clientes/${p.cliente.id}`} className="font-medium hover:text-acento break-words">{p.cliente.nombre}</Link><span className="block text-xs text-texto-2">N° {p.cliente.numero}</span></td>
+                      <td className="min-w-[240px] max-w-[320px] group-hover:bg-fondo">
+                        {p.items.slice(0, 3).map((i, k) => <span key={k} className="block">{i.cantidad > 1 ? `${i.cantidad}× ` : ""}{i.nombre}</span>)}
                         {p.items.length > 3 && <span className="text-xs text-texto-2">+{p.items.length - 3} más</span>}
-                        {p.items[0]?.bordadoTexto && <span className="block text-xs text-texto-2 truncate">“{p.items[0].bordadoTexto}”</span>}
+                        {p.items[0]?.bordadoTexto && <span className="block text-xs text-texto-2 line-clamp-2">“{p.items[0].bordadoTexto}”</span>}
                       </td>
-                      <td className={tarde ? "text-estado-alerta-txt font-medium" : ""}>
+                      <td className={`whitespace-nowrap group-hover:bg-fondo ${tarde ? "text-estado-alerta-txt font-medium" : ""}`}>
                         {p.fechaEvento ? fecha(p.fechaEvento) : <span className="text-texto-2">Sin fecha</span>}
                         {p.evento && <span className="block text-xs text-texto-2">{p.evento}</span>}
                         {p.fechaEntrega && <span className="block text-xs text-texto-2">Entrega {fecha(p.fechaEntrega)}</span>}
                       </td>
-                      <td className="text-texto-2">{p.vendedor?.nombre ?? "—"}</td>
-                      <td className="text-right whitespace-nowrap">{pesos(p.total)}</td>
-                      <td className={`text-right whitespace-nowrap ${s > 0 ? "text-estado-alerta-txt font-medium" : "text-texto-2"}`}>{s > 0 ? pesos(s) : "—"}</td>
-                      <td><EstadoChip estado={p.estado} atrasado={tarde} /></td>
-                      <td>{wa && <a href={wa} target="_blank" title={s > 0 ? "Recordar saldo por WhatsApp" : "Abrir WhatsApp"} className="inline-flex w-11 h-11 items-center justify-center rounded-full text-[#1E8E4E] hover:bg-estado-listo"><MessageCircle size={18} /></a>}</td>
+                      <td className="text-texto-2 group-hover:bg-fondo">{p.vendedor?.nombre ?? "—"}</td>
+                      <td className="text-right whitespace-nowrap group-hover:bg-fondo">{pesos(p.total)}</td>
+                      <td className={`text-right whitespace-nowrap group-hover:bg-fondo ${s > 0 ? "text-estado-alerta-txt font-medium" : "text-texto-2"}`}>{s > 0 ? pesos(s) : "—"}</td>
+                      <td className="group-hover:bg-fondo"><EstadoChip estado={p.estado} atrasado={tarde} /></td>
+                      <td className="group-hover:bg-fondo">{wa && <a href={wa} target="_blank" title={s > 0 ? "Recordar saldo por WhatsApp" : "Abrir WhatsApp"} className="inline-flex w-11 h-11 items-center justify-center rounded-full text-[#1E8E4E] hover:bg-estado-listo"><MessageCircle size={18} /></a>}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
-
-          <div className="lg:hidden space-y-2">
-            {visibles.map((p) => {
-              const s = saldo(p.total, p.pagos);
-              const tarde = atrasado(p);
-              return (
-                <Link key={p.id} href={`/pedidos/${p.id}`} className="tarjeta p-4 block">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate"><span className="text-acento">N° {p.numero}</span> · {p.cliente.nombre}</p>
-                      <p className="text-xs text-texto-2 truncate">{p.items.map((i) => i.nombre).join(", ")}</p>
-                    </div>
-                    <EstadoChip estado={p.estado} atrasado={tarde} />
-                  </div>
-                  <div className="flex justify-between text-sm mt-2">
-                    <span className="text-texto-2">{p.fechaEvento ? `Evento ${fecha(p.fechaEvento)}` : p.fechaEntrega ? `Entrega ${fecha(p.fechaEntrega)}` : "Sin fecha"}</span>
-                    <span>{pesos(p.total)}{s > 0 && <span className="text-estado-alerta-txt font-medium"> · debe {pesos(s)}</span>}</span>
-                  </div>
-                </Link>
-              );
-            })}
           </div>
 
           {visibles.length < lista.length && (
