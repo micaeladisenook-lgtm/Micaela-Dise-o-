@@ -150,6 +150,12 @@ async function main() {
   for (const [nombre, pesoGramos, altoCm, anchoCm, largoCm] of paquetes) {
     await db.producto.updateMany({ where: { nombre, pesoGramos: null }, data: { pesoGramos, altoCm, anchoCm, largoCm } });
   }
+  // Prendas que también se venden por unidad (precio cargado solo si aún no tenían uno)
+  await db.producto.updateMany({ where: { nombre: "Pijama de tiras y short" }, data: { nombre: "Pijama de tiras regulables" } });
+  const sueltas: [string, number][] = [["Pijama de tiras regulables", 50000], ["Pijama camisero corto", 69900], ["Pijama camisero largo de satén", 69900], ["Camisolín", 50000]];
+  for (const [nombre, precio] of sueltas) {
+    await db.producto.updateMany({ where: { nombre, tipo: "SUELTO", precio: null }, data: { precio, enListaPrecios: true, talleColorOpcional: true, descripcion: "Talle y color a elección (opcional)" } });
+  }
   if ((await db.tarifaMoto.count()) === 0) {
     await db.tarifaMoto.createMany({ data: TARIFAS_MOTO_INICIALES, skipDuplicates: true });
   }

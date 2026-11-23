@@ -73,7 +73,7 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
       if (talle && !pr.talles.includes(talle)) talle = null;
       return { productoId: pr.productoId, nombre: pr.nombre, color, talle, orden: k };
     });
-    const falta = lista.findIndex((pr, k) => !esAccesorio(pr.nombre) && (!prendas[k].color || (pr.talles.length > 0 && !prendas[k].talle)));
+    const falta = producto.talleColorOpcional ? -1 : lista.findIndex((pr, k) => !esAccesorio(pr.nombre) && (!prendas[k].color || (pr.talles.length > 0 && !prendas[k].talle)));
     if (falta >= 0) return { error: `Box ${n + 1}: falta el color o el talle de ${lista[falta].nombre}.` };
     const hilo = txt(b.hilo, 30) || null;
     items.push({

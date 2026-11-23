@@ -24,6 +24,7 @@ function leer(form: FormData) {
     precio: leerPesos(String(form.get("precio") ?? "")),
     precioAnterior: leerPesos(String(form.get("precioAnterior") ?? "")),
     enListaPrecios: form.get("enListaPrecios") === "on",
+    talleColorOpcional: form.get("talleColorOpcional") === "on",
     colores: lista("colores"),
     talles: lista("talles"),
     activo: form.get("activo") === "on",

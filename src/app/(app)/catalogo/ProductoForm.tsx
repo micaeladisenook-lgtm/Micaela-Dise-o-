@@ -6,7 +6,7 @@ import type { EstadoForm } from "./acciones";
 
 type Producto = {
   nombre: string; tipo: string; descripcion: string | null; precio: number | null;
-  precioAnterior: number | null; enListaPrecios: boolean;
+  precioAnterior: number | null; enListaPrecios: boolean; talleColorOpcional?: boolean;
   pesoGramos?: number | null; altoCm?: number | null; anchoCm?: number | null; largoCm?: number | null;
   colores: string[]; talles: string[]; activo: boolean; orden: number;
   componentes: { componenteId: string; cantidad: number; opcional: boolean; aEleccion: boolean }[];
@@ -149,6 +149,11 @@ export default function ProductoForm({
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" name="enListaPrecios" defaultChecked={producto?.enListaPrecios ?? true} className="w-5 h-5 accent-acento" />
         <span className="text-sm">Mostrar en la lista de precios (desmarcalo para prendas que solo van dentro de un box)</span>
+      </label>
+
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="talleColorOpcional" defaultChecked={producto?.talleColorOpcional ?? false} className="w-5 h-5 accent-acento" />
+        <span className="text-sm">Talle y color opcionales (la clienta puede dejarlos sin elegir en el formulario)</span>
       </label>
 
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-3 py-2">{estado.error}</p>}

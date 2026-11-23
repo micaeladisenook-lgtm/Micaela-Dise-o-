@@ -13,7 +13,7 @@ import SelectorColor from "@/components/SelectorColor";
 type Comp = { componenteId: string; cantidad: number; aEleccion: boolean; componente: { id: string; nombre: string; colores: string[]; talles: string[] } };
 type P = {
   id: string; nombre: string; tipo: string; precio: number | null; precioAnterior: number | null; descripcion: string | null;
-  colores: string[]; talles: string[]; componentes: Comp[];
+  colores: string[]; talles: string[]; opcional?: boolean; componentes: Comp[];
 };
 
 const TIPOS: [string, string][] = [["BOX", "Boxes"], ["KIT", "Kits"], ["SUELTO", "Prendas sueltas"]];
@@ -63,6 +63,7 @@ function faltaEnBox(b: Box, productos: P[]): string | null {
   const p = productos.find((x) => x.id === b.productoId);
   if (!p) return "Elegí un box o producto.";
   for (const pr of prendasDelProducto(p, b.eleccion || null).map((x, i) => ({ ...x, i })).filter((x) => !esAccesorio(x.nombre))) {
+    if (p.opcional) continue;
     if (!b.colores[pr.i]) return `Elegí el color de: ${pr.nombre}.`;
     if (pr.talles.length && !b.talles[pr.i]) return `Elegí el talle de: ${pr.nombre}.`;
   }
@@ -84,7 +85,7 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
     setBox({ colores: n });
   };
   const talle = (pr: { i: number; talles: string[] }) => pr.talles.length > 0 && (
-    <Campo etiqueta="Talle *">
+    <Campo etiqueta={p?.opcional ? "Talle (opcional)" : "Talle *"}>
       <select className="campo" value={box.talles[pr.i] ?? ""} onChange={(e) => setBox({ talles: { ...box.talles, [pr.i]: e.target.value } })}>
         <option value="">Elegí…</option>
         {pr.talles.map((t) => <option key={t}>{t}</option>)}
@@ -163,7 +164,7 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    <Campo etiqueta="Color *">
+                    <Campo etiqueta={p?.opcional ? "Color (opcional)" : "Color *"}>
                       {pr.colores.length ? (
                         <select className="campo" value={box.colores[pr.i] ?? ""} onChange={(e) => elegirColor(pr.i, e.target.value)}>
                           <option value="">Elegí…</option>

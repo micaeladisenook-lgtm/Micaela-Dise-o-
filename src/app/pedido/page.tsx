@@ -21,7 +21,7 @@ export default async function PedidoPublicoPage() {
   const extra = await db.producto.findFirst({ where: { tipo: "ADICIONAL", nombre: { contains: "Bordado", mode: "insensitive" } } });
   const datos = productos.map((p) => ({
     id: p.id, nombre: p.nombre, tipo: p.tipo, precio: p.precio, precioAnterior: p.precioAnterior, descripcion: p.descripcion,
-    colores: p.colores, talles: p.talles,
+    colores: p.colores, talles: p.talles, opcional: p.talleColorOpcional,
     componentes: p.componentes.map((c) => ({
       componenteId: c.componenteId, cantidad: c.cantidad, aEleccion: c.aEleccion,
       componente: { id: c.componente.id, nombre: c.componente.nombre, colores: c.componente.colores, talles: c.componente.talles },

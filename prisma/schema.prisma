@@ -121,6 +121,7 @@ model Producto {
   precio      Int?
   precioAnterior Int?
   enListaPrecios Boolean   @default(true)
+  talleColorOpcional Boolean @default(false) // la clienta puede dejar talle y color sin elegir
   pesoGramos  Int?        // peso del paquete listo para enviar
   altoCm      Float?
   anchoCm     Float?
