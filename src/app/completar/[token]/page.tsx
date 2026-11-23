@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { fotosDeColores } from "@/lib/colores";
 import { fecha, pesos } from "@/lib/formato";
 import { pagado, saldo } from "@/lib/pedidos";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Completá tu pedido · Micaela Diseño", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export default async function CompletarPage({ params }: { params: Promise<{ toke
     <main className="min-h-screen px-4 py-8">
       <div className="max-w-xl mx-auto">
         <header className="text-center mb-6">
-          <p className="titulo text-5xl italic text-acento leading-none">Micaela Diseño</p>
+          <Logo className="w-72 mx-auto" />
           <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-3">Pedido N° {p.numero}</p>
         </header>
 
