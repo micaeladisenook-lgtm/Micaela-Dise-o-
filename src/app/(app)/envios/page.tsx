@@ -3,6 +3,8 @@ import { AlertTriangle, Printer } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
 import EstadoChip from "@/components/EstadoChip";
 import { Acciones } from "./Tarjeta";
+import Configuracion from "./Configuracion";
+import { cpOrigen, estadoCorreos } from "@/lib/cotizador";
 import { db } from "@/lib/db";
 import { requerirPermiso } from "@/lib/acceso";
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
@@ -10,7 +12,8 @@ import { fechaGuia, atrasado } from "@/lib/pedidos";
 import { datosEnvio, faltantes, textoParaCopiar } from "@/lib/envios";
 
 export default async function EnviosPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  await requerirPermiso("ver_pedidos");
+  const u = await requerirPermiso("ver_pedidos");
+  const origen = await cpOrigen();
   const { tab = "pendientes" } = await searchParams;
   const despachados = tab === "despachados";
   const [pedidos, plantilla] = await Promise.all([
@@ -35,6 +38,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
           <a href={`/imprimir-rotulos?ids=${listos.join(",")}`} target="_blank" className="btn-primario"><Printer size={16} /> Rótulos de los listos ({listos.length})</a>
         )}
       </Encabezado>
+      <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={u.rol === "ADMIN"} />
       <div className="inline-flex gap-1 bg-menu rounded-full p-1 mb-5">
         <Link href="/envios" className={chip(!despachados)}>Para despachar</Link>
         <Link href="/envios?tab=despachados" className={chip(despachados)}>Despachados</Link>
@@ -58,7 +62,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     <Link href={`/pedidos/${p.id}`} className="font-semibold text-acento hover:underline">Pedido N° {p.numero}</Link>
-                    <p className="text-xs text-texto-2">{p.items.map((i) => i.nombre).join(", ")}</p>
+                    <p className="text-xs text-texto-2">{p.items.filter((i) => !i.nombre.startsWith("Envío ")).map((i) => i.nombre).join(", ")}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <EstadoChip estado={p.estado} atrasado={atrasado(p)} />

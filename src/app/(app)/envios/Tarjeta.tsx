@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Copy, Pencil, Truck, Printer, Undo2, MessageCircle } from "lucide-react";
+import { Copy, Pencil, Truck, Printer, Undo2, MessageCircle, Calculator } from "lucide-react";
+import Cotizador from "./Cotizador";
 import { useFormulario } from "@/lib/useFormulario";
 import { guardarDatosEnvio, marcarDespachado, deshacerDespacho } from "./acciones";
 import { FORMAS_ENVIO } from "@/lib/pedidos";
@@ -10,7 +11,7 @@ type D = { nombre: string; dni: string | null; telefono: string | null; direccio
 export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa }: {
   id: string; datos: D; copiar: string; formaEnvio: string | null; despachado: boolean; avisoWa: string | null;
 }) {
-  const [modo, setModo] = useState<"" | "editar" | "despachar">("");
+  const [modo, setModo] = useState<"" | "editar" | "despachar" | "cotizar">("");
   const [copiado, setCopiado] = useState(false);
   const [e1, onEditar, p1] = useFormulario(guardarDatosEnvio.bind(null, id), null);
   const [e2, onDespachar, p2] = useFormulario(marcarDespachado.bind(null, id), null);
@@ -23,12 +24,14 @@ export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa }:
           <Copy size={15} /> {copiado ? "¡Copiado!" : "Copiar datos"}
         </button>
         <a href={`/imprimir-rotulos?ids=${id}`} target="_blank" className="btn-suave min-h-10 px-3"><Printer size={15} /> Rótulo</a>
+        {!despachado && <button type="button" className="btn-secundario min-h-10 px-3" onClick={() => setModo(modo === "cotizar" ? "" : "cotizar")}><Calculator size={15} /> Cotizar</button>}
         {!despachado && <button type="button" className="btn-suave min-h-10 px-3" onClick={() => setModo(modo === "editar" ? "" : "editar")}><Pencil size={15} /> Editar datos</button>}
         {!despachado && <button type="button" className="btn-primario min-h-10 px-3" onClick={() => setModo(modo === "despachar" ? "" : "despachar")}><Truck size={15} /> Despachar</button>}
         {despachado && avisoWa && <a href={avisoWa} target="_blank" className="btn-secundario min-h-10 px-3"><MessageCircle size={15} /> Avisar envío</a>}
         {despachado && <button type="button" disabled={p3} className="btn-suave min-h-10 px-3" onClick={() => confirm("¿Volver este pedido a pendiente de envío?") && start(() => deshacerDespacho(id))}><Undo2 size={15} /> Deshacer</button>}
       </div>
 
+      {modo === "cotizar" && <Cotizador pedidoId={id} cpInicial={datos.codigoPostal} />}
       {modo === "editar" && (
         <form onSubmit={onEditar} className="grid sm:grid-cols-2 gap-2 rounded-xl bg-fondo p-3">
           <select name="formaEnvio" className="campo" defaultValue={formaEnvio ?? ""}>

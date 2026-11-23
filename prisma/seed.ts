@@ -133,6 +133,24 @@ async function main() {
     }
   }
 
+  // Peso y medidas de los paquetes (solo si todavía no están cargados)
+  const paquetes: [string, number, number, number, number][] = [
+    // nombre, gramos, alto, ancho, largo (cm)
+    ["Bata + pantu satén bordada", 1000, 7, 22, 33],
+    ["Bata + pantu plush bordada", 1000, 7, 22, 33],
+    ["Mega box satén", 1000, 11, 27, 35],
+    ["Bata diseñada de satén", 500, 7, 22, 33],
+    ["Bata diseñada de plush (manga larga)", 500, 7, 22, 33],
+    // estimados (se pueden corregir en Catálogo → Editar)
+    ["Box completo", 1000, 11, 27, 35],
+    ["Box de invierno", 1000, 11, 27, 35],
+    ["Bata + camisolín (o pijama o camisero)", 1000, 7, 22, 33],
+  ];
+  for (const [nombre, pesoGramos, altoCm, anchoCm, largoCm] of paquetes) {
+    await db.producto.updateMany({ where: { nombre, pesoGramos: null }, data: { pesoGramos, altoCm, anchoCm, largoCm } });
+  }
+  await db.configuracion.upsert({ where: { clave: "cp_origen" }, update: {}, create: { clave: "cp_origen", valor: "1759" } });
+
   console.log("Datos iniciales cargados ✔");
 }
 

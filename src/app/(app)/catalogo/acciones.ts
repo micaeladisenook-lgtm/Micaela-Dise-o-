@@ -10,6 +10,11 @@ import { exigirPermiso } from "@/lib/acceso";
 
 export type EstadoForm = { error?: string; ok?: string } | null;
 
+function num(v: FormDataEntryValue | null): number | null {
+  const n = parseFloat(String(v ?? "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 function leer(form: FormData) {
   const lista = (k: string) => String(form.get(k) ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   return {
@@ -22,6 +27,10 @@ function leer(form: FormData) {
     colores: lista("colores"),
     talles: lista("talles"),
     activo: form.get("activo") === "on",
+    pesoGramos: num(form.get("pesoKg")) != null ? Math.round(num(form.get("pesoKg"))! * 1000) : null,
+    altoCm: num(form.get("altoCm")),
+    anchoCm: num(form.get("anchoCm")),
+    largoCm: num(form.get("largoCm")),
     orden: parseInt(String(form.get("orden") ?? "0"), 10) || 0,
   };
 }

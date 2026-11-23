@@ -11,6 +11,7 @@ import BorrarPago from "../BorrarPago";
 import BotonRevisado from "../BotonRevisado";
 import LinkPago from "../LinkPago";
 import EnviarResumen from "../EnviarResumen";
+import Cotizador from "../../envios/Cotizador";
 import { linkResumen } from "@/lib/resumen";
 import CasillaTarea from "../../talleres/CasillaTarea";
 import { bloqueadaPor, NOMBRE_FUNCION } from "@/lib/produccion";
@@ -153,6 +154,12 @@ export default async function PedidoPage({
               <p className="font-medium">{p.fechaEntrega ? fecha(p.fechaEntrega) : "Sin fecha"}</p>
               <p>{textoEntrega({ ...p, fechaEntrega: null })}</p>
             </div>
+            {p.envio && p.estado !== "ENTREGADO" && p.estado !== "CANCELADO" && permisos.has("crear_pedidos") && (
+              <div className="sm:col-span-2 no-imprimir">
+                <p className="text-texto-2 mb-1">Cotizar envío {p.costoEnvio ? <span className="text-texto">· elegido: {p.formaEnvio} {pesos(p.costoEnvio)}</span> : null}</p>
+                <Cotizador pedidoId={p.id} cpInicial={p.codigoPostal ?? p.cliente.codigoPostal} />
+              </div>
+            )}
             {p.notas && (
               <div className="sm:col-span-2">
                 <p className="text-texto-2">Notas</p>

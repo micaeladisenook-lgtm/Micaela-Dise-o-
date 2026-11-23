@@ -7,6 +7,7 @@ import type { EstadoForm } from "./acciones";
 type Producto = {
   nombre: string; tipo: string; descripcion: string | null; precio: number | null;
   precioAnterior: number | null; enListaPrecios: boolean;
+  pesoGramos?: number | null; altoCm?: number | null; anchoCm?: number | null; largoCm?: number | null;
   colores: string[]; talles: string[]; activo: boolean; orden: number;
   componentes: { componenteId: string; cantidad: number; opcional: boolean; aEleccion: boolean }[];
 };
@@ -72,6 +73,19 @@ export default function ProductoForm({
           <p className="ayuda">Los números más chicos aparecen primero.</p>
         </div>
       </div>
+
+      {tipo !== "ADICIONAL" && (
+        <div>
+          <span className="etiqueta">Paquete para envío</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <label className="text-xs text-texto-2">Peso (kg)<input name="pesoKg" inputMode="decimal" className="campo mt-1" defaultValue={producto?.pesoGramos != null ? String(producto.pesoGramos / 1000).replace(".", ",") : ""} placeholder="1" /></label>
+            <label className="text-xs text-texto-2">Alto (cm)<input name="altoCm" inputMode="decimal" className="campo mt-1" defaultValue={producto?.altoCm ?? ""} placeholder="7" /></label>
+            <label className="text-xs text-texto-2">Ancho (cm)<input name="anchoCm" inputMode="decimal" className="campo mt-1" defaultValue={producto?.anchoCm ?? ""} placeholder="22" /></label>
+            <label className="text-xs text-texto-2">Largo (cm)<input name="largoCm" inputMode="decimal" className="campo mt-1" defaultValue={producto?.largoCm ?? ""} placeholder="33" /></label>
+          </div>
+          <p className="ayuda">Medidas de la caja ya armada. Se usan para cotizar envíos con Correo Argentino, Andreani y Vía Cargo.</p>
+        </div>
+      )}
 
       {tipo !== "ADICIONAL" && tipo !== "BOX" && (
         <div className="grid sm:grid-cols-2 gap-4">

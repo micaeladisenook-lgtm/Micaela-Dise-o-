@@ -66,6 +66,9 @@ export default async function CatalogoPage() {
                         )}
                       </ul>
                     )}
+                    {p.pesoGramos != null && (
+                      <p className="text-xs text-texto-2 mt-2">📦 {String(p.pesoGramos / 1000).replace(".", ",")} kg · {p.altoCm}×{p.anchoCm}×{p.largoCm} cm</p>
+                    )}
                     {p.colores.length > 0 && (
                       <div className="mt-3">
                         <p className="text-xs text-texto-2 mb-1">Colores</p>

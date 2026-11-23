@@ -120,6 +120,10 @@ model Producto {
   precio      Int?
   precioAnterior Int?
   enListaPrecios Boolean   @default(true)
+  pesoGramos  Int?        // peso del paquete listo para enviar
+  altoCm      Float?
+  anchoCm     Float?
+  largoCm     Float?
   colores     String[]
   talles      String[]
   activo      Boolean      @default(true)
@@ -385,4 +389,10 @@ model Permiso {
   clave     String
   permitido Boolean @default(false)
   @@id([rol, clave])
+}
+
+// Ajustes generales del sistema (ej: código postal de origen de los envíos)
+model Configuracion {
+  clave String @id
+  valor String
 }
