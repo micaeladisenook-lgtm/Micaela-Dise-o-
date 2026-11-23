@@ -7,9 +7,9 @@ import { registrar } from "@/lib/registro";
 import { cotizarPedido } from "@/lib/cotizador";
 import { pesos } from "@/lib/formato";
 
-export async function cotizarEnvio(pedidoId: string, cpDestino: string) {
+export async function cotizarEnvio(pedidoId: string, cpDestino: string, localidad?: string) {
   await requerirPermiso("ver_pedidos");
-  return cotizarPedido(pedidoId, cpDestino);
+  return cotizarPedido(pedidoId, cpDestino, localidad);
 }
 
 export async function elegirEnvio(pedidoId: string, opcion: { empresa: string; servicio: string; precio: number }, sumarAlTotal: boolean) {

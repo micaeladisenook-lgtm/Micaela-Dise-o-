@@ -42,7 +42,7 @@ export function Acciones({ id, datos, copiar, formaEnvio, despachado, avisoWa, p
 
       {msgCorreo?.ok && <p className="text-sm text-estado-listo-txt">{msgCorreo.ok}</p>}
       {msgCorreo?.error && <p className="text-sm text-estado-alerta-txt">{msgCorreo.error}</p>}
-      {modo === "cotizar" && <Cotizador pedidoId={id} cpInicial={datos.codigoPostal} />}
+      {modo === "cotizar" && <Cotizador pedidoId={id} cpInicial={datos.codigoPostal} localidadInicial={datos.localidad} />}
       {modo === "editar" && (
         <form onSubmit={onEditar} className="grid sm:grid-cols-2 gap-2 rounded-xl bg-fondo p-3">
           <select name="formaEnvio" className="campo" defaultValue={formaEnvio ?? ""}>

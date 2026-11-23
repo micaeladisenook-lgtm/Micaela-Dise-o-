@@ -1,5 +1,7 @@
 import "server-only";
 import { db } from "./db";
+import { datosEnvio } from "./envios";
+import { buscarTarifaMoto } from "./moto";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cotizador de envíos: Correo Argentino (MiCorreo), Andreani y Vía Cargo.
@@ -12,12 +14,13 @@ import { db } from "./db";
 
 export type Bulto = { gramos: number; alto: number; ancho: number; largo: number; valor: number; nombre: string };
 export type Opcion = {
-  empresa: "Correo Argentino" | "Andreani" | "Vía Cargo";
+  empresa: "Motomensajería" | "Correo Argentino" | "Andreani" | "Vía Cargo";
   servicio: string;
   precio: number | null;
   plazo: string | null;
   aviso?: string; // no configurado, error, o cotización manual
   linkManual?: string;
+  manual?: boolean; // se puede escribir el precio a mano
 };
 
 const PAQUETE_POR_DEFECTO = { gramos: 1000, alto: 7, ancho: 22, largo: 33 };
@@ -45,7 +48,7 @@ export async function bultosDePedido(pedidoId: string): Promise<Bulto[]> {
 }
 
 // Sin credenciales: cotización manual en la web de la empresa (se carga el precio a mano)
-const WEB: Record<Opcion["empresa"], string> = {
+const WEB: Partial<Record<Opcion["empresa"], string>> = {
   "Correo Argentino": "https://www.correoargentino.com.ar/formularios/e-commerce",
   Andreani: "https://www.andreani.com/",
   "Vía Cargo": "https://www.viacargo.com.ar/",
@@ -142,6 +145,7 @@ export function estadoCorreos() {
   const ca = !!(e.CORREO_AR_USUARIO && e.CORREO_AR_CLAVE && e.CORREO_AR_CUSTOMER_ID);
   const an = !!(e.ANDREANI_USUARIO && e.ANDREANI_CLAVE && e.ANDREANI_CLIENTE && (e.ANDREANI_CONTRATO_DOMICILIO || e.ANDREANI_CONTRATO_SUCURSAL));
   return [
+    { empresa: "Motomensajería", ok: true, nota: "Precio automático según la localidad" },
     { empresa: "Correo Argentino", ok: ca, nota: ca ? "Conectado (MiCorreo)" : "Cotización manual (falta conectar MiCorreo)" },
     { empresa: "Andreani", ok: an, nota: an ? "Conectado (contrato propio)" : "Cotización manual (falta conectar el contrato)" },
     { empresa: "Vía Cargo", ok: false, nota: "Cotización manual (no tiene API pública)" },
@@ -153,14 +157,30 @@ export function estadoCorreos() {
   ];
 }
 
-export async function cotizarPedido(pedidoId: string, cpDestino: string) {
+// ── Motomensajería (lista de precios por localidad, editable en Envíos) ─────
+async function motomensajeria(localidad: string | null, provincia: string | null, direccion: string | null): Promise<Opcion[]> {
+  const t = await buscarTarifaMoto(localidad, provincia, direccion);
+  if (!t.length) {
+    return [{
+      empresa: "Motomensajería", servicio: localidad ? `“${localidad}” no está en la lista` : "Falta la localidad", precio: null, plazo: null, manual: true,
+      aviso: "Revisá la localidad o cargá el precio a mano (la lista se edita en Envíos → Motomensajería).",
+    }];
+  }
+  return t.map((x) => ({ empresa: "Motomensajería" as const, servicio: `${x.localidad} · ${x.zona}`, precio: x.precio, plazo: null }));
+}
+
+export async function cotizarPedido(pedidoId: string, cpDestino: string, localidadDestino?: string) {
   const origen = await cpOrigen();
   const destino = cpDestino.replace(/\D/g, "");
   const bultos = await bultosDePedido(pedidoId);
-  if (!origen) return { error: "Falta el código postal de origen (Envíos → Configuración).", bultos, opciones: [] as Opcion[] };
-  if (destino.length < 4) return { error: "Falta el código postal de destino de la clienta.", bultos, opciones: [] as Opcion[] };
-  if (!bultos.length) return { error: "El pedido no tiene productos para enviar.", bultos, opciones: [] as Opcion[] };
+  const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: { cliente: true } });
+  const d = datosEnvio(p);
+  const localidad = localidadDestino?.trim() || d.localidad;
+  const moto = await motomensajeria(localidad, d.provincia, localidadDestino?.trim() ? null : d.direccion);
+  const conError = (error: string) => ({ error, origen, destino, localidad, bultos, opciones: moto });
+  if (!bultos.length) return conError("El pedido no tiene productos para enviar.");
+  if (!origen) return conError("Para cotizar por correo falta el código postal de origen (Envíos → Configuración).");
+  if (destino.length < 4) return conError("Para cotizar por correo falta el código postal de la clienta.");
   const [ca, an] = await Promise.all([correoArgentino(origen, destino, bultos), andreani(destino, bultos)]);
-  const opciones = [...ca, ...an, ...viaCargo()];
-  return { error: null, origen, destino, bultos, opciones };
+  return { error: null, origen, destino, localidad, bultos, opciones: [...moto, ...ca, ...an, ...viaCargo()] };
 }

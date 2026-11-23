@@ -18,7 +18,7 @@ export default function Configuracion({ cp, estado, esAdmin, remitente }: { cp: 
       </form>
       <div>
         <p className="font-medium mb-2">Cotización automática</p>
-        <ul className="grid sm:grid-cols-2 xl:grid-cols-4 gap-2 text-sm">
+        <ul className="grid sm:grid-cols-2 xl:grid-cols-5 gap-2 text-sm">
           {estado.map((x) => (
             <li key={x.empresa} className={`rounded-xl px-3 py-2 ${x.ok ? "bg-estado-listo text-estado-listo-txt" : "bg-fondo text-texto-2"}`}>
               <strong>{x.empresa}</strong><span className="block text-xs">{x.nota}</span>

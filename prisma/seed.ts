@@ -1,4 +1,5 @@
 import { PrismaClient, TipoProducto } from "@prisma/client";
+import { TARIFAS_MOTO_INICIALES } from "../src/lib/tarifasMotoIniciales";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 
@@ -148,6 +149,9 @@ async function main() {
   ];
   for (const [nombre, pesoGramos, altoCm, anchoCm, largoCm] of paquetes) {
     await db.producto.updateMany({ where: { nombre, pesoGramos: null }, data: { pesoGramos, altoCm, anchoCm, largoCm } });
+  }
+  if ((await db.tarifaMoto.count()) === 0) {
+    await db.tarifaMoto.createMany({ data: TARIFAS_MOTO_INICIALES, skipDuplicates: true });
   }
   await db.configuracion.upsert({ where: { clave: "cp_origen" }, update: {}, create: { clave: "cp_origen", valor: "1759" } });
 

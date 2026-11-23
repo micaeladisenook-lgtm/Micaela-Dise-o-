@@ -157,7 +157,7 @@ export default async function PedidoPage({
             {p.envio && p.estado !== "ENTREGADO" && p.estado !== "CANCELADO" && permisos.has("crear_pedidos") && (
               <div className="sm:col-span-2 no-imprimir">
                 <p className="text-texto-2 mb-1">Cotizar envío {p.costoEnvio ? <span className="text-texto">· elegido: {p.formaEnvio} {pesos(p.costoEnvio)}</span> : null}</p>
-                <Cotizador pedidoId={p.id} cpInicial={p.codigoPostal ?? p.cliente.codigoPostal} />
+                <Cotizador pedidoId={p.id} cpInicial={p.codigoPostal ?? p.cliente.codigoPostal} localidadInicial={p.localidad ?? p.cliente.localidad} />
               </div>
             )}
             {p.notas && (

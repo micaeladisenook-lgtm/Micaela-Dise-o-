@@ -404,3 +404,13 @@ model Configuracion {
   clave String @id
   valor String
 }
+
+// Motomensajería: precio por localidad / barrio (editable desde Envíos)
+model TarifaMoto {
+  id        String @id @default(cuid())
+  zona      String
+  localidad String
+  precio    Int
+
+  @@unique([zona, localidad])
+}

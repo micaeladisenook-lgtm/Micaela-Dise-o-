@@ -4,6 +4,7 @@ import Encabezado from "@/components/Encabezado";
 import EstadoChip from "@/components/EstadoChip";
 import { Acciones } from "./Tarjeta";
 import Configuracion from "./Configuracion";
+import MotoTarifas from "./MotoTarifas";
 import { cpOrigen, estadoCorreos } from "@/lib/cotizador";
 import { paqarConfigurado } from "@/lib/paqar";
 import { db } from "@/lib/db";
@@ -17,6 +18,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
   const origen = await cpOrigen();
   const remitente = Object.fromEntries((await db.configuracion.findMany({ where: { clave: { startsWith: "remitente_" } } })).map((c) => [c.clave.replace("remitente_", ""), c.valor]));
   const paqarActivo = paqarConfigurado();
+  const tarifasMoto = await db.tarifaMoto.findMany({ orderBy: { localidad: "asc" } });
   const { tab = "pendientes" } = await searchParams;
   const despachados = tab === "despachados";
   const [pedidos, plantilla] = await Promise.all([
@@ -42,6 +44,7 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
         )}
       </Encabezado>
       <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={u.rol === "ADMIN"} remitente={remitente} />
+      <MotoTarifas tarifas={tarifasMoto} esAdmin={u.rol === "ADMIN"} />
       <div className="inline-flex gap-1 bg-menu rounded-full p-1 mb-5">
         <Link href="/envios" className={chip(!despachados)}>Para despachar</Link>
         <Link href="/envios?tab=despachados" className={chip(despachados)}>Despachados</Link>
