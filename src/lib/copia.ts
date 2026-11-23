@@ -25,8 +25,13 @@ const revivir = (o: unknown): unknown => {
 };
 
 // Reemplaza TODO el contenido de la base por el de la copia
-export async function restaurarTodo(copia: { app?: string; datos?: Record<string, unknown[]> }) {
+// "conservar": la usuaria que restaura mantiene su contraseña actual (y sigue siendo administradora)
+export async function restaurarTodo(copia: { app?: string; datos?: Record<string, unknown[]> }, conservar?: { login: string; passwordHash: string }) {
   if (copia.app !== "micaela-diseno" || !copia.datos) throw new Error("El archivo no es una copia de seguridad de Micaela Diseño.");
+  if (conservar) {
+    copia.datos.usuario = (copia.datos.usuario as { login: string }[]).map((u) =>
+      u.login === conservar.login ? { ...u, passwordHash: conservar.passwordHash, rol: "ADMIN", activo: true, debeCambiarClave: false } : u);
+  }
   await db.$transaction(async (tx) => {
     const t = (n: string) => (tx as unknown as Record<string, Delegado>)[n];
     for (const n of [...TABLAS].reverse()) await t(n).deleteMany();
