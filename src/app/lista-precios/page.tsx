@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { fecha, pesos } from "@/lib/formato";
 import { NOMBRE_TIPO, ORDEN_TIPOS } from "@/lib/catalogo";
 import { requerirPermiso } from "@/lib/acceso";
+import Logo from "@/components/Logo";
 
 export const metadata = { title: "Lista de precios · Micaela Diseño" };
 
@@ -26,7 +27,7 @@ export default async function ListaPreciosPage() {
 
       <article className="bg-white max-w-[800px] mx-auto p-8 md:p-12 border border-borde rounded-tarjeta print:border-0 print:p-0 print:rounded-none">
         <header className="text-center border-b border-borde pb-6 mb-8">
-          <p className="titulo text-5xl italic text-acento">Micaela Diseño</p>
+          <Logo className="w-72 mx-auto" />
           <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-2">Lista de precios</p>
           <p className="text-xs text-texto-2 mt-1">Vigente al {fecha(new Date())}</p>
         </header>

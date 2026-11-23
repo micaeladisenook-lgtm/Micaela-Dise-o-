@@ -3,9 +3,9 @@ import { pedidoPorToken } from "@/lib/resumen";
 import { fecha, pesos } from "@/lib/formato";
 import { pagado, saldo, textoEntrega } from "@/lib/pedidos";
 
-const ACENTO = rgb(0.612, 0.247, 0.361);
-const GRIS = rgb(0.42, 0.357, 0.38);
-const TEXTO = rgb(0.169, 0.137, 0.149);
+const ACENTO = rgb(0.6, 0.133, 0.133); // #992222
+const GRIS = rgb(0.4, 0.345, 0.416); // #66586A
+const TEXTO = rgb(0.122, 0.071, 0.176); // #1F122D
 
 // Las fuentes estándar del PDF no tienen emojis: los quitamos
 const limpio = (s: string) => s.replace(/[“”]/g, '"').replace(/[^\x20-\x7E -ÿ–—•…'"]/g, "").trim();
@@ -22,7 +22,7 @@ function partir(texto: string, fuente: PDFFont, tam: number, ancho: number) {
   return lineas;
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const p = await pedidoPorToken(token);
   if (!p) return new Response("No encontrado", { status: 404 });
@@ -44,9 +44,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
   };
 
   // Encabezado
-  const marca = "Micaela Diseño";
-  page.drawText(marca, { x: (W - cursiva.widthOfTextAtSize(marca, 30)) / 2, y, size: 30, font: cursiva, color: ACENTO });
-  y -= 22;
+  // Logo de la marca (si no se puede leer, va el nombre en letra cursiva)
+  const logo = await fetch(new URL("/logo.png", req.url)).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => (b ? doc.embedPng(b) : null)).catch(() => null);
+  if (logo) {
+    const ancho = 200, alto = (ancho * logo.height) / logo.width;
+    page.drawImage(logo, { x: (W - ancho) / 2, y: y - alto + 24, width: ancho, height: alto });
+    y -= alto - 4;
+  } else {
+    const marca = "Micaela Diseño";
+    page.drawText(marca, { x: (W - cursiva.widthOfTextAtSize(marca, 30)) / 2, y, size: 30, font: cursiva, color: ACENTO });
+    y -= 22;
+  }
   const sub = "RESUMEN DE TU COMPRA";
   page.drawText(sub, { x: (W - normal.widthOfTextAtSize(sub, 9)) / 2, y, size: 9, font: normal, color: GRIS });
   y -= 18;

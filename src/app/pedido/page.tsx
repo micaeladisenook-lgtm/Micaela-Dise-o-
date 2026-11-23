@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import FormPublico from "./FormPublico";
 import { db } from "@/lib/db";
 import { fotosDeColores } from "@/lib/colores";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Hacé tu pedido · Micaela Diseño",
@@ -30,7 +31,7 @@ export default async function PedidoPublicoPage() {
     <main className="min-h-screen px-4 py-8">
       <div className="max-w-xl mx-auto">
         <header className="text-center mb-6">
-          <p className="titulo text-5xl italic text-acento leading-none">Micaela Diseño</p>
+          <Logo className="w-72 mx-auto" />
           <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-3">Hacé tu pedido</p>
           <p className="text-sm text-texto-2 mt-3">Elegí tu box, personalizalo y completá los datos de envío. Te escribimos por WhatsApp para confirmar, pasarte el costo del envío y coordinar la seña 💕</p>
         </header>

@@ -6,6 +6,7 @@ import {
   Tags, Package, Wallet, Receipt, ShieldCheck, LogOut, Truck, MessageSquareText,
 } from "lucide-react";
 import { salir } from "@/app/login/acciones";
+import Logo from "@/components/Logo";
 
 type Item = { href: string; texto: string; icono: React.ElementType; clave: string };
 
@@ -39,7 +40,7 @@ export default function MenuLateral({ nombre, rol, permisos }: { nombre: string;
     <aside className="no-imprimir bg-menu border-b md:border-b-0 md:border-r border-borde md:fixed md:inset-y-0 md:left-0 md:w-64 flex flex-col">
       <div className="px-4 md:px-6 pt-4 md:pt-7 pb-2 md:pb-6 flex items-center justify-between md:block">
         <div>
-          <p className="titulo text-2xl md:text-3xl italic leading-none">Micaela Diseño</p>
+          <Logo className="w-36 md:w-48" />
           <p className="text-xs text-texto-2 mt-1 hidden md:block">Gestión del emprendimiento</p>
         </div>
         {/* En el celular, usuario arriba a la derecha */}

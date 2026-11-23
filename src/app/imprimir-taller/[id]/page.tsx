@@ -8,6 +8,7 @@ import { hoyAR } from "@/lib/pedidos";
 import { vistaTarea, itemDeTarea } from "@/lib/vistaTaller";
 import { tipografia } from "@/lib/tipografias";
 import { tareasDeSemana } from "@/lib/datosTalleres";
+import Logo from "@/components/Logo";
 
 export default async function ImprimirTallerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fecha?: string }> }) {
   const u = await requerirUsuario();
@@ -24,7 +25,7 @@ export default async function ImprimirTallerPage({ params, searchParams }: { par
       <div className="no-imprimir mb-4"><BotonImprimir texto="Imprimir / guardar PDF" /></div>
       <header className="flex items-end justify-between border-b border-borde pb-3 mb-4">
         <div>
-          <p className="titulo text-3xl italic text-acento">Micaela Diseño</p>
+          <Logo className="w-48" />
           <h1 className="text-2xl">Trabajos de {taller.nombre}</h1>
           <p className="text-sm text-texto-2">{taller.especialidad}</p>
         </div>

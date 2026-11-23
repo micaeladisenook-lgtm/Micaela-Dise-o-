@@ -2,6 +2,7 @@
 import { useFormulario } from "@/lib/useFormulario";
 
 import { entrar } from "./acciones";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const [error, onSubmit, enviando] = useFormulario(entrar, null);
@@ -9,7 +10,7 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <p className="titulo text-4xl italic">Micaela Diseño</p>
+          <Logo className="w-64 mx-auto" />
           <p className="text-texto-2 text-sm mt-1">Sistema de gestión</p>
         </div>
         <form onSubmit={onSubmit} className="tarjeta p-6 space-y-4">

@@ -4,6 +4,7 @@ import BotonImprimir from "@/components/BotonImprimir";
 import { pedidoPorToken } from "@/lib/resumen";
 import { fecha, pesos } from "@/lib/formato";
 import { pagado, saldo, textoEntrega, NOMBRE_ESTADO } from "@/lib/pedidos";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = { title: "Resumen de tu compra · Micaela Diseño", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export default async function ResumenPage({ params }: { params: Promise<{ token:
         </div>
         <article className="tarjeta p-6 md:p-8 print:border-0">
           <header className="text-center border-b border-borde pb-5 mb-5">
-            <p className="titulo text-4xl italic text-acento">Micaela Diseño</p>
+            <Logo className="w-64 mx-auto" />
             <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-2">Resumen de tu compra</p>
           </header>
           <div className="flex justify-between text-sm mb-5">
