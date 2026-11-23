@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, X, Plus, Trash2, MessageCircle, Check, Users } from "lucide-react";
 import { buscarClientes, guardarPedido } from "./acciones";
+import BordadoUbicacion from "./BordadoUbicacion";
 import type { ClienteForm, ItemForm, PedidoForm, PrendaForm } from "./tipos";
 import { pesos, linkWhatsApp } from "@/lib/formato";
 import {
@@ -41,7 +42,7 @@ function prendasDe(p: Prod, eleccionId?: string | null): PrendaForm[] {
 function itemVacio(): ItemForm {
   return {
     key: nuevaKey(), productoId: null, nombre: "", persona: "", cantidad: 1, precioUnitario: 0,
-    bordadoTexto: "", bordadoUbicacion: "Espalda", hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
+    bordadoTexto: "", bordadoUbicacion: "Espalda", bordadoDetalle: "", bordadoFotos: [], hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
   };
 }
 
@@ -404,6 +405,7 @@ export default function FormPedido({
                         <Opciones valor={it.bordadoUbicacion} opciones={UBICACIONES} onChange={(v) => setItem(it.key, { bordadoUbicacion: v })} placeholder="Ubicación del bordado" />
                         <Opciones valor={it.hilo} opciones={HILOS} onChange={(v) => setItem(it.key, { hilo: v })} placeholder="Color del hilo" />
                       </div>
+                      <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} onChange={(v) => setItem(it.key, v)} />
                       <input className="campo" placeholder="Notas (medidas especiales, talle distinto arriba/abajo, etc.)" value={it.notas} onChange={(e) => setItem(it.key, { notas: e.target.value })} />
                     </div>
                   )}

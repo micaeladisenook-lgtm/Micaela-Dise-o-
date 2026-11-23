@@ -99,6 +99,10 @@ export default async function PedidoPage({
                   {i.bordadoTexto && (
                     <p className="text-sm mt-1">– Bordado: <strong>&quot;{i.bordadoTexto}&quot;</strong>{i.bordadoUbicacion ? ` · ${i.bordadoUbicacion}` : ""}{i.hilo ? ` · hilo ${i.hilo.toLowerCase()}` : ""}</p>
                   )}
+                  {i.bordadoDetalle && <p className="text-sm mt-1">– Dónde va exactamente: <strong>{i.bordadoDetalle}</strong></p>}
+                  {i.bordadoFotos.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">{i.bordadoFotos.map((u) => <a key={u} href={u} target="_blank"><img src={u} alt="Dónde va el bordado" className="w-16 h-16 rounded-lg object-cover border border-borde" /></a>)}</div>
+                  )}
                   {i.notas && <p className="text-sm text-texto-2 mt-1 whitespace-pre-line">Nota: {i.notas}</p>}
                 </div>
               ))}

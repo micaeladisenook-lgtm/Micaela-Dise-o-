@@ -92,6 +92,12 @@ function Ficha({ t, onMover, verPedido }: { t: Tarjeta; onMover: (id: string, e:
             ))}
           </dl>
         )}
+        {t.vista.fotos.length > 0 && (
+          <div className="mt-1.5">
+            <p className="text-[11px] text-texto-2 mb-0.5">Foto de dónde va (tocá para agrandar)</p>
+            <div className="flex flex-wrap gap-1">{t.vista.fotos.map((u) => <a key={u} href={u} target="_blank"><img src={u} alt="Dónde va el bordado" className="w-16 h-16 rounded-lg object-cover border-2 border-acento/40" /></a>)}</div>
+          </div>
+        )}
         {t.vista.notas.map((n, i) => <p key={i} className="text-xs text-texto-2 mt-0.5">{n}</p>)}
         <p className="text-xs text-texto-2 mt-1.5 pt-1.5 border-t border-borde">
           {verPedido ? <Link href={`/pedidos/${t.pedidoId}`} className="text-acento hover:underline">Pedido N° {t.numero}</Link> : <span>Pedido N° {t.numero}</span>}

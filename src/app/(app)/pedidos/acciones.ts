@@ -13,6 +13,7 @@ import { pesos, leerPesos } from "@/lib/formato";
 import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
 import { exigirPermiso } from "@/lib/acceso";
+import { guardarImagen } from "@/lib/archivos";
 
 export async function buscarClientes(q: string) {
   await exigirPermiso("crear_pedidos");
@@ -119,6 +120,8 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     precioUnitario: Math.max(0, i.precioUnitario),
     bordadoTexto: txt(i.bordadoTexto),
     bordadoUbicacion: txt(i.bordadoUbicacion),
+    bordadoDetalle: txt(i.bordadoDetalle),
+    bordadoFotos: (i.bordadoFotos ?? []).filter((u) => /^(https:\/\/|\/api\/archivos\/)/.test(u)).slice(0, 6),
     hilo: txt(i.hilo),
     notas: txt(i.notas),
     orden: n,
@@ -260,5 +263,17 @@ export async function generarLinkPago(pedidoId: string, monto: number): Promise<
     return { ok: true, link };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
+  }
+}
+
+// Foto de referencia de dónde va el bordado (se sube apenas la eligen en el formulario)
+export async function subirFotoBordado(form: FormData): Promise<{ url: string } | { error: string }> {
+  await exigirPermiso("crear_pedidos");
+  const archivo = form.get("foto");
+  if (!(archivo instanceof File) || archivo.size === 0) return { error: "Elegí una foto." };
+  try {
+    return { url: await guardarImagen(archivo) };
+  } catch (e) {
+    return { error: (e as Error).message };
   }
 }

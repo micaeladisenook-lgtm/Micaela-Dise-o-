@@ -7,6 +7,8 @@ export type ItemParaTaller = {
   persona: string | null;
   bordadoTexto: string | null;
   bordadoUbicacion: string | null;
+  bordadoDetalle?: string | null;
+  bordadoFotos?: string[];
   hilo: string | null;
   notas: string | null;
 };
@@ -21,7 +23,7 @@ export type TareaParaTaller = {
 };
 
 export type Dato = { etiqueta: string; valor: string; destacado?: boolean };
-export type VistaTarea = { accion: string; prenda: string; datos: Dato[]; notas: string[]; conDisenos: boolean };
+export type VistaTarea = { accion: string; prenda: string; datos: Dato[]; notas: string[]; conDisenos: boolean; fotos: string[] };
 
 export const ACCION_FUNCION: Record<string, { verbo: string; empezar: string; terminar: string }> = {
   CONFECCION_ROPA: { verbo: "Confeccionar", empezar: "Tildá cuando empieces a cortar/coser", terminar: "Tildá cuando la prenda esté cosida" },
@@ -60,16 +62,17 @@ export function vistaTarea(funcion: string, t: TareaParaTaller, it: ItemParaTall
     add("Color de la prenda", t.color);
     add("Texto", it?.bordadoTexto ?? t.bordado, true);
     add("Ubicación", it?.bordadoUbicacion);
+    add("Dónde exactamente", it?.bordadoDetalle, true);
     add("Hilo", it?.hilo);
     add("Para", it?.persona);
-    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true };
+    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true, fotos: it?.bordadoFotos ?? [] };
   }
 
   if (funcion === "CONFECCION_PANTU" || funcion === "PEGADO_PANTU") {
     const tallePantu = t.talle ?? talles.find((s) => /pantu/i.test(s))?.replace(/^pantu\w*\s*/i, "") ?? null;
     add("Color", t.color);
     add("Talle", tallePantu ?? "a confirmar", true);
-    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false).filter((l) => /pantu|suela|horma/i.test(l)), conDisenos: false };
+    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false).filter((l) => /pantu|suela|horma/i.test(l)), conDisenos: false, fotos: [] };
   }
 
   if (funcion === "CONFECCION_ROPA") {
@@ -82,11 +85,11 @@ export function vistaTarea(funcion: string, t: TareaParaTaller, it: ItemParaTall
     else if (propio.length) add("Talle", propio.join(" · "), true);
     else if (ropa.length && !tipo) add("Talles (planilla)", ropa.join(" · "), true);
     else add("Talle", "a confirmar", true);
-    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, true), conDisenos: false };
+    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, true), conDisenos: false, fotos: [] };
   }
 
   add("Color", t.color);
   add("Talle", t.talle);
   add("Bordado", t.bordado);
-  return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: !!t.bordado };
+  return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: !!t.bordado, fotos: [] };
 }

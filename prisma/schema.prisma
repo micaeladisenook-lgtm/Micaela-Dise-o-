@@ -241,6 +241,8 @@ model PedidoItem {
   precioUnitario   Int        @default(0)
   bordadoTexto     String?
   bordadoUbicacion String?
+  bordadoDetalle   String?    // dónde va exactamente el bordado (texto libre para el taller)
+  bordadoFotos     String[]   @default([]) // fotos de referencia de la ubicación
   hilo             String?
   notas            String?
   orden            Int        @default(0)
