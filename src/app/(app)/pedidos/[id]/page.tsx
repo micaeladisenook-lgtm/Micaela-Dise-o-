@@ -11,8 +11,9 @@ import BorrarPago from "../BorrarPago";
 import BotonRevisado from "../BotonRevisado";
 import LinkPago from "../LinkPago";
 import EnviarResumen from "../EnviarResumen";
+import LinkCompletar from "../LinkCompletar";
 import Cotizador from "../../envios/Cotizador";
-import { linkResumen } from "@/lib/resumen";
+import { linkResumen, linkCompletar } from "@/lib/resumen";
 import CasillaTarea from "../../talleres/CasillaTarea";
 import { bloqueadaPor, NOMBRE_FUNCION } from "@/lib/produccion";
 import { mercadoPagoConfigurado } from "@/lib/mercadopago";
@@ -40,6 +41,7 @@ export default async function PedidoPage({
   const tpl = (k: string) => plantillas.find((x) => x.clave === k)?.texto ?? "";
   const sal = saldo(p.total, p.pagos);
   const resumen = await linkResumen(p.id);
+  const completar = await linkCompletar(p.id);
   const wa = (k: string) => linkWhatsApp(p.cliente.telefono, armarMensaje(k === "confirmacion" ? conLinkResumen(tpl(k)) : tpl(k), p, { link_resumen: resumen }));
   const tarde = atrasado(p);
 
@@ -201,6 +203,16 @@ export default async function PedidoPage({
               </div>
             )}
           </section>
+
+          {p.estado !== "CANCELADO" && p.estado !== "ENTREGADO" && (
+            <section className="tarjeta p-5 no-imprimir">
+              <h2 className="text-2xl mb-1">Datos para completar</h2>
+              <p className="text-xs text-texto-2 mb-3">Link para que la clienta complete los colores, talles, el bordado y los datos de envío de este pedido (ideal después de que abona).</p>
+              <LinkCompletar pedidoId={p.id} link={completar} mensaje={armarMensaje(tpl("completar") || "¡Hola {nombre}! Completá los datos de tu pedido N° {pedido} acá: {link_completar}", p, { link_completar: completar })}
+                telefono={p.cliente.telefono} instagram={p.cliente.instagram}
+                completadoEl={p.datosCompletadosEn ? fecha(p.datosCompletadosEn) : null} puedeReabrir={permisos.has("editar_pedidos")} />
+            </section>
+          )}
 
           <section className="tarjeta p-5 no-imprimir">
             <h2 className="text-2xl mb-1">Resumen para la clienta</h2>

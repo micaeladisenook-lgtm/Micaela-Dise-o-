@@ -281,3 +281,11 @@ export async function subirFotoBordado(form: FormData): Promise<{ url: string } 
     return { error: (e as Error).message };
   }
 }
+
+// Vuelve a abrir el link para que la clienta corrija sus datos
+export async function reabrirLinkCompletar(pedidoId: string) {
+  const u = await exigirPermiso("editar_pedidos");
+  const p = await db.pedido.update({ where: { id: pedidoId }, data: { datosCompletadosEn: null, modificadoPorId: u.id } });
+  await registrar(u.id, "Volvió a habilitar el link para completar datos", "Pedido", pedidoId, `N° ${p.numero}`);
+  revalidatePath(`/pedidos/${pedidoId}`);
+}

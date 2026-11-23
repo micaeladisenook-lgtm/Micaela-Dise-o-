@@ -162,6 +162,7 @@ export const VARIABLES_PLANTILLA: { clave: string; texto: string }[] = [
   { clave: "{entrega}", texto: "Cómo y dónde se entrega" },
   { clave: "{link_pago}", texto: "Link de Mercado Pago" },
   { clave: "{link_resumen}", texto: "Link al resumen de compra (se descarga en PDF)" },
+  { clave: "{link_completar}", texto: "Link para que la clienta complete colores, talles, bordado y envío" },
   { clave: "{forma_envio}", texto: "Forma de envío (solo aviso de envío)" },
   { clave: "{seguimiento}", texto: "N° de seguimiento (solo aviso de envío)" },
   { clave: "{taller}", texto: "Nombre del taller (solo mensaje de taller)" },

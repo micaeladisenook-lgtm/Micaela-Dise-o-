@@ -34,3 +34,14 @@ export async function pedidoPorToken(token: string) {
   if (!/^[\w-]{10,40}$/.test(token)) return null;
   return db.pedido.findUnique({ where: { tokenPublico: token }, include: includeResumen });
 }
+
+// Link para que la clienta complete colores, talles, bordado y envío de SU pedido
+export async function linkCompletar(pedidoId: string) {
+  const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, select: { tokenCompletar: true } });
+  let token = p.tokenCompletar;
+  if (!token) {
+    token = randomBytes(18).toString("base64url");
+    await db.pedido.update({ where: { id: pedidoId }, data: { tokenCompletar: token } });
+  }
+  return `${await urlBase()}/completar/${token}`;
+}

@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { VARIABLES_PLANTILLA } from "@/lib/pedidos";
 import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
-const ORDEN = ["confirmacion", "saldo", "listo", "envio", "taller"];
+const ORDEN = ["confirmacion", "completar", "saldo", "listo", "envio", "taller"];
 
 export default async function MensajesPage() {
   const u = await requerirPermiso("ver_pedidos");

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_SESION, leerSesion } from "@/lib/sesion";
 
 // Páginas que se pueden ver sin iniciar sesión
-const PUBLICAS = ["/login", "/pedido", "/c", "/api/archivos", "/api/mercadopago", "/api/copia/automatica"];
+const PUBLICAS = ["/login", "/pedido", "/completar", "/c", "/api/archivos", "/api/mercadopago", "/api/copia/automatica"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
