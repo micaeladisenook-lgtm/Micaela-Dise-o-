@@ -1,9 +1,8 @@
-// Las 3 tipografías que usa Micaela para bordar.
+// Las tipografías que usa Micaela para bordar.
 // "fuente" es la letra que se usa para mostrar la muestra en pantalla.
 export const TIPOGRAFIAS = [
   { nombre: "Alex Brush", estilo: "Cursiva", fuente: "var(--font-alex), cursive", tamano: "1.6em" },
   { nombre: "Bodoni FLF", estilo: "Clásica con serifa", fuente: "var(--font-bodoni), 'Bodoni 72', Didot, serif", tamano: "1.25em" },
-  { nombre: "Montaser Arabic", estilo: "Moderna sin serifa", fuente: "var(--font-montaser), 'Helvetica Neue', Arial, sans-serif", tamano: "1.15em" },
 ] as const;
 
 export type NombreTipografia = (typeof TIPOGRAFIAS)[number]["nombre"];

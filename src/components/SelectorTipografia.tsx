@@ -2,7 +2,7 @@
 import { Check } from "lucide-react";
 import { TIPOGRAFIAS } from "@/lib/tipografias";
 
-// Elegir una de las 3 tipografías mirando cómo queda el texto del bordado
+// Elegir una de las tipografías mirando cómo queda el texto del bordado
 export default function SelectorTipografia({ name, valor, onChange, texto }: {
   name?: string; valor: string; onChange: (v: string) => void; texto?: string;
 }) {
@@ -11,7 +11,7 @@ export default function SelectorTipografia({ name, valor, onChange, texto }: {
     <fieldset>
       <legend className="text-[11px] text-texto-2 mb-1">Tipografía {valor ? <span className="text-texto font-medium">· {valor}</span> : null}</legend>
       {name && <input type="hidden" name={name} value={valor} />}
-      <div className="grid sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {TIPOGRAFIAS.map((t) => {
           const on = t.nombre === valor;
           return (
