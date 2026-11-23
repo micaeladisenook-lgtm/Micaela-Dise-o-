@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Check, Truck, Store, Gift } from "lucide-react";
+import { Check, Truck, Store, Gift, Info } from "lucide-react";
 import { useFormulario } from "@/lib/useFormulario";
 import { enviarPedidoPublico } from "./acciones";
 import { pesos } from "@/lib/formato";
@@ -43,7 +43,7 @@ function Seccion({ n, titulo, children, ayuda }: { n: number; titulo: string; ay
 
 const opcion = "rounded-xl border border-borde min-h-11 flex items-center gap-2 px-3 cursor-pointer has-[:checked]:border-acento has-[:checked]:bg-acento-suave/50";
 
-export default function FormPublico({ productos, precioBordadoExtra }: { productos: P[]; precioBordadoExtra: number }) {
+export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio = "" }: { productos: P[]; precioBordadoExtra: number; avisoEnvio?: string }) {
   const [estado, onSubmit, enviando] = useFormulario(enviarPedidoPublico, null);
   const [pid, setPid] = useState("");
   const [eleccion, setEleccion] = useState("");
@@ -229,6 +229,7 @@ export default function FormPublico({ productos, precioBordadoExtra }: { product
       </Seccion>
 
       <Seccion n={p ? 6 : 4} titulo="Entrega" ayuda="No hace falta cotizar: te pasamos el costo del envío por WhatsApp.">
+        {avisoEnvio && <p className="text-sm bg-acento-suave/60 border border-acento/20 rounded-xl px-3 py-2.5 whitespace-pre-line flex gap-2"><Info size={16} className="text-acento shrink-0 mt-0.5" /><span>{avisoEnvio}</span></p>}
         <div className="grid grid-cols-2 gap-2">
           {([["envio", "Envío", Truck], ["retira", "Retiro", Store]] as const).map(([v, t, Icono]) => (
             <label key={v} className={opcion}>
@@ -259,12 +260,14 @@ export default function FormPublico({ productos, precioBordadoExtra }: { product
                 {CORREOS.map((c, i) => <label key={c} className={opcion}><input type="radio" name="formaPreferida" value={c} defaultChecked={i === CORREOS.length - 1} className="accent-acento w-4 h-4" /> {c}</label>)}
               </div>
             </Campo>
-            <Campo etiqueta="Indicaciones para la entrega (opcional)" ayuda="Horarios, timbre, si hay portero…"><input name="indicaciones" className="campo" /></Campo>
+            <Campo etiqueta="Aclaraciones para el envío (opcional)" ayuda="Horarios para recibir, timbre, portería, si va a una sucursal del correo…">
+              <textarea name="indicaciones" rows={2} className="campo py-2.5" />
+            </Campo>
           </>
         ) : (
           <p className="text-sm text-texto-2">Te escribimos para coordinar día y horario de retiro.</p>
         )}
-        <Campo etiqueta="Comentarios (opcional)"><textarea name="comentarios" rows={3} className="campo py-2.5" placeholder="Medidas especiales, dudas, detalles…" /></Campo>
+        <Campo etiqueta="Detalles extras (opcional)" ayuda="Ubicación exacta del bordado, tipografía, tamaño, colores especiales, algo para la tarjeta…"><textarea name="comentarios" rows={3} className="campo py-2.5" /></Campo>
       </Seccion>
 
       {p && (

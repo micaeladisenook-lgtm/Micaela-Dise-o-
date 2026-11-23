@@ -87,8 +87,8 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
   const notas = [
     envio && t(f, "recibe") ? `Recibe: ${t(f, "recibe")}${dni ? ` (DNI ${dni})` : ""}` : null,
     envio && preferida ? `Prefiere envío por: ${preferida}` : null,
-    envio && t(f, "indicaciones") ? `Indicaciones de entrega: ${t(f, "indicaciones")}` : null,
-    t(f, "comentarios") || null,
+    envio && t(f, "indicaciones") ? `Aclaraciones para el envío: ${t(f, "indicaciones")}` : null,
+    t(f, "comentarios") ? `Detalles extras: ${t(f, "comentarios")}` : null,
   ].filter(Boolean).join("\n") || null;
 
   const p = await db.pedido.create({

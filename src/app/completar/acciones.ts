@@ -5,9 +5,29 @@ import { leerFecha } from "@/lib/pedidos";
 import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
 import { pedidoParaCompletar } from "./datos";
+import { guardarImagen, esUrlPropia } from "@/lib/archivos";
 
 export type EstadoCompletar = { error?: string; ok?: boolean } | null;
 const t = (f: FormData, k: string, max = 200) => String(f.get(k) ?? "").trim().slice(0, max);
+const fotosDe = (f: FormData, id: string) => {
+  try {
+    const v = JSON.parse(String(f.get(`fotos_${id}`) ?? "[]"));
+    return Array.isArray(v) ? v.filter((u): u is string => typeof u === "string" && esUrlPropia(u)).slice(0, 6) : [];
+  } catch { return []; }
+};
+
+// Foto o logo de referencia que sube la clienta desde su link (solo con un link válido y abierto)
+export async function subirFotoCompletar(token: string, fd: FormData): Promise<{ url: string } | { error: string }> {
+  const datos = await pedidoParaCompletar(token);
+  if (!datos || datos.p.datosCompletadosEn || datos.p.estado === "CANCELADO" || datos.p.estado === "ENTREGADO") return { error: "Este link ya no está disponible." };
+  const archivo = fd.get("foto");
+  if (!(archivo instanceof File) || archivo.size === 0) return { error: "Elegí una foto." };
+  try {
+    return { url: await guardarImagen(archivo, { permitirSvg: false }) };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
 
 export async function completarDatos(token: string, _prev: EstadoCompletar, f: FormData): Promise<EstadoCompletar> {
   const datos = await pedidoParaCompletar(token);
@@ -42,8 +62,8 @@ export async function completarDatos(token: string, _prev: EstadoCompletar, f: F
     "— Datos completados por la clienta —",
     envio ? `Recibe: ${t(f, "recibe")}${dni ? ` (DNI ${dni})` : ""}` : "Retira",
     envio && preferida ? `Prefiere envío por: ${preferida}` : null,
-    envio && t(f, "indicaciones") ? `Indicaciones de entrega: ${t(f, "indicaciones")}` : null,
-    t(f, "comentarios", 1000) ? `Comentarios: ${t(f, "comentarios", 1000)}` : null,
+    envio && t(f, "indicaciones", 500) ? `Aclaraciones para el envío: ${t(f, "indicaciones", 500)}` : null,
+    t(f, "extras", 1500) ? `Detalles extras: ${t(f, "extras", 1500)}` : null,
   ].filter(Boolean).join("\n");
 
   await db.$transaction([
@@ -55,6 +75,7 @@ export async function completarDatos(token: string, _prev: EstadoCompletar, f: F
         hilo: t(f, `hilo_${i.id}`, 30) || i.hilo,
         bordadoUbicacion: t(f, `ubicacion_${i.id}`, 60) || i.bordadoUbicacion,
         bordadoDetalle: t(f, `detalle_${i.id}`, 500) || null,
+        bordadoFotos: fotosDe(f, i.id),
         persona: t(f, `persona_${i.id}`, 80) || i.persona,
       },
     })),

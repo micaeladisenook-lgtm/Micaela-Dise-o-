@@ -2,13 +2,15 @@
 import { useState } from "react";
 import { Truck, Store } from "lucide-react";
 import { useFormulario } from "@/lib/useFormulario";
-import { completarDatos, type EstadoCompletar } from "./acciones";
+import { completarDatos, subirFotoCompletar, type EstadoCompletar } from "./acciones";
+import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
+import { Info } from "lucide-react";
 import { PROVINCIAS_AR } from "@/lib/prendasProducto";
 
 type Prenda = { id: string; nombre: string; color: string | null; talle: string | null; colores: string[]; talles: string[] };
 type Item = {
   id: string; nombre: string; persona: string | null; bordadoTexto: string | null; bordadoUbicacion: string | null;
-  bordadoDetalle: string | null; hilo: string | null; prendas: Prenda[]; conBordado: boolean;
+  bordadoDetalle: string | null; bordadoFotos: string[]; hilo: string | null; prendas: Prenda[]; conBordado: boolean;
 };
 type Envio = { envio: boolean; direccion: string; entreCalles: string; localidad: string; provincia: string; codigoPostal: string; dni: string; recibe: string };
 
@@ -20,9 +22,13 @@ function Campo({ etiqueta, children, ayuda }: { etiqueta: string; children: Reac
   return <div><label className="etiqueta">{etiqueta}</label>{children}{ayuda && <p className="ayuda">{ayuda}</p>}</div>;
 }
 
-export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento }: {
-  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean;
+export default function FormCompletar({ token, items, envioInicial, fechaEvento, conEvento, avisoEnvio }: {
+  token: string; items: Item[]; envioInicial: Envio; fechaEvento: string; conEvento: boolean; avisoEnvio: string;
 }) {
+  const [ubic, setUbic] = useState<Record<string, { bordadoDetalle: string; bordadoFotos: string[] }>>(
+    () => Object.fromEntries(items.map((i) => [i.id, { bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [] }])),
+  );
+  const subir = (fd: FormData) => subirFotoCompletar(token, fd);
   const [estado, onSubmit, enviando] = useFormulario(completarDatos.bind(null, token) as (prev: EstadoCompletar, f: FormData) => Promise<EstadoCompletar>, null);
   const [envio, setEnvio] = useState(envioInicial.envio ? "envio" : "retira");
   const todas = items.flatMap((i) => i.prendas);
@@ -91,9 +97,16 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
                   <select name={`ubicacion_${it.id}`} className="campo" defaultValue={it.bordadoUbicacion || "Espalda"}>{ubicacionesDe(it.bordadoUbicacion).map((u) => <option key={u}>{u}</option>)}</select>
                 </Campo>
               </div>
-              <Campo etiqueta="¿Dónde va exactamente? (opcional)" ayuda="Ej: centrado en la espalda · en la pantufla derecha">
-                <textarea name={`detalle_${it.id}`} rows={2} className="campo py-2.5" defaultValue={it.bordadoDetalle ?? ""} />
-              </Campo>
+              <input type="hidden" name={`detalle_${it.id}`} value={ubic[it.id]?.bordadoDetalle ?? ""} />
+              <input type="hidden" name={`fotos_${it.id}`} value={JSON.stringify(ubic[it.id]?.bordadoFotos ?? [])} />
+              <BordadoUbicacion
+                detalle={ubic[it.id]?.bordadoDetalle ?? ""}
+                fotos={ubic[it.id]?.bordadoFotos ?? []}
+                subir={subir}
+                textoBoton="Subir foto o logo"
+                ayuda="Si tenés un logo, un diseño o una foto de cómo lo querés, subila acá (JPG o PNG, hasta 6)."
+                onChange={(v) => setUbic((prev) => ({ ...prev, [it.id]: { ...prev[it.id], ...v } }))}
+              />
               {it.prendas.length > 0 && <Campo etiqueta="¿Para quién es? (opcional)"><input name={`persona_${it.id}`} className="campo" defaultValue={it.persona ?? ""} /></Campo>}
             </div>
           )}
@@ -111,6 +124,7 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
           <h2 className="text-2xl">Entrega</h2>
           <p className="text-xs text-texto-2">No hace falta cotizar: si falta, te pasamos el costo del envío por WhatsApp.</p>
         </div>
+        {avisoEnvio && <p className="text-sm bg-acento-suave/60 border border-acento/20 rounded-xl px-3 py-2.5 whitespace-pre-line flex gap-2"><Info size={16} className="text-acento shrink-0 mt-0.5" /><span>{avisoEnvio}</span></p>}
         <div className="grid grid-cols-2 gap-2">
           {([["envio", "Envío", Truck], ["retira", "Retiro", Store]] as const).map(([v, t, Icono]) => (
             <label key={v} className={opcion}><input type="radio" name="envio" value={v} checked={envio === v} onChange={() => setEnvio(v)} className="accent-acento w-4 h-4" /> <Icono size={16} className="text-acento" /> {t}</label>
@@ -141,10 +155,17 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
                 {CORREOS.map((c, i) => <label key={c} className={opcion}><input type="radio" name="formaPreferida" value={c} defaultChecked={i === CORREOS.length - 1} className="accent-acento w-4 h-4" /> {c}</label>)}
               </div>
             </Campo>
-            <Campo etiqueta="Indicaciones para la entrega (opcional)" ayuda="Horarios, timbre, si hay portero…"><input name="indicaciones" className="campo" /></Campo>
+            <Campo etiqueta="Aclaraciones para el envío (opcional)" ayuda="Horarios para recibir, timbre, portería, si va a una sucursal del correo…">
+              <textarea name="indicaciones" rows={2} className="campo py-2.5" />
+            </Campo>
           </>
         ) : <p className="text-sm text-texto-2">Te escribimos para coordinar día y horario de retiro.</p>}
-        <Campo etiqueta="Comentarios (opcional)"><textarea name="comentarios" rows={3} className="campo py-2.5" placeholder="Algo más que quieras contarnos…" /></Campo>
+      </section>
+
+      <section className="tarjeta p-5 space-y-2">
+        <h2 className="text-2xl">Detalles extras</h2>
+        <p className="text-xs text-texto-2">Todo lo que quieras aclarar: ubicación exacta del bordado, tipografía, tamaño, colores especiales, algo para la tarjeta…</p>
+        <textarea name="extras" rows={4} className="campo py-2.5" aria-label="Detalles extras" />
       </section>
 
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-4 py-3">{estado.error}</p>}
