@@ -201,6 +201,8 @@ model Pedido {
   numeroSeguimiento String?
   despachadoEn   DateTime?
   tokenPublico   String?      @unique // para el link del resumen que se le manda a la clienta
+  tokenCompletar String?      @unique // link para que la clienta complete colores, talles, bordado y envío
+  datosCompletadosEn DateTime? // cuándo la clienta completó sus datos (el link queda cerrado)
   prioridad      Boolean      @default(false)
   total          Int          @default(0)
   notas          String?

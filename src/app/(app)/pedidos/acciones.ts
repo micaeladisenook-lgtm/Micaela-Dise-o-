@@ -13,7 +13,7 @@ import { pesos, leerPesos } from "@/lib/formato";
 import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
 import { exigirPermiso, permisosDe } from "@/lib/acceso";
-import { guardarImagen } from "@/lib/archivos";
+import { guardarImagen, esUrlPropia } from "@/lib/archivos";
 
 export async function buscarClientes(q: string) {
   await exigirPermiso(["crear_pedidos", "editar_pedidos"]);
@@ -125,7 +125,7 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     bordadoTexto: txt(i.bordadoTexto),
     bordadoUbicacion: txt(i.bordadoUbicacion),
     bordadoDetalle: txt(i.bordadoDetalle),
-    bordadoFotos: (i.bordadoFotos ?? []).filter((u) => /^(https:\/\/|\/api\/archivos\/)/.test(u)).slice(0, 6),
+    bordadoFotos: (i.bordadoFotos ?? []).filter(esUrlPropia).slice(0, 6),
     hilo: txt(i.hilo),
     notas: txt(i.notas),
     orden: n,
@@ -280,4 +280,12 @@ export async function subirFotoBordado(form: FormData): Promise<{ url: string } 
   } catch (e) {
     return { error: (e as Error).message };
   }
+}
+
+// Vuelve a abrir el link para que la clienta corrija sus datos
+export async function reabrirLinkCompletar(pedidoId: string) {
+  const u = await exigirPermiso("editar_pedidos");
+  const p = await db.pedido.update({ where: { id: pedidoId }, data: { datosCompletadosEn: null, modificadoPorId: u.id } });
+  await registrar(u.id, "Volvió a habilitar el link para completar datos", "Pedido", pedidoId, `N° ${p.numero}`);
+  revalidatePath(`/pedidos/${pedidoId}`);
 }

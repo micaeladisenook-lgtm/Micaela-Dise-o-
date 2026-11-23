@@ -14,6 +14,8 @@ export default async function PedidoPublicoPage() {
     orderBy: [{ tipo: "asc" }, { orden: "asc" }],
     include: { componentes: { include: { componente: true }, orderBy: { id: "asc" } } },
   });
+  const avisos = await db.plantilla.findMany({ where: { clave: { in: ["aviso_envio", "aviso_pedido"] } } });
+  const aviso = (k: string) => avisos.find((a) => a.clave === k)?.texto ?? "";
   const extra = await db.producto.findFirst({ where: { tipo: "ADICIONAL", nombre: { contains: "Bordado", mode: "insensitive" } } });
   const datos = productos.map((p) => ({
     id: p.id, nombre: p.nombre, tipo: p.tipo, precio: p.precio, precioAnterior: p.precioAnterior, descripcion: p.descripcion,
@@ -31,7 +33,7 @@ export default async function PedidoPublicoPage() {
           <p className="text-xs uppercase tracking-[0.25em] text-texto-2 mt-3">Hacé tu pedido</p>
           <p className="text-sm text-texto-2 mt-3">Elegí tu box, personalizalo y completá los datos de envío. Te escribimos por WhatsApp para confirmar, pasarte el costo del envío y coordinar la seña 💕</p>
         </header>
-        <FormPublico productos={datos} precioBordadoExtra={extra?.precio ?? 10000} />
+        <FormPublico productos={datos} precioBordadoExtra={extra?.precio ?? 10000} avisoEnvio={aviso("aviso_envio")} avisoPedido={aviso("aviso_pedido")} />
       </div>
     </main>
   );

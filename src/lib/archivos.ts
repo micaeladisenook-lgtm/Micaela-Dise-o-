@@ -32,8 +32,9 @@ export async function subirASupabase(bucket: string, nombre: string, datos: Buff
   if (!r.ok) throw new Error(`No se pudo guardar el archivo (${r.status}).`);
 }
 
-export async function guardarImagen(archivo: File): Promise<string> {
+export async function guardarImagen(archivo: File, { permitirSvg = true } = {}): Promise<string> {
   const ext = TIPOS[archivo.type];
+  if (ext === "svg" && !permitirSvg) throw new Error("Formato de imagen no permitido (usá JPG, PNG o WEBP)");
   if (!ext) throw new Error("Formato de imagen no permitido (usá JPG, PNG o WEBP)");
   if (archivo.size > 8 * 1024 * 1024) throw new Error("La imagen pesa más de 8 MB");
   const nombre = `${randomUUID()}.${ext}`;
@@ -45,6 +46,12 @@ export async function guardarImagen(archivo: File): Promise<string> {
   await mkdir(CARPETA_UPLOADS, { recursive: true });
   await writeFile(path.join(CARPETA_UPLOADS, nombre), datos);
   return `/api/archivos/${nombre}`;
+}
+
+// ¿La foto es una de las que subimos nosotros? (para no guardar links de cualquier lado)
+export function esUrlPropia(url: string) {
+  if (/^\/api\/archivos\/[\w-]+\.(jpg|png|webp|svg)$/.test(url)) return true;
+  return !!SUPABASE_URL && url.startsWith(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`) && !url.includes("..");
 }
 
 export async function borrarImagen(url: string) {

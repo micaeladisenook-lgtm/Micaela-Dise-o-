@@ -8,13 +8,18 @@ const MAX_FOTOS = 6;
 // Achica la foto del celular (suelen pesar varios MB) antes de subirla
 async function achicar(archivo: File): Promise<File> {
   if (!/^image\/(jpeg|png|webp)$/.test(archivo.type) && !/heic|heif/i.test(archivo.type)) return archivo;
+  // los PNG chicos (logos) se mandan tal cual, para no perder la transparencia
+  if (archivo.type === "image/png" && archivo.size < 3 * 1024 * 1024) return archivo;
   try {
     const bmp = await createImageBitmap(archivo);
     const escala = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
     const c = document.createElement("canvas");
     c.width = Math.round(bmp.width * escala);
     c.height = Math.round(bmp.height * escala);
-    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
     const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.85));
     return blob ? new File([blob], "bordado.jpg", { type: "image/jpeg" }) : archivo;
   } catch {
@@ -22,10 +27,15 @@ async function achicar(archivo: File): Promise<File> {
   }
 }
 
-export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir = true }: {
+type Subir = (fd: FormData) => Promise<{ url: string } | { error: string }>;
+
+export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir = true, subir = subirFotoBordado, ayuda, textoBoton }: {
   detalle: string;
   fotos: string[];
   puedeSubir?: boolean;
+  subir?: Subir;
+  ayuda?: string;
+  textoBoton?: string;
   onChange: (v: { bordadoDetalle?: string; bordadoFotos?: string[] }) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -41,7 +51,7 @@ export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir 
     for (const a of archivos) {
       const fd = new FormData();
       fd.set("foto", await achicar(a));
-      const r = await subirFotoBordado(fd).catch(() => ({ error: "No se pudo subir la foto." }));
+      const r = await subir(fd).catch(() => ({ error: "No se pudo subir la foto." }));
       if ("url" in r) nuevas.push(r.url);
       else setError(r.error);
       setSubiendo((n) => n - 1);
@@ -75,13 +85,13 @@ export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir 
         ))}
         {puedeSubir && fotos.length + subiendo < MAX_FOTOS && (
           <button type="button" onClick={() => input.current?.click()} disabled={subiendo > 0} className="btn-suave min-h-10 px-3 text-sm">
-            <Camera size={16} /> {fotos.length ? "Agregar otra foto" : "Agregar foto de referencia"}
+            <Camera size={16} /> {fotos.length ? "Agregar otra foto" : textoBoton ?? "Agregar foto de referencia"}
           </button>
         )}
         <input ref={input} type="file" accept="image/*" multiple className="hidden" onChange={(e) => elegir(e.target.files)} />
       </div>
       {error && <p className="text-xs text-estado-alerta-txt">{error}</p>}
-      <p className="text-[11px] text-texto-2">Sacá una foto o elegila de la galería (ej: la prenda con una marca o un dibujo de dónde va). Hasta 6 fotos. La ve el taller de bordado.</p>
+      <p className="text-[11px] text-texto-2">{ayuda ?? "Sacá una foto o elegila de la galería (ej: la prenda con una marca o un dibujo de dónde va). Hasta 6 fotos. La ve el taller de bordado."}</p>
     </div>
   );
 }
