@@ -11,7 +11,7 @@ const ORDEN = ["confirmacion", "saldo", "listo", "envio", "taller"];
 export default async function MensajesPage() {
   const u = await requerirPermiso("ver_pedidos");
   const editar = (await permisosDe(u)).has("editar_mensajes");
-  const plantillas = (await db.plantilla.findMany()).sort((a, b) => ORDEN.indexOf(a.clave) - ORDEN.indexOf(b.clave));
+  const plantillas = (await db.plantilla.findMany({ where: { NOT: { clave: { startsWith: "rr_" } } } })).sort((a, b) => ORDEN.indexOf(a.clave) - ORDEN.indexOf(b.clave));
   return (
     <>
       <Encabezado titulo="Mensajes de WhatsApp" subtitulo="Los textos que se arman solos para mandar a clientas y talleres.">
