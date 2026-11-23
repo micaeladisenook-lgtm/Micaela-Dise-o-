@@ -300,6 +300,7 @@ model Taller {
 
 // Columnas del tablero de cada taller
 enum EtapaTarea {
+  PENDIENTE_ENVIO
   RECIBIDO
   EN_PRODUCCION
   LISTO
@@ -319,7 +320,7 @@ model Tarea {
   talle         String?
   bordado       String?
   detalle       String?
-  etapa         EtapaTarea @default(RECIBIDO) // columna del tablero del taller
+  etapa         EtapaTarea @default(PENDIENTE_ENVIO) // columna del tablero del taller
   terminada     Boolean    @default(false)    // = etapa LISTO (se mantienen sincronizados)
   terminadaEn   DateTime?
   terminadaPorId String?

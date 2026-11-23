@@ -70,9 +70,17 @@ export function vistaTarea(funcion: string, t: TareaParaTaller, it: ItemParaTall
 
   if (funcion === "CONFECCION_PANTU" || funcion === "PEGADO_PANTU") {
     const tallePantu = t.talle ?? talles.find((s) => /pantu/i.test(s))?.replace(/^pantu\w*\s*/i, "") ?? null;
+    // Richard y Pedro ven la pantufla completa: tela, color, talle y cómo va bordada
+    const tela = /plush/i.test(prenda) ? "Plush" : /sat[eé]n/i.test(prenda) ? "Satén" : null;
+    add("Tela", tela);
     add("Color", t.color);
     add("Talle", tallePantu ?? "a confirmar", true);
-    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false).filter((l) => /pantu|suela|horma/i.test(l)), conDisenos: false, fotos: [] };
+    add("Bordado", it?.bordadoTexto ?? t.bordado ?? "Sin bordado");
+    add("Ubicación del bordado", it?.bordadoUbicacion);
+    add("Dónde exactamente", it?.bordadoDetalle);
+    add("Hilo", it?.bordadoTexto ? it?.hilo : null);
+    add("Para", it?.persona);
+    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true, fotos: it?.bordadoFotos ?? [] };
   }
 
   if (funcion === "CONFECCION_ROPA") {
