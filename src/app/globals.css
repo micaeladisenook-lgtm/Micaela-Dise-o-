@@ -1,26 +1,87 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-fondo: #FBF7F5;
+  --color-menu: #F4EAE6;
+  --color-borde: #EBDDD8;
+  --color-acento: #9C3F5C;
+  --color-acento-oscuro: #7E2F48;
+  --color-acento-suave: #F6E4EA;
+  --color-texto: #2B2326;
+  --color-texto-2: #6B5B61;
+
+  --color-estado-nuevo: #DCEEF8;
+  --color-estado-nuevo-txt: #1F5F84;
+  --color-estado-produccion: #FBEBC8;
+  --color-estado-produccion-txt: #8A5A00;
+  --color-estado-listo: #DCF0DF;
+  --color-estado-listo-txt: #2E6B3A;
+  --color-estado-entregado: #ECE8E9;
+  --color-estado-entregado-txt: #5E5458;
+  --color-estado-alerta: #F5D5DF;
+  --color-estado-alerta-txt: #8A1E43;
+
+  --font-titulo: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+  --radius-tarjeta: 12px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html, body {
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+h1, h2, h3, .titulo {
+  font-family: var(--font-titulo);
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+@utility tarjeta {
+  @apply bg-white border border-borde rounded-tarjeta;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed;
+}
+@utility btn-primario {
+  @apply btn bg-acento text-white hover:bg-acento-oscuro;
+}
+@utility btn-secundario {
+  @apply btn bg-white text-acento border border-acento/40 hover:bg-acento-suave;
+}
+@utility btn-suave {
+  @apply btn bg-menu text-texto hover:bg-borde;
+}
+@utility btn-peligro {
+  @apply btn bg-white text-estado-alerta-txt border border-estado-alerta-txt/40 hover:bg-estado-alerta;
+}
+@utility campo {
+  @apply w-full min-h-11 px-3.5 rounded-xl border border-borde bg-white text-texto placeholder:text-texto-2/60 focus:outline-none focus:ring-2 focus:ring-acento/30 focus:border-acento;
+}
+@utility etiqueta {
+  @apply block text-sm font-medium text-texto mb-1.5;
+}
+@utility ayuda {
+  @apply text-xs text-texto-2 mt-1;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+}
+
+@layer components {
+  .tabla th {
+    @apply text-left text-xs font-semibold uppercase tracking-wide text-texto-2 px-4 py-3 border-b border-borde;
+  }
+  .tabla td {
+    @apply px-4 py-3 border-b border-borde text-sm align-top;
+  }
+  .tabla tr:last-child td {
+    @apply border-b-0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media print {
+  .no-imprimir { display: none !important; }
+  body { background: white; }
 }

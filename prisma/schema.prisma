@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  VENDEDOR
+  TALLER
+}
+
+enum TipoProducto {
+  SUELTO
+  BOX
+  KIT
+  ADICIONAL
+}
+
+enum CategoriaDiseno {
+  PRODUCTO
+  COLOR
+  BORDADO
+}
+
+model Usuario {
+  id           String   @id @default(cuid())
+  nombre       String
+  login        String   @unique
+  passwordHash String
+  rol          Rol      @default(VENDEDOR)
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now())
+
+  clientesCreados Cliente[]  @relation("ClienteCreadoPor")
+  registros       Registro[]
+}
+
+model Cliente {
+  id          String   @id @default(cuid())
+  numero      Int      @unique @default(autoincrement())
+  nombre      String
+  telefono    String?
+  instagram   String?
+  email       String?
+  direccion   String?
+  notas       String?
+  esEjemplo   Boolean  @default(false)
+  creadoEn    DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  creadoPorId String?
+  creadoPor   Usuario? @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+}
+
+model Producto {
+  id          String       @id @default(cuid())
+  nombre      String
+  tipo        TipoProducto
+  descripcion String?
+  precio      Int?
+  colores     String[]
+  talles      String[]
+  activo      Boolean      @default(true)
+  orden       Int          @default(0)
+  creadoEn    DateTime     @default(now())
+  actualizadoEn DateTime   @updatedAt
+
+  componentes  ComponenteBox[] @relation("Box")
+  enBoxes      ComponenteBox[] @relation("Componente")
+  disenos      Diseno[]
+}
+
+// Qué prendas trae cada box o kit (para pedir color y talle de cada una)
+model ComponenteBox {
+  id            String   @id @default(cuid())
+  boxId         String
+  box           Producto @relation("Box", fields: [boxId], references: [id], onDelete: Cascade)
+  componenteId  String
+  componente    Producto @relation("Componente", fields: [componenteId], references: [id], onDelete: Cascade)
+  cantidad      Int      @default(1)
+  opcional      Boolean  @default(false)
+  nota          String?
+}
+
+model Diseno {
+  id          String          @id @default(cuid())
+  nombre      String
+  categoria   CategoriaDiseno
+  imagen      String
+  descripcion String?
+  productoId  String?
+  producto    Producto?       @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  creadoEn    DateTime        @default(now())
+}
+
+// Registro de cambios: quién hizo qué y cuándo
+model Registro {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  accion    String
+  entidad   String
+  entidadId String?
+  detalle   String?
+  fecha     DateTime @default(now())
+}
