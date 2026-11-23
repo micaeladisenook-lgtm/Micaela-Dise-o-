@@ -6,12 +6,13 @@ import BorrarDiseno from "./BorrarDiseno";
 import { db } from "@/lib/db";
 import { NOMBRE_CATEGORIA_DISENO } from "@/lib/catalogo";
 import type { CategoriaDiseno } from "@prisma/client";
-import { requerirPermiso } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 const CATS = ["BORDADO", "COLOR", "PRODUCTO"] as const;
 
 export default async function GaleriaPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
-  await requerirPermiso("ver_catalogo");
+  const u = await requerirPermiso("ver_catalogo");
+  const gestionar = (await permisosDe(u)).has("gestionar_disenos");
   const { cat } = await searchParams;
   const filtro = CATS.includes(cat as never) ? (cat as CategoriaDiseno) : undefined;
   const [disenos, productos, conteos] = await Promise.all([
@@ -52,16 +53,18 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
                     </p>
                     {d.descripcion && <p className="text-xs text-texto-2 mt-0.5">{d.descripcion}</p>}
                   </figcaption>
-                  <div className="absolute top-2 right-2"><BorrarDiseno id={d.id} nombre={d.nombre} /></div>
+                  {gestionar && <div className="absolute top-2 right-2"><BorrarDiseno id={d.id} nombre={d.nombre} /></div>}
                 </figure>
               ))}
             </div>
           )}
         </div>
-        <aside className="tarjeta p-5 lg:sticky lg:top-6">
-          <h2 className="text-2xl mb-3">Agregar foto</h2>
-          <SubirDiseno productos={productos} />
-        </aside>
+        {gestionar && (
+          <aside className="tarjeta p-5 lg:sticky lg:top-6">
+            <h2 className="text-2xl mb-3">Agregar foto</h2>
+            <SubirDiseno productos={productos} />
+          </aside>
+        )}
       </div>
     </>
   );

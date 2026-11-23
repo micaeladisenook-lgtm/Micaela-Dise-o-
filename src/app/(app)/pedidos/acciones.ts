@@ -12,10 +12,11 @@ import { linkResumen } from "@/lib/resumen";
 import { pesos, leerPesos } from "@/lib/formato";
 import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
-import { exigirPermiso } from "@/lib/acceso";
+import { exigirPermiso, permisosDe } from "@/lib/acceso";
+import { guardarImagen } from "@/lib/archivos";
 
 export async function buscarClientes(q: string) {
-  await exigirPermiso("crear_pedidos");
+  await exigirPermiso(["crear_pedidos", "editar_pedidos"]);
   const t = q.trim();
   if (t.length < 2) return [];
   const num = parseInt(t.replace(/^n[°º]?\s*/i, ""), 10);
@@ -38,7 +39,7 @@ export async function buscarClientes(q: string) {
 const txt = (s: string | null | undefined) => (s ?? "").trim() || null;
 
 export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promise<ResultadoGuardar> {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso(pedidoId ? "editar_pedidos" : "crear_pedidos");
   const items = datos.items.filter((i) => i.nombre.trim());
   if (!datos.cliente.nombre.trim()) return { ok: false, error: "Falta el nombre de la clienta (paso 1)." };
   if (items.length === 0) return { ok: false, error: "Agregá al menos un producto (paso 3)." };
@@ -89,7 +90,11 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
   }
 
   const total = items.reduce((s, i) => s + Math.max(0, i.precioUnitario) * Math.max(1, i.cantidad), 0);
-  const estado = (ESTADOS as readonly string[]).includes(datos.estado) ? (datos.estado as EstadoPedido) : "NUEVO";
+  let estado = (ESTADOS as readonly string[]).includes(datos.estado) ? (datos.estado as EstadoPedido) : "NUEVO";
+  // sin permiso para cambiar el estado, al editar se conserva el que tenía
+  if (pedidoId && !(await permisosDe(u)).has("cambiar_estado")) {
+    estado = (await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, select: { estado: true } })).estado;
+  }
   const campos = {
     clienteId,
     tipo: datos.tipo as TipoPedido,
@@ -119,6 +124,8 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     precioUnitario: Math.max(0, i.precioUnitario),
     bordadoTexto: txt(i.bordadoTexto),
     bordadoUbicacion: txt(i.bordadoUbicacion),
+    bordadoDetalle: txt(i.bordadoDetalle),
+    bordadoFotos: (i.bordadoFotos ?? []).filter((u) => /^(https:\/\/|\/api\/archivos\/)/.test(u)).slice(0, 6),
     hilo: txt(i.hilo),
     notas: txt(i.notas),
     orden: n,
@@ -180,7 +187,7 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
 }
 
 export async function cambiarEstado(pedidoId: string, estado: string) {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("cambiar_estado");
   if (!(ESTADOS as readonly string[]).includes(estado)) return;
   const antes = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId } });
   if (antes.estado === estado) return;
@@ -221,7 +228,7 @@ export async function registrarPago(pedidoId: string, _prev: { error?: string; o
 }
 
 export async function borrarPago(pagoId: string) {
-  const u = await exigirPermiso("registrar_pagos");
+  const u = await exigirPermiso("borrar_pagos");
   const pago = await db.pago.delete({ where: { id: pagoId }, include: { pedido: true } });
   await registrar(u.id, "Borró pago", "Pedido", pago.pedidoId, `N° ${pago.pedido.numero} · ${pesos(pago.monto)}`);
   revalidatePath(`/pedidos/${pago.pedidoId}`);
@@ -237,7 +244,7 @@ export async function borrarPedido(pedidoId: string) {
 }
 
 export async function marcarRevisado(pedidoId: string) {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("editar_pedidos");
   const p = await db.pedido.update({ where: { id: pedidoId }, data: { revisar: null, modificadoPorId: u.id } });
   await registrar(u.id, "Marcó como revisado", "Pedido", pedidoId, `N° ${p.numero}`);
   revalidatePath(`/pedidos/${pedidoId}`);
@@ -245,7 +252,7 @@ export async function marcarRevisado(pedidoId: string) {
 }
 
 export async function generarLinkPago(pedidoId: string, monto: number): Promise<{ ok: true; link: string } | { ok: false; error: string }> {
-  const u = await exigirPermiso("registrar_pagos");
+  const u = await exigirPermiso("links_pago");
   const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: { cliente: true } });
   if (!monto || monto <= 0) return { ok: false, error: "El monto tiene que ser mayor a cero." };
   try {
@@ -260,5 +267,17 @@ export async function generarLinkPago(pedidoId: string, monto: number): Promise<
     return { ok: true, link };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
+  }
+}
+
+// Foto de referencia de dónde va el bordado (se sube apenas la eligen en el formulario)
+export async function subirFotoBordado(form: FormData): Promise<{ url: string } | { error: string }> {
+  await exigirPermiso("subir_fotos_bordado");
+  const archivo = form.get("foto");
+  if (!(archivo instanceof File) || archivo.size === 0) return { error: "Elegí una foto." };
+  try {
+    return { url: await guardarImagen(archivo) };
+  } catch (e) {
+    return { error: (e as Error).message };
   }
 }

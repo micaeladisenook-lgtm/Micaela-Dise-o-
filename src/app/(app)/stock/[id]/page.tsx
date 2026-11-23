@@ -7,11 +7,11 @@ import { borrarItem } from "../acciones";
 import { db } from "@/lib/db";
 
 import { fechaHora } from "@/lib/formato";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function ItemStockPage({ params }: { params: Promise<{ id: string }> }) {
   const u = await requerirPermiso("ver_stock");
-  const editar = (await permisosDeRol(u.rol)).has("editar_stock");
+  const editar = (await permisosDe(u)).has("editar_stock");
   const { id } = await params;
   const it = await db.itemStock.findUnique({ where: { id }, include: { movimientos: { orderBy: { fecha: "desc" }, take: 50, include: { pedido: true } } } });
   if (!it) notFound();
@@ -43,7 +43,7 @@ export default async function ItemStockPage({ params }: { params: Promise<{ id: 
         <aside className="space-y-4">
           {editar && <div className="tarjeta p-5"><h2 className="text-xl mb-3">Entrada / salida</h2><FormMovimiento id={it.id} unidad={it.unidad} /></div>}
           {editar && <div className="tarjeta p-5"><h2 className="text-xl mb-3">Datos</h2><FormItem item={it} productos={productos} colores={bata?.colores ?? []} /></div>}
-          {u.rol === "ADMIN" && <BotonBorrar accion={borrarItem.bind(null, it.id)} texto="Borrar ítem" confirmacion={`¿Borrar "${it.nombre}" y su historial?`} />}
+          {(await permisosDe(u)).has("administrar_stock") && <BotonBorrar accion={borrarItem.bind(null, it.id)} texto="Borrar ítem" confirmacion={`¿Borrar "${it.nombre}" y su historial?`} />}
         </aside>
       </div>
     </>

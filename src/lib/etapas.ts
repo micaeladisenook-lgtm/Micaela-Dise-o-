@@ -1,7 +1,8 @@
 // Columnas del tablero de cada taller (sirve en servidor y en el navegador)
-export type Etapa = "RECIBIDO" | "EN_PRODUCCION" | "LISTO";
-export const ETAPAS: Etapa[] = ["RECIBIDO", "EN_PRODUCCION", "LISTO"];
+export type Etapa = "PENDIENTE_ENVIO" | "RECIBIDO" | "EN_PRODUCCION" | "LISTO";
+export const ETAPAS: Etapa[] = ["PENDIENTE_ENVIO", "RECIBIDO", "EN_PRODUCCION", "LISTO"];
 export const NOMBRE_ETAPA: Record<Etapa, string> = {
+  PENDIENTE_ENVIO: "Pendiente de envío",
   RECIBIDO: "Recibido",
   EN_PRODUCCION: "En producción",
   LISTO: "Listo para entregar",

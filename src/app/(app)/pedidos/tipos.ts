@@ -16,6 +16,8 @@ export type ItemForm = {
   precioUnitario: number;
   bordadoTexto: string;
   bordadoUbicacion: string;
+  bordadoDetalle: string;
+  bordadoFotos: string[];
   hilo: string;
   notas: string;
   prendas: PrendaForm[];

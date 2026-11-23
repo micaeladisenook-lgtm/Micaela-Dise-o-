@@ -1,14 +1,14 @@
 "use server";
+import { exigirPermiso } from "@/lib/acceso";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { pesos } from "@/lib/formato";
 
 const precioDe = (v: unknown) => parseInt(String(v ?? "").replace(/\D/g, "")) || 0;
 
 export async function guardarTarifaMoto(id: string, precio: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   const p = precioDe(precio);
   if (p <= 0) return { error: "Precio inválido." };
   const t = await db.tarifaMoto.update({ where: { id }, data: { precio: p } });
@@ -18,7 +18,7 @@ export async function guardarTarifaMoto(id: string, precio: string) {
 }
 
 export async function agregarTarifaMoto(_prev: { ok?: string; error?: string } | null, f: FormData) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   const zona = String(f.get("zona") ?? "").trim();
   const localidad = String(f.get("localidad") ?? "").trim();
   const precio = precioDe(f.get("precio"));
@@ -32,7 +32,7 @@ export async function agregarTarifaMoto(_prev: { ok?: string; error?: string } |
 }
 
 export async function borrarTarifaMoto(id: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   const t = await db.tarifaMoto.delete({ where: { id } });
   await registrar(u.id, "Borró tarifa de motomensajería", "Sistema", null, `${t.localidad} (${t.zona})`);
   revalidatePath("/envios");
@@ -41,7 +41,7 @@ export async function borrarTarifaMoto(id: string) {
 
 // Aumento por porcentaje a toda una zona (o a todas), redondeado a $100
 export async function aumentarTarifasMoto(zona: string, porcentaje: number) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   if (!Number.isFinite(porcentaje) || porcentaje === 0 || Math.abs(porcentaje) > 200) return { error: "Porcentaje inválido." };
   const tarifas = await db.tarifaMoto.findMany({ where: zona ? { zona } : {} });
   await db.$transaction(tarifas.map((t) => db.tarifaMoto.update({ where: { id: t.id }, data: { precio: Math.round((t.precio * (1 + porcentaje / 100)) / 100) * 100 } })));

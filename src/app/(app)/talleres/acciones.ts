@@ -1,7 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { actualizarEstadoPorTareas } from "@/lib/produccion";
 import type { EtapaTarea, FuncionTaller } from "@prisma/client";
@@ -31,7 +30,7 @@ export async function marcarTarea(id: string, terminada: boolean) {
 }
 
 export async function guardarTaller(id: string | null, _prev: { ok?: string; error?: string } | null, form: FormData) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("editar_talleres");
   const nombre = String(form.get("nombre") ?? "").trim();
   if (!nombre) return { error: "Poné un nombre." };
   const data = {

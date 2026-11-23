@@ -17,7 +17,7 @@ export async function tareasDeSemana(base: Date, tallerId?: string) {
       pedido: {
         select: {
           id: true, numero: true, fechaEvento: true, fechaEntrega: true, prioridad: true, estado: true, disenos: { include: { diseno: true } },
-          items: { select: { orden: true, nombre: true, persona: true, bordadoTexto: true, bordadoUbicacion: true, hilo: true, notas: true } },
+          items: { select: { orden: true, nombre: true, persona: true, bordadoTexto: true, bordadoUbicacion: true, bordadoDetalle: true, bordadoFotos: true, hilo: true, notas: true } },
         },
       },
     },
@@ -53,6 +53,7 @@ export function lineaTarea(t: TareaSemana) {
     `${v.accion}: ${v.prenda}`,
     ...v.datos.map((d) => `${d.etiqueta.toLowerCase()} ${d.valor}`),
     ...v.notas,
+    ...v.fotos.map((u, i) => `foto ${i + 1}: ${u}`),
     fechasTexto(t.pedido),
     t.pedido.prioridad ? "PRIORIDAD" : null,
   ].filter(Boolean).join(" · ");

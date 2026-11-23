@@ -88,6 +88,7 @@ model Usuario {
   pagosCargados   Pago[]
   tallerId        String?
   taller          Taller?    @relation(fields: [tallerId], references: [id], onDelete: SetNull)
+  permisos        PermisoUsuario[]
 }
 
 model Cliente {
@@ -241,6 +242,8 @@ model PedidoItem {
   precioUnitario   Int        @default(0)
   bordadoTexto     String?
   bordadoUbicacion String?
+  bordadoDetalle   String?    // dónde va exactamente el bordado (texto libre para el taller)
+  bordadoFotos     String[]   @default([]) // fotos de referencia de la ubicación
   hilo             String?
   notas            String?
   orden            Int        @default(0)
@@ -298,6 +301,7 @@ model Taller {
 
 // Columnas del tablero de cada taller
 enum EtapaTarea {
+  PENDIENTE_ENVIO
   RECIBIDO
   EN_PRODUCCION
   LISTO
@@ -317,7 +321,7 @@ model Tarea {
   talle         String?
   bordado       String?
   detalle       String?
-  etapa         EtapaTarea @default(RECIBIDO) // columna del tablero del taller
+  etapa         EtapaTarea @default(PENDIENTE_ENVIO) // columna del tablero del taller
   terminada     Boolean    @default(false)    // = etapa LISTO (se mantienen sincronizados)
   terminadaEn   DateTime?
   terminadaPorId String?
@@ -397,6 +401,15 @@ model Permiso {
   clave     String
   permitido Boolean @default(false)
   @@id([rol, clave])
+}
+
+// Permisos personalizados de un usuario (pisan a los de su rol)
+model PermisoUsuario {
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  clave     String
+  permitido Boolean
+  @@id([usuarioId, clave])
 }
 
 // Ajustes generales del sistema (ej: código postal de origen de los envíos)

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
-import { Check, Clock, Undo2, Inbox, Scissors, PackageCheck } from "lucide-react";
+import { Check, Clock, Undo2, Inbox, Scissors, PackageCheck, Send } from "lucide-react";
 import { moverTarea } from "./acciones";
 import { ETAPAS, NOMBRE_ETAPA, siguienteEtapa, etapaAnterior, type Etapa } from "@/lib/etapas";
 import type { VistaTarea } from "@/lib/vistaTaller";
@@ -21,13 +21,14 @@ export type Tarjeta = {
 };
 
 const ESTILO: Record<Etapa, { icono: typeof Inbox; cabeza: string; fondo: string; casilla: string }> = {
+  PENDIENTE_ENVIO: { icono: Send, cabeza: "bg-estado-entregado text-estado-entregado-txt", fondo: "bg-estado-entregado/50", casilla: "hover:border-estado-entregado-txt" },
   RECIBIDO: { icono: Inbox, cabeza: "bg-estado-nuevo text-estado-nuevo-txt", fondo: "bg-estado-nuevo/40", casilla: "hover:border-estado-nuevo-txt" },
   EN_PRODUCCION: { icono: Scissors, cabeza: "bg-estado-produccion text-estado-produccion-txt", fondo: "bg-estado-produccion/40", casilla: "hover:border-estado-produccion-txt" },
   LISTO: { icono: PackageCheck, cabeza: "bg-estado-listo text-estado-listo-txt", fondo: "bg-estado-listo/40", casilla: "" },
 };
 
 export default function TableroTaller({ tarjetas, ayuda, verPedido }: { tarjetas: Tarjeta[]; ayuda: { empezar: string; terminar: string }; verPedido: boolean }) {
-  const AYUDA: Record<Etapa, string> = { RECIBIDO: ayuda.empezar, EN_PRODUCCION: ayuda.terminar, LISTO: "Listo para retirar del taller" };
+  const AYUDA: Record<Etapa, string> = { PENDIENTE_ENVIO: "Tildá cuando se lo mandes (o lo lleves) al taller", RECIBIDO: ayuda.empezar, EN_PRODUCCION: ayuda.terminar, LISTO: "Listo para retirar del taller" };
   const [, start] = useTransition();
   const [lista, mover] = useOptimistic(tarjetas, (actual: Tarjeta[], m: { id: string; etapa: Etapa }) =>
     actual.map((t) => (t.id === m.id ? { ...t, etapa: m.etapa } : t)),
@@ -35,7 +36,7 @@ export default function TableroTaller({ tarjetas, ayuda, verPedido }: { tarjetas
   const pasarA = (id: string, etapa: Etapa) => start(async () => { mover({ id, etapa }); await moverTarea(id, etapa); });
 
   return (
-    <div className="grid md:grid-cols-3 gap-3">
+    <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-3">
       {ETAPAS.map((etapa) => {
         const propias = lista.filter((t) => t.etapa === etapa);
         const E = ESTILO[etapa];
@@ -91,6 +92,12 @@ function Ficha({ t, onMover, verPedido }: { t: Tarjeta; onMover: (id: string, e:
               </div>
             ))}
           </dl>
+        )}
+        {t.vista.fotos.length > 0 && (
+          <div className="mt-1.5">
+            <p className="text-[11px] text-texto-2 mb-0.5">Foto de dónde va (tocá para agrandar)</p>
+            <div className="flex flex-wrap gap-1">{t.vista.fotos.map((u) => <a key={u} href={u} target="_blank"><img src={u} alt="Dónde va el bordado" className="w-16 h-16 rounded-lg object-cover border-2 border-acento/40" /></a>)}</div>
+          </div>
         )}
         {t.vista.notas.map((n, i) => <p key={i} className="text-xs text-texto-2 mt-0.5">{n}</p>)}
         <p className="text-xs text-texto-2 mt-1.5 pt-1.5 border-t border-borde">

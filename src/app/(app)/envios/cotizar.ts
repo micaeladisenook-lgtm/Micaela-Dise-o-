@@ -2,7 +2,6 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { exigirPermiso, requerirPermiso } from "@/lib/acceso";
-import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { cotizarPedido } from "@/lib/cotizador";
 import { pesos } from "@/lib/formato";
@@ -13,7 +12,7 @@ export async function cotizarEnvio(pedidoId: string, cpDestino: string, localida
 }
 
 export async function elegirEnvio(pedidoId: string, opcion: { empresa: string; servicio: string; precio: number }, sumarAlTotal: boolean) {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("gestionar_envios");
   if (!opcion.precio || opcion.precio < 0) return { error: "Falta el precio del envío." };
   const forma = `${opcion.empresa}${opcion.servicio && opcion.servicio !== "—" && opcion.servicio !== "Cotización manual" ? ` · ${opcion.servicio}` : ""}`;
   const p = await db.pedido.findUniqueOrThrow({ where: { id: pedidoId }, include: { items: true } });
@@ -35,7 +34,7 @@ export async function elegirEnvio(pedidoId: string, opcion: { empresa: string; s
 }
 
 export async function guardarCpOrigen(_prev: { ok?: string; error?: string } | null, f: FormData) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   const cp = String(f.get("cp") ?? "").replace(/\D/g, "");
   if (cp.length < 4) return { error: "Escribí un código postal válido." };
   await db.configuracion.upsert({ where: { clave: "cp_origen" }, update: { valor: cp }, create: { clave: "cp_origen", valor: cp } });
