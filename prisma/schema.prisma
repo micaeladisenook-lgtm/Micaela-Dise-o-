@@ -61,6 +61,8 @@ model Producto {
   tipo        TipoProducto
   descripcion String?
   precio      Int?
+  precioAnterior Int?
+  enListaPrecios Boolean   @default(true)
   colores     String[]
   talles      String[]
   activo      Boolean      @default(true)
@@ -82,6 +84,7 @@ model ComponenteBox {
   componente    Producto @relation("Componente", fields: [componenteId], references: [id], onDelete: Cascade)
   cantidad      Int      @default(1)
   opcional      Boolean  @default(false)
+  aEleccion     Boolean  @default(false)
   nota          String?
 }
 

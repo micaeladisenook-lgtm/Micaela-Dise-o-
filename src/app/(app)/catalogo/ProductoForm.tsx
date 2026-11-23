@@ -6,8 +6,9 @@ import type { EstadoForm } from "./acciones";
 
 type Producto = {
   nombre: string; tipo: string; descripcion: string | null; precio: number | null;
+  precioAnterior: number | null; enListaPrecios: boolean;
   colores: string[]; talles: string[]; activo: boolean; orden: number;
-  componentes: { componenteId: string; cantidad: number; opcional: boolean }[];
+  componentes: { componenteId: string; cantidad: number; opcional: boolean; aEleccion: boolean }[];
 };
 type Opcion = { id: string; nombre: string };
 
@@ -57,6 +58,15 @@ export default function ProductoForm({
           <p className="ayuda">Dejalo vacío si el precio está &quot;a definir&quot;.</p>
         </div>
         <div>
+          <label className="etiqueta" htmlFor="precioAnterior">Precio anterior (tachado)</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-texto-2">$</span>
+            <input id="precioAnterior" name="precioAnterior" className="campo pl-7" inputMode="numeric" placeholder="Opcional"
+              defaultValue={producto?.precioAnterior != null ? producto.precioAnterior.toLocaleString("es-AR") : ""} />
+          </div>
+          <p className="ayuda">Para promos: se muestra tachado al lado del precio.</p>
+        </div>
+        <div>
           <label className="etiqueta" htmlFor="orden">Orden en la lista</label>
           <input id="orden" name="orden" type="number" className="campo" defaultValue={producto?.orden ?? 0} />
           <p className="ayuda">Los números más chicos aparecen primero.</p>
@@ -79,7 +89,7 @@ export default function ProductoForm({
       {(tipo === "BOX" || tipo === "KIT") && (
         <div>
           <span className="etiqueta">Prendas que incluye</span>
-          <p className="ayuda mb-2 mt-0">Al cargar un pedido, se va a pedir color y talle de cada prenda marcada.</p>
+          <p className="ayuda mb-2 mt-0">Al cargar un pedido, se va a pedir color y talle de cada prenda marcada. Las marcadas como &quot;A elección&quot; son opciones: la clienta elige una.</p>
           <div className="grid sm:grid-cols-2 gap-2">
             {sueltos.map((s) => {
               const on = elegidos.has(s.id);
@@ -105,6 +115,10 @@ export default function ProductoForm({
                         <input type="checkbox" name={`opcional_${s.id}`} defaultChecked={c?.opcional} className="w-4 h-4 accent-acento" />
                         Opcional
                       </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" name={`eleccion_${s.id}`} defaultChecked={c?.aEleccion} className="w-4 h-4 accent-acento" />
+                        A elección
+                      </label>
                     </div>
                   )}
                 </div>
@@ -116,7 +130,11 @@ export default function ProductoForm({
 
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" name="activo" defaultChecked={producto?.activo ?? true} className="w-5 h-5 accent-acento" />
-        <span className="text-sm">Activo (se muestra en la lista de precios y al cargar pedidos)</span>
+        <span className="text-sm">Activo (se puede elegir al cargar pedidos)</span>
+      </label>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="enListaPrecios" defaultChecked={producto?.enListaPrecios ?? true} className="w-5 h-5 accent-acento" />
+        <span className="text-sm">Mostrar en la lista de precios (desmarcalo para prendas que solo van dentro de un box)</span>
       </label>
 
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-3 py-2">{estado.error}</p>}

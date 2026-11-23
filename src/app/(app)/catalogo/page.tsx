@@ -36,21 +36,33 @@ export default async function CatalogoPage() {
                   <article key={p.id} className={`tarjeta p-5 flex flex-col ${p.activo ? "" : "opacity-60"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-xl leading-tight">{p.nombre}</h3>
-                      <p className={`text-lg font-semibold whitespace-nowrap ${p.precio == null ? "text-texto-2 text-sm font-normal" : "text-acento"}`}>
-                        {p.tipo === "ADICIONAL" && p.precio != null ? "+" : ""}{pesos(p.precio)}
-                      </p>
+                      <div className="text-right">
+                        <p className={`text-lg font-semibold whitespace-nowrap ${p.precio == null ? "text-texto-2 text-sm font-normal" : "text-acento"}`}>
+                          {p.tipo === "ADICIONAL" && p.precio != null ? "+" : ""}{pesos(p.precio)}
+                        </p>
+                        {p.precioAnterior != null && <p className="text-xs text-texto-2 line-through">{pesos(p.precioAnterior)}</p>}
+                      </div>
                     </div>
                     {p.descripcion && <p className="text-sm text-texto-2 mt-1">{p.descripcion}</p>}
-                    {!p.activo && <p className="chip bg-menu text-texto-2 mt-2 self-start">Inactivo</p>}
+                    <div className="flex flex-wrap gap-1 mt-2 empty:hidden">
+                      {!p.activo && <span className="chip bg-menu text-texto-2">Inactivo</span>}
+                      {!p.enListaPrecios && <span className="chip bg-menu text-texto-2">Solo dentro de boxes</span>}
+                    </div>
 
                     {p.componentes.length > 0 && (
                       <ul className="mt-3 text-sm space-y-0.5">
-                        {p.componentes.map((c) => (
+                        {p.componentes.filter((c) => !c.aEleccion).map((c) => (
                           <li key={c.id} className="text-texto">
                             • {c.cantidad > 1 ? `${c.cantidad} × ` : ""}{c.componente.nombre}
                             {c.opcional && <span className="text-texto-2"> (opcional)</span>}
                           </li>
                         ))}
+                        {p.componentes.some((c) => c.aEleccion) && (
+                          <li className="text-texto">
+                            • <span className="text-texto-2">Uno a elección:</span>{" "}
+                            {p.componentes.filter((c) => c.aEleccion).map((c) => c.componente.nombre).join(" / ")}
+                          </li>
+                        )}
                       </ul>
                     )}
                     {p.colores.length > 0 && (

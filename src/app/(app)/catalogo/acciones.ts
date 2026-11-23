@@ -16,6 +16,8 @@ function leer(form: FormData) {
     tipo: String(form.get("tipo") ?? "SUELTO") as TipoProducto,
     descripcion: String(form.get("descripcion") ?? "").trim() || null,
     precio: leerPesos(String(form.get("precio") ?? "")),
+    precioAnterior: leerPesos(String(form.get("precioAnterior") ?? "")),
+    enListaPrecios: form.get("enListaPrecios") === "on",
     colores: lista("colores"),
     talles: lista("talles"),
     activo: form.get("activo") === "on",
@@ -28,6 +30,7 @@ function leerComponentes(form: FormData) {
     componenteId: cid,
     cantidad: Math.max(1, parseInt(String(form.get(`cantidad_${cid}`) ?? "1"), 10) || 1),
     opcional: form.get(`opcional_${cid}`) === "on",
+    aEleccion: form.get(`eleccion_${cid}`) === "on",
   }));
 }
 

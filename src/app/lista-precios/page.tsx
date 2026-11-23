@@ -10,7 +10,7 @@ export const metadata = { title: "Lista de precios · Micaela Diseño" };
 export default async function ListaPreciosPage() {
   await requerirUsuario();
   const productos = await db.producto.findMany({
-    where: { activo: true },
+    where: { activo: true, enListaPrecios: true },
     orderBy: [{ orden: "asc" }, { nombre: "asc" }],
   });
   return (
@@ -42,18 +42,25 @@ export default async function ListaPreciosPage() {
                     <div>
                       <p className="font-medium">{p.nombre}</p>
                       {p.descripcion && <p className="text-sm text-texto-2">{p.descripcion}</p>}
-                      {p.colores.length > 0 && <p className="text-xs text-texto-2 mt-0.5">Colores: {p.colores.join(", ")}</p>}
-                      {p.talles.length > 0 && <p className="text-xs text-texto-2">Talles: {p.talles.join(", ")}</p>}
+
                     </div>
-                    <p className="font-semibold whitespace-nowrap">
-                      {p.precio == null ? <span className="text-sm font-normal text-texto-2">Consultar</span> : `${p.tipo === "ADICIONAL" ? "+" : ""}${pesos(p.precio)}`}
-                    </p>
+                    <div className="text-right whitespace-nowrap">
+                      {p.precioAnterior != null && <p className="text-xs text-texto-2 line-through">{pesos(p.precioAnterior)}</p>}
+                      <p className="font-semibold">
+                        {p.precio == null ? <span className="text-sm font-normal text-texto-2">Consultar</span> : `${p.tipo === "ADICIONAL" ? "+" : ""}${pesos(p.precio)}`}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             </section>
           );
         })}
+        <section className="mb-8 rounded-tarjeta bg-acento-suave/50 px-6 py-4 text-sm text-center">
+          <p>Todos los boxes vienen en <strong>caja para regalar</strong>, con <strong>tarjeta de presentación</strong> y <strong>scrunchies de regalo</strong>.</p>
+          <p className="mt-1">Colores disponibles: {Array.from(new Set(productos.flatMap((p) => p.colores))).join(", ")}.</p>
+          <p className="mt-1 font-medium text-acento">Envíos a todo el país.</p>
+        </section>
         <footer className="text-center text-xs text-texto-2 border-t border-borde pt-6">
           Precios en pesos argentinos. Sujetos a modificación sin previo aviso.
         </footer>
