@@ -6,6 +6,7 @@ import { leerFecha } from "@/lib/pedidos";
 import { pesos } from "@/lib/formato";
 import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
+import { prendasDelProducto, esAccesorio } from "@/lib/prendasProducto";
 
 export type EstadoPublico = { error?: string; ok?: boolean; numero?: number } | null;
 
@@ -23,41 +24,53 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
   });
   if (!producto) return { error: "Elegí un producto." };
 
-  // Clienta: si ya existe ese WhatsApp, se usa su ficha
+  const envio = t(f, "envio") !== "retira";
+  if (envio) {
+    for (const [k, msj] of [["recibe", "quién lo recibe"], ["dni", "el DNI de quien recibe"], ["direccion", "la calle y el número"], ["localidad", "la localidad"], ["provincia", "la provincia"], ["codigoPostal", "el código postal"]] as const) {
+      if (!t(f, k)) return { error: `Para el envío falta ${msj}.` };
+    }
+  }
+  const dni = t(f, "dni").replace(/\D/g, "") || null;
+  const direccion = [t(f, "direccion"), t(f, "pisoDepto")].filter(Boolean).join(", ") || null;
+
+  // Clienta: si ya existe ese WhatsApp, se usa su ficha (y se completan los datos que le falten, sin pisar nada)
   let cliente = await clientePorTelefono(telefono);
+  const datosCliente = {
+    instagram: normalizarInstagram(t(f, "instagram")), email: t(f, "email") || null,
+    direccion: envio ? direccion : null, localidad: envio ? t(f, "localidad") || null : null,
+    provincia: envio ? t(f, "provincia") || null : null, codigoPostal: envio ? t(f, "codigoPostal") || null : null,
+    dni: envio ? dni : null, entreCalles: envio ? t(f, "entreCalles") || null : null,
+  };
   if (!cliente) {
-    cliente = await db.cliente.create({
-      data: {
-        nombre, telefono, instagram: normalizarInstagram(t(f, "instagram")),
-        direccion: t(f, "direccion") || null, localidad: t(f, "localidad") || null,
-        provincia: t(f, "provincia") || null, codigoPostal: t(f, "codigoPostal") || null,
-        dni: t(f, "dni").replace(/\D/g, "") || null,
-        entreCalles: t(f, "entreCalles") || null,
-      },
-    });
+    cliente = await db.cliente.create({ data: { nombre, telefono, ...datosCliente } });
     await registrar(null, "Creó clienta", "Cliente", cliente.id, `N° ${cliente.numero} · ${cliente.nombre} (formulario público)`);
-  } else if (!cliente.instagram && t(f, "instagram")) {
-    await db.cliente.update({ where: { id: cliente.id }, data: { instagram: normalizarInstagram(t(f, "instagram")) } });
+  } else {
+    const faltan = Object.fromEntries(Object.entries(datosCliente).filter(([k, v]) => v && !cliente![k as keyof typeof datosCliente]));
+    if (Object.keys(faltan).length) await db.cliente.update({ where: { id: cliente.id }, data: faltan });
   }
 
-  // Prendas del producto con su color y talle
-  const color = t(f, "color") || null;
-  const eleccion = t(f, "eleccion");
-  const primeraOpcion = producto.componentes.find((x) => x.aEleccion)?.componenteId;
-  const comps = producto.componentes.filter((c) => !c.aEleccion || c.componenteId === (eleccion || primeraOpcion));
-  const talleDe = (nombre: string) =>
-    (/pantu/i.test(nombre) ? t(f, "tallePantu") : /bata/i.test(nombre) ? t(f, "talleBata") : t(f, "talleOtro")) || null;
-  const prendas = comps.length
-    ? comps.map((c, k) => ({ productoId: c.componenteId, nombre: c.componente.nombre, color, talle: talleDe(c.componente.nombre), orden: k }))
-    : [{ productoId: producto.id, nombre: producto.nombre, color, talle: t(f, "talleBata") || null, orden: 0 }];
+  // Prendas del producto: cada una con su color y su talle (mismo orden que el formulario)
+  const lista = prendasDelProducto(producto, t(f, "eleccion") || null);
+  const prendas = lista.map((pr, k) => {
+    const accesorio = esAccesorio(pr.nombre);
+    let color = accesorio ? null : t(f, `color_${k}`).slice(0, 60) || null;
+    if (color && pr.colores.length && !pr.colores.includes(color)) color = null;
+    let talle = accesorio ? null : t(f, `talle_${k}`) || null;
+    if (talle && !pr.talles.includes(talle)) talle = null;
+    return { productoId: pr.productoId, nombre: pr.nombre, color, talle, orden: k };
+  });
+  const faltaColor = lista.some((pr, k) => !esAccesorio(pr.nombre) && !prendas[k].color);
+  const faltaTalle = lista.some((pr, k) => !esAccesorio(pr.nombre) && pr.talles.length > 0 && !prendas[k].talle);
+  if (faltaColor || faltaTalle) return { error: `Elegí ${faltaColor ? "el color" : ""}${faltaColor && faltaTalle ? " y " : ""}${faltaTalle ? "el talle" : ""} de cada prenda (paso 3).` };
 
   type ItemNuevo = {
     productoId: string | null; nombre: string; precioUnitario: number; orden: number; bordadoTexto: string | null;
-    hilo: string | null; bordadoUbicacion: string; prendas: { create: typeof prendas };
+    hilo: string | null; bordadoUbicacion: string; bordadoDetalle: string | null; persona: string | null; prendas: { create: typeof prendas };
   };
   const items: ItemNuevo[] = [{
     productoId: producto.id, nombre: producto.nombre, precioUnitario: producto.precio ?? 0, orden: 0,
-    bordadoTexto: t(f, "bordado") || null, hilo: t(f, "hilo") || null, bordadoUbicacion: "Espalda",
+    bordadoTexto: t(f, "bordado") || null, hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacion") || "Espalda",
+    bordadoDetalle: t(f, "bordadoDetalle").slice(0, 500) || null, persona: t(f, "persona").slice(0, 80) || null,
     prendas: { create: prendas },
   }];
   if (t(f, "bordadoExtra")) {
@@ -65,12 +78,18 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     items.push({
       productoId: extra?.id ?? null, nombre: extra?.nombre ?? "Bordado extra", precioUnitario: extra?.precio ?? 10000, orden: 1,
       bordadoTexto: t(f, "bordadoExtra"), hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacionExtra") || "Adelante",
-      prendas: { create: [] },
+      bordadoDetalle: null, persona: null, prendas: { create: [] },
     });
   }
   const total = items.reduce((s, i) => s + i.precioUnitario, 0);
-  const envio = t(f, "envio") !== "retira";
   const evento = t(f, "evento");
+  const preferida = t(f, "formaPreferida");
+  const notas = [
+    envio && t(f, "recibe") ? `Recibe: ${t(f, "recibe")}${dni ? ` (DNI ${dni})` : ""}` : null,
+    envio && preferida ? `Prefiere envío por: ${preferida}` : null,
+    envio && t(f, "indicaciones") ? `Indicaciones de entrega: ${t(f, "indicaciones")}` : null,
+    t(f, "comentarios") || null,
+  ].filter(Boolean).join("\n") || null;
 
   const p = await db.pedido.create({
     data: {
@@ -82,13 +101,13 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
       fechaEvento: leerFecha(t(f, "fechaEvento")),
       fechaEntrega: leerFecha(t(f, "fechaNecesita")),
       envio,
-      formaEnvio: envio ? "A coordinar" : "Retira",
-      direccionEnvio: envio ? t(f, "direccion") || null : null,
-      localidad: t(f, "localidad") || null,
-      provincia: t(f, "provincia") || null,
-      codigoPostal: t(f, "codigoPostal") || null,
+      formaEnvio: envio ? (preferida && !/igual/i.test(preferida) ? preferida : "A coordinar") : "Retira",
+      direccionEnvio: envio ? direccion : null,
+      localidad: envio ? t(f, "localidad") || null : null,
+      provincia: envio ? t(f, "provincia") || null : null,
+      codigoPostal: envio ? t(f, "codigoPostal") || null : null,
       entreCalles: envio ? t(f, "entreCalles") || null : null,
-      notas: t(f, "comentarios") || null,
+      notas,
       total,
       items: { create: items },
     },

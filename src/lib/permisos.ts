@@ -17,7 +17,8 @@ export const PERMISOS = [
   { clave: "editar_pedidos", grupo: "Pedidos", texto: "Editar pedidos ya cargados", ayuda: "Productos, talles, colores, fechas, datos de entrega", padre: "crear_pedidos" },
   { clave: "cambiar_estado", grupo: "Pedidos", texto: "Cambiar el estado de un pedido", ayuda: "Nuevo, en producción, listo, entregado, cancelado", padre: "crear_pedidos" },
   { clave: "borrar_pedidos", grupo: "Pedidos", texto: "Borrar pedidos" },
-  { clave: "editar_mensajes", grupo: "Pedidos", texto: "Editar los mensajes de WhatsApp" },
+  { clave: "editar_mensajes", grupo: "Pedidos", texto: "Editar los mensajes de WhatsApp y las respuestas rápidas" },
+  { clave: "usar_respuestas", grupo: "Pedidos", texto: "Usar las respuestas rápidas (Instagram / WhatsApp)", padre: "ver_pedidos" },
 
   // Bordados y diseños
   { clave: "subir_fotos_bordado", grupo: "Bordados y diseños", texto: "Subir fotos de dónde va el bordado en un pedido", padre: "crear_pedidos" },

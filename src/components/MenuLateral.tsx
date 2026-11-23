@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ClipboardList, PlusCircle, CalendarDays, Scissors, Users,
-  Tags, Package, Wallet, Receipt, ShieldCheck, LogOut, Truck,
+  Tags, Package, Wallet, Receipt, ShieldCheck, LogOut, Truck, MessageSquareText,
 } from "lucide-react";
 import { salir } from "@/app/login/acciones";
 
@@ -13,6 +13,7 @@ const ITEMS: Item[] = [
   { href: "/", texto: "Panel", icono: LayoutDashboard, clave: "ver_panel" },
   { href: "/pedidos", texto: "Pedidos", icono: ClipboardList, clave: "ver_pedidos" },
   { href: "/pedidos/nuevo", texto: "Nuevo pedido", icono: PlusCircle, clave: "crear_pedidos" },
+  { href: "/respuestas", texto: "Respuestas rápidas", icono: MessageSquareText, clave: "usar_respuestas" },
   { href: "/calendario", texto: "Calendario", icono: CalendarDays, clave: "ver_calendario" },
   { href: "/talleres", texto: "Talleres", icono: Scissors, clave: "talleres" },
   { href: "/envios", texto: "Envíos", icono: Truck, clave: "ver_envios" },
