@@ -296,6 +296,13 @@ model Taller {
   usuarios     Usuario[]
 }
 
+// Columnas del tablero de cada taller
+enum EtapaTarea {
+  RECIBIDO
+  EN_PRODUCCION
+  LISTO
+}
+
 // Trabajo de un taller sobre una prenda de un pedido (se arma solo)
 model Tarea {
   id            String     @id @default(cuid())
@@ -310,7 +317,8 @@ model Tarea {
   talle         String?
   bordado       String?
   detalle       String?
-  terminada     Boolean    @default(false)
+  etapa         EtapaTarea @default(RECIBIDO) // columna del tablero del taller
+  terminada     Boolean    @default(false)    // = etapa LISTO (se mantienen sincronizados)
   terminadaEn   DateTime?
   terminadaPorId String?
   creadoEn      DateTime   @default(now())
