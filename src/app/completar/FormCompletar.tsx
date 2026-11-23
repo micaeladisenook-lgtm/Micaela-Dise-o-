@@ -4,6 +4,7 @@ import { Truck, Store } from "lucide-react";
 import { useFormulario } from "@/lib/useFormulario";
 import { completarDatos, subirFotoCompletar, type EstadoCompletar } from "./acciones";
 import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
+import SelectorTipografia from "@/components/SelectorTipografia";
 import AvisoTexto from "@/components/AvisoTexto";
 import { PROVINCIAS_AR, telaDe } from "@/lib/prendasProducto";
 import SelectorColor from "@/components/SelectorColor";
@@ -11,7 +12,7 @@ import SelectorColor from "@/components/SelectorColor";
 type Prenda = { id: string; nombre: string; color: string | null; talle: string | null; colores: string[]; talles: string[] };
 type Item = {
   id: string; nombre: string; persona: string | null; bordadoTexto: string | null; bordadoUbicacion: string | null;
-  bordadoDetalle: string | null; bordadoFotos: string[]; hilo: string | null; prendas: Prenda[]; conBordado: boolean;
+  bordadoDetalle: string | null; bordadoFotos: string[]; bordadoTipografia: string | null; hilo: string | null; prendas: Prenda[]; conBordado: boolean;
 };
 type Envio = { envio: boolean; direccion: string; entreCalles: string; localidad: string; provincia: string; codigoPostal: string; dni: string; recibe: string };
 
@@ -30,6 +31,9 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
     () => Object.fromEntries(items.map((i) => [i.id, { bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [] }])),
   );
   const subir = (fd: FormData) => subirFotoCompletar(token, fd);
+  const [bord, setBord] = useState<Record<string, { texto: string; tipo: string }>>(
+    () => Object.fromEntries(items.map((i) => [i.id, { texto: i.bordadoTexto ?? "", tipo: i.bordadoTipografia ?? "" }])),
+  );
   const [estado, onSubmit, enviando] = useFormulario(completarDatos.bind(null, token) as (prev: EstadoCompletar, f: FormData) => Promise<EstadoCompletar>, null);
   const [envio, setEnvio] = useState(envioInicial.envio ? "envio" : "retira");
   const todas = items.flatMap((i) => i.prendas);
@@ -100,7 +104,8 @@ export default function FormCompletar({ token, items, envioInicial, fechaEvento,
           {it.conBordado && (
             <div className="space-y-3 pt-1">
               <p className="font-medium">Bordado</p>
-              <Campo etiqueta="Texto para bordar" ayuda="Ej: Mía Mis XV · Bride · tu nombre"><input name={`bordado_${it.id}`} className="campo" defaultValue={it.bordadoTexto ?? ""} /></Campo>
+              <Campo etiqueta="Texto para bordar" ayuda="Ej: Mía Mis XV · Bride · tu nombre"><input name={`bordado_${it.id}`} className="campo" value={bord[it.id]?.texto ?? ""} onChange={(e) => setBord((b) => ({ ...b, [it.id]: { ...b[it.id], texto: e.target.value } }))} /></Campo>
+              <SelectorTipografia name={`tipografia_${it.id}`} valor={bord[it.id]?.tipo ?? ""} texto={bord[it.id]?.texto} onChange={(v) => setBord((b) => ({ ...b, [it.id]: { ...b[it.id], tipo: v } }))} />
               <div className="grid sm:grid-cols-2 gap-3">
                 <Campo etiqueta="Color del hilo">
                   <div className="grid grid-cols-2 gap-2">

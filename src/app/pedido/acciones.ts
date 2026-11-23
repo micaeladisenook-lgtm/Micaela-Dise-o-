@@ -8,6 +8,7 @@ import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
 import { prendasDelProducto, esAccesorio } from "@/lib/prendasProducto";
 import { guardarImagen, esUrlPropia } from "@/lib/archivos";
+import { tipografiaValida } from "@/lib/tipografias";
 
 export type EstadoPublico = { error?: string; ok?: boolean; numero?: number } | null;
 
@@ -87,13 +88,13 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
 
   type ItemNuevo = {
     productoId: string | null; nombre: string; precioUnitario: number; orden: number; bordadoTexto: string | null;
-    hilo: string | null; bordadoUbicacion: string; bordadoDetalle: string | null; bordadoFotos: string[]; notas: string | null; persona: string | null; prendas: { create: typeof prendas };
+    hilo: string | null; bordadoUbicacion: string; bordadoDetalle: string | null; bordadoTipografia: string | null; bordadoFotos: string[]; notas: string | null; persona: string | null; prendas: { create: typeof prendas };
   };
   const items: ItemNuevo[] = [{
     productoId: producto.id, nombre: producto.nombre, precioUnitario: producto.precio ?? 0, orden: 0,
     bordadoTexto: t(f, "bordado") || null, hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacion") || "Espalda",
     bordadoDetalle: t(f, "bordadoDetalle").slice(0, 500) || null, persona: t(f, "persona").slice(0, 80) || null,
-    bordadoFotos: fotosDelForm(f), notas: t(f, "extrasItem").slice(0, 1500) || null,
+    bordadoFotos: fotosDelForm(f), notas: t(f, "extrasItem").slice(0, 1500) || null, bordadoTipografia: tipografiaValida(t(f, "tipografia")),
     prendas: { create: prendas },
   }];
   if (t(f, "bordadoExtra")) {
@@ -101,7 +102,7 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     items.push({
       productoId: extra?.id ?? null, nombre: extra?.nombre ?? "Bordado extra", precioUnitario: extra?.precio ?? 10000, orden: 1,
       bordadoTexto: t(f, "bordadoExtra"), hilo: t(f, "hilo") || null, bordadoUbicacion: t(f, "ubicacionExtra") || "Adelante",
-      bordadoDetalle: null, bordadoFotos: [], notas: null, persona: null, prendas: { create: [] },
+      bordadoDetalle: null, bordadoFotos: [], notas: null, persona: null, bordadoTipografia: tipografiaValida(t(f, "tipografia")), prendas: { create: [] },
     });
   }
   const total = items.reduce((s, i) => s + i.precioUnitario, 0);

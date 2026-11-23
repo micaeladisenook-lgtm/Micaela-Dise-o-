@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, X, Plus, Trash2, MessageCircle, Check, Users, Shirt, Sparkles, StickyNote } from "lucide-react";
 import { buscarClientes, guardarPedido } from "./acciones";
 import BordadoUbicacion from "./BordadoUbicacion";
+import SelectorTipografia from "@/components/SelectorTipografia";
 import type { ClienteForm, ItemForm, PedidoForm, PrendaForm } from "./tipos";
 import { pesos, linkWhatsApp } from "@/lib/formato";
 import {
@@ -42,7 +43,7 @@ function prendasDe(p: Prod, eleccionId?: string | null): PrendaForm[] {
 function itemVacio(): ItemForm {
   return {
     key: nuevaKey(), productoId: null, nombre: "", persona: "", cantidad: 1, precioUnitario: 0,
-    bordadoTexto: "", bordadoUbicacion: "Espalda", bordadoDetalle: "", bordadoFotos: [], hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
+    bordadoTexto: "", bordadoUbicacion: "Espalda", bordadoDetalle: "", bordadoFotos: [], bordadoTipografia: "", hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
   };
 }
 
@@ -435,6 +436,7 @@ export default function FormPedido({
                               <Opciones valor={it.hilo} opciones={HILOS} onChange={(v) => setItem(it.key, { hilo: v })} placeholder="Color del hilo" />
                             </div>
                           </div>
+                          <SelectorTipografia valor={it.bordadoTipografia} texto={it.bordadoTexto} onChange={(v) => setItem(it.key, { bordadoTipografia: v })} />
                           <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} puedeSubir={puedeFotos} textoBoton="Subir foto o archivo" onChange={(v) => setItem(it.key, v)} />
                         </div>
                       </div>

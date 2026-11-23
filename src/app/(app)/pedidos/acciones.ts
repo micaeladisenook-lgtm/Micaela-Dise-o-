@@ -14,6 +14,7 @@ import type { PedidoForm, ResultadoGuardar } from "./tipos";
 import type { EstadoPedido, MedioPago, TipoPedido } from "@prisma/client";
 import { exigirPermiso, permisosDe } from "@/lib/acceso";
 import { guardarImagen, esUrlPropia } from "@/lib/archivos";
+import { tipografiaValida } from "@/lib/tipografias";
 
 export async function buscarClientes(q: string) {
   await exigirPermiso(["crear_pedidos", "editar_pedidos"]);
@@ -125,6 +126,7 @@ export async function guardarPedido(datos: PedidoForm, pedidoId?: string): Promi
     bordadoTexto: txt(i.bordadoTexto),
     bordadoUbicacion: txt(i.bordadoUbicacion),
     bordadoDetalle: txt(i.bordadoDetalle),
+    bordadoTipografia: tipografiaValida(i.bordadoTipografia),
     bordadoFotos: (i.bordadoFotos ?? []).filter(esUrlPropia).slice(0, 6),
     hilo: txt(i.hilo),
     notas: txt(i.notas),

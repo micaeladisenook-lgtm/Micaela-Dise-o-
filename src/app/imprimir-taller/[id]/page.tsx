@@ -6,6 +6,7 @@ import { permisosDe } from "@/lib/acceso";
 import { fecha } from "@/lib/formato";
 import { hoyAR } from "@/lib/pedidos";
 import { vistaTarea, itemDeTarea } from "@/lib/vistaTaller";
+import { tipografia } from "@/lib/tipografias";
 import { tareasDeSemana } from "@/lib/datosTalleres";
 
 export default async function ImprimirTallerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fecha?: string }> }) {
@@ -46,6 +47,7 @@ export default async function ImprimirTallerPage({ params, searchParams }: { par
                   <td className="py-2 pr-2"><span className="block text-xs uppercase text-texto-2">{v.accion}</span>{v.prenda}</td>
                   <td className="py-2 pr-2">
                     {v.datos.map((d) => <p key={d.etiqueta}><span className="text-texto-2">{d.etiqueta}:</span> {d.destacado ? <strong>{d.valor}</strong> : d.valor}</p>)}
+                    {v.tipografia && v.textoBordado && tipografia(v.tipografia) && <p style={{ fontFamily: tipografia(v.tipografia)!.fuente, fontSize: tipografia(v.tipografia)!.tamano }}>{v.textoBordado}</p>}
                     {v.notas.map((n, i) => <p key={i} className="text-texto-2">{n}</p>)}
                     {v.fotos.length > 0 && <div className="flex gap-1 mt-1">{v.fotos.map((u) => <img key={u} src={u} alt="Dónde va el bordado" className="w-24 h-24 object-cover rounded border border-texto" />)}</div>}
                     {v.conDisenos && t.pedido.disenos.length > 0 && <div className="flex gap-1 mt-1">{t.pedido.disenos.map(({ diseno: d }) => <img key={d.id} src={d.imagen} alt={d.nombre} className="w-14 h-14 object-cover rounded" />)}</div>}

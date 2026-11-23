@@ -83,7 +83,7 @@ export function atrasado(p: { estado: string; fechaEntrega: Date | null; fechaEv
 
 type ItemTexto = {
   nombre: string; cantidad: number; persona: string | null; bordadoTexto: string | null;
-  bordadoUbicacion: string | null; hilo: string | null;
+  bordadoUbicacion: string | null; hilo: string | null; bordadoTipografia?: string | null;
   prendas: { nombre: string; color: string | null; talle: string | null }[];
 };
 
@@ -96,7 +96,7 @@ export function detalleItem(i: ItemTexto, conViñeta = true): string {
     lineas.push(`   – ${p.nombre}${partes ? `: ${partes}` : ""}`);
   }
   if (i.bordadoTexto) {
-    const extra = [i.bordadoUbicacion, i.hilo ? `hilo ${i.hilo.toLowerCase()}` : null].filter(Boolean).join(", ");
+    const extra = [i.bordadoUbicacion, i.hilo ? `hilo ${i.hilo.toLowerCase()}` : null, i.bordadoTipografia ? `letra ${i.bordadoTipografia}` : null].filter(Boolean).join(", ");
     lineas.push(`   – Bordado: "${i.bordadoTexto}"${extra ? ` (${extra})` : ""}`);
   }
   return lineas.join("\n");

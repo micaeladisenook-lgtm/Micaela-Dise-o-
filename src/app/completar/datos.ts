@@ -18,7 +18,7 @@ export async function pedidoParaCompletar(token: string) {
   const items = p.items
     .map((i) => ({
       id: i.id, nombre: i.nombre, persona: i.persona, bordadoTexto: i.bordadoTexto, bordadoUbicacion: i.bordadoUbicacion,
-      bordadoDetalle: i.bordadoDetalle, bordadoFotos: i.bordadoFotos, hilo: i.hilo,
+      bordadoDetalle: i.bordadoDetalle, bordadoFotos: i.bordadoFotos, bordadoTipografia: i.bordadoTipografia, hilo: i.hilo,
       prendas: i.prendas.filter((pr) => !esAccesorio(pr.nombre)).map((pr) => {
         const prod = pr.productoId ? productos.get(pr.productoId) : undefined;
         return { id: pr.id, nombre: pr.nombre, color: pr.color, talle: pr.talle, colores: prod?.colores ?? [], talles: prod?.talles ?? [] };

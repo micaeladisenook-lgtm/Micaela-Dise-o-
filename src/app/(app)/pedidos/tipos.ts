@@ -17,6 +17,7 @@ export type ItemForm = {
   bordadoTexto: string;
   bordadoUbicacion: string;
   bordadoDetalle: string;
+  bordadoTipografia: string;
   bordadoFotos: string[];
   hilo: string;
   notas: string;

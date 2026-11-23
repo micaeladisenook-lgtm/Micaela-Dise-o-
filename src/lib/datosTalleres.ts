@@ -17,7 +17,7 @@ export async function tareasDeSemana(base: Date, tallerId?: string) {
       pedido: {
         select: {
           id: true, numero: true, fechaEvento: true, fechaEntrega: true, prioridad: true, estado: true, disenos: { include: { diseno: true } },
-          items: { select: { orden: true, nombre: true, persona: true, bordadoTexto: true, bordadoUbicacion: true, bordadoDetalle: true, bordadoFotos: true, hilo: true, notas: true } },
+          items: { select: { orden: true, nombre: true, persona: true, bordadoTexto: true, bordadoUbicacion: true, bordadoDetalle: true, bordadoFotos: true, bordadoTipografia: true, hilo: true, notas: true } },
         },
       },
     },

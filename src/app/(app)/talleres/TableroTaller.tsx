@@ -5,6 +5,7 @@ import { Check, Clock, Undo2, Inbox, Scissors, PackageCheck, Send } from "lucide
 import { moverTarea } from "./acciones";
 import { ETAPAS, NOMBRE_ETAPA, siguienteEtapa, etapaAnterior, type Etapa } from "@/lib/etapas";
 import type { VistaTarea } from "@/lib/vistaTaller";
+import { tipografia } from "@/lib/tipografias";
 
 export type Tarjeta = {
   id: string;
@@ -92,6 +93,10 @@ function Ficha({ t, onMover, verPedido }: { t: Tarjeta; onMover: (id: string, e:
               </div>
             ))}
           </dl>
+        )}
+        {t.vista.tipografia && t.vista.textoBordado && tipografia(t.vista.tipografia) && (
+          <p className="mt-1.5 rounded-lg bg-acento-suave/40 px-2 py-1 truncate" title={`Así queda en ${t.vista.tipografia}`}
+            style={{ fontFamily: tipografia(t.vista.tipografia)!.fuente, fontSize: tipografia(t.vista.tipografia)!.tamano }}>{t.vista.textoBordado}</p>
         )}
         {t.vista.fotos.length > 0 && (
           <div className="mt-1.5">

@@ -6,6 +6,7 @@ import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
 import { pedidoParaCompletar } from "./datos";
 import { guardarImagen, esUrlPropia } from "@/lib/archivos";
+import { tipografiaValida } from "@/lib/tipografias";
 
 export type EstadoCompletar = { error?: string; ok?: boolean } | null;
 const hayAvisoPedido = async () => !!(await db.plantilla.findUnique({ where: { clave: "aviso_pedido" } }))?.texto.trim();
@@ -80,6 +81,7 @@ export async function completarDatos(token: string, _prev: EstadoCompletar, f: F
         bordadoUbicacion: t(f, `ubicacion_${i.id}`, 60) || i.bordadoUbicacion,
         bordadoDetalle: t(f, `detalle_${i.id}`, 500) || null,
         bordadoFotos: fotosDe(f, i.id),
+        bordadoTipografia: tipografiaValida(t(f, `tipografia_${i.id}`, 40)),
         persona: t(f, `persona_${i.id}`, 80) || i.persona,
         ...(t(f, `extras_${i.id}`, 1500) ? { notas: [itemsBase.get(i.id), `Detalles extras: ${t(f, `extras_${i.id}`, 1500)}`].filter(Boolean).join("\n") } : {}),
       },

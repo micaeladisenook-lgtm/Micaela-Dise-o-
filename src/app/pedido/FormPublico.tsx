@@ -5,6 +5,7 @@ import AvisoTexto from "@/components/AvisoTexto";
 import { useFormulario } from "@/lib/useFormulario";
 import { enviarPedidoPublico, subirFotoPublica } from "./acciones";
 import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
+import SelectorTipografia from "@/components/SelectorTipografia";
 import { pesos } from "@/lib/formato";
 import { prendasDelProducto, esAccesorio, telaDe, PROVINCIAS_AR } from "@/lib/prendasProducto";
 import SelectorColor from "@/components/SelectorColor";
@@ -55,6 +56,8 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
   const [evento, setEvento] = useState("no");
   const [envio, setEnvio] = useState("envio");
   const [extra, setExtra] = useState(false);
+  const [textoBordado, setTextoBordado] = useState("");
+  const [tipo, setTipo] = useState("");
   const [ubic, setUbic] = useState<{ bordadoDetalle: string; bordadoFotos: string[] }>({ bordadoDetalle: "", bordadoFotos: [] });
   const p = productos.find((x) => x.id === pid);
   const prendas = useMemo(() => (p ? prendasDelProducto(p, eleccion || null) : []), [p, eleccion]);
@@ -200,7 +203,8 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
 
       {p && (
         <Seccion n={4} titulo="Bordado">
-          <Campo etiqueta="Texto para bordar" ayuda="Ej: Mía Mis XV · Bride · tu nombre"><input name="bordado" className="campo" /></Campo>
+          <Campo etiqueta="Texto para bordar" ayuda="Ej: Mía Mis XV · Bride · tu nombre"><input name="bordado" className="campo" value={textoBordado} onChange={(e) => setTextoBordado(e.target.value)} /></Campo>
+          <SelectorTipografia name="tipografia" valor={tipo} texto={textoBordado} onChange={setTipo} />
           <div className="grid sm:grid-cols-2 gap-3">
             <Campo etiqueta="Color del hilo">
               <div className="grid grid-cols-2 gap-2">
