@@ -19,6 +19,21 @@ function tipoPrenda(nombre: string) {
   return "ROPA";
 }
 
+// Una prenda con nombre genérico ("Box dama 1", "Prenda", "Box camisero + pantu") puede traer
+// ropa y pantuflas juntas: se separa para que cada parte vaya a su taller.
+// Las pantuflas (pantus) NUNCA van a Gery: las borda Héctor, las hace Richard y las pega Pedro.
+const RE_CONOCIDA = /pantu|bata|pijama|camis|short|tiras|antifaz|scrunchie|tarjeta|caja/i;
+const RE_ROPA = /bata|pijama|camis|short|tiras/i;
+function tiposDe(prenda: string, contexto: string): string[] {
+  if (RE_CONOCIDA.test(prenda) && !/box|combo|\+/i.test(prenda)) return [tipoPrenda(prenda)];
+  const txt = `${prenda} ${contexto}`;
+  const pantu = /pantu/i.test(txt);
+  const ropa = RE_ROPA.test(txt) || !pantu;
+  return [...(ropa ? ["ROPA"] : []), ...(pantu ? ["PANTU"] : [])];
+}
+// "Bata M - Pantus 38" → "38"
+const tallePantu = (txt: string) => txt.match(/pantu\w*\s*:?\s*(\d{2}(?:\s*\/\s*\d{2})?)/i)?.[1]?.replace(/\s/g, "") ?? null;
+
 // Recorrido de cada prenda por los talleres:
 // ropa: Gery confecciona → Héctor borda · pantuflas: Héctor borda → Richard confecciona → Pedro pega
 function pasosDe(tipo: string, bordada: boolean): Paso[] {
@@ -57,21 +72,28 @@ export async function generarTareas(pedidoId: string) {
         if (t) deseadas.push({ clave: `${it.orden}.${q}-x-BORDADO`, tallerId: t.id, paso: 1, prenda: it.nombre, color: null, talle: null, bordado: bordadoTxt, detalle: it.persona ? `Para ${it.persona}` : null });
         continue;
       }
+      const contexto = `${it.nombre} ${it.notas ?? ""}`;
       prendas.forEach((pr, k) => {
-        const tipo = tipoPrenda(pr.nombre);
+        const tipos = tiposDe(pr.nombre, contexto);
+        const separada = tipos.length > 1;
+        tipos.forEach((tipo) => {
         // en los boxes con bata, el pijama/camisolín va sin bordar (salvo que la ubicación lo diga)
-        const esPijama = tipo === "ROPA" && !/bata/i.test(pr.nombre);
+        const esPijama = tipo === "ROPA" && !/bata/i.test(pr.nombre) && !(separada && /bata/i.test(contexto));
         const bordada = !!it.bordadoTexto && pr.bordada &&
           (!esPijama || !hayBata || /pijama|camis/i.test(`${it.bordadoUbicacion ?? ""} ${it.bordadoTexto ?? ""}`));
+        // la parte de pantuflas de una prenda separada lleva su propia clave ("0.0-0p")
+        const sub = separada && tipo === "PANTU" ? `${k}p` : `${k}`;
+        const talle = separada && tipo === "PANTU" ? tallePantu(contexto) : pr.talle;
         pasosDe(tipo, bordada).forEach((paso, n) => {
           const t = tallerDe(paso.funcion);
           if (!t) return;
           deseadas.push({
-            clave: `${it.orden}.${q}-${k}-${paso.funcion}`, tallerId: t.id, paso: n + 1,
-            prenda: pr.nombre, color: pr.color, talle: pr.talle,
+            clave: `${it.orden}.${q}-${sub}-${paso.funcion}`, tallerId: t.id, paso: n + 1,
+            prenda: separada ? `${pr.nombre} (${tipo === "PANTU" ? "pantuflas" : "ropa"})` : pr.nombre, color: pr.color, talle,
             bordado: paso.funcion === "BORDADO" ? bordadoTxt : null,
             detalle: [paso.detalle, it.persona ? `Para ${it.persona}` : null, it.notas && paso.funcion !== "BORDADO" ? it.notas.split("\n")[0] : null].filter(Boolean).join(" · ") || null,
           });
+        });
         });
       });
     }

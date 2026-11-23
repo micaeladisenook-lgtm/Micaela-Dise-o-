@@ -4,18 +4,30 @@ import { db } from "@/lib/db";
 import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { actualizarEstadoPorTareas } from "@/lib/produccion";
-import type { FuncionTaller } from "@prisma/client";
+import type { EtapaTarea, FuncionTaller } from "@prisma/client";
 import { exigirPermiso } from "@/lib/acceso";
+import { NOMBRE_ETAPA } from "@/lib/etapas";
 
-export async function marcarTarea(id: string, terminada: boolean) {
+// Mueve un trabajo a una columna del tablero (Recibido → En producción → Listo para entregar)
+export async function moverTarea(id: string, etapa: EtapaTarea) {
   const u = await exigirPermiso("marcar_tareas");
   const t = await db.tarea.findUniqueOrThrow({ where: { id }, include: { pedido: true, taller: true } });
   if (u.rol === "TALLER" && u.tallerId !== t.tallerId) return;
-  await db.tarea.update({ where: { id }, data: { terminada, terminadaEn: terminada ? new Date() : null, terminadaPorId: terminada ? u.id : null } });
-  await registrar(u.id, terminada ? "Marcó tarea terminada" : "Desmarcó tarea", "Pedido", t.pedidoId, `N° ${t.pedido.numero} · ${t.taller.nombre}: ${t.prenda}${t.color ? ` ${t.color}` : ""}`);
-  await actualizarEstadoPorTareas(t.pedidoId, u.id);
+  if (t.etapa === etapa) return;
+  const terminada = etapa === "LISTO";
+  await db.tarea.update({
+    where: { id },
+    data: { etapa, terminada, ...(terminada !== t.terminada ? { terminadaEn: terminada ? new Date() : null, terminadaPorId: terminada ? u.id : null } : {}) },
+  });
+  await registrar(u.id, `Pasó tarea a «${NOMBRE_ETAPA[etapa]}»`, "Pedido", t.pedidoId, `N° ${t.pedido.numero} · ${t.taller.nombre}: ${t.prenda}${t.color ? ` ${t.color}` : ""}`);
+  if (terminada !== t.terminada) await actualizarEstadoPorTareas(t.pedidoId, u.id);
   revalidatePath("/talleres");
   revalidatePath(`/pedidos/${t.pedidoId}`);
+}
+
+// Casilla de la ficha del pedido: tildar = listo; destildar = vuelve a "En producción"
+export async function marcarTarea(id: string, terminada: boolean) {
+  await moverTarea(id, terminada ? "LISTO" : "EN_PRODUCCION");
 }
 
 export async function guardarTaller(id: string | null, _prev: { ok?: string; error?: string } | null, form: FormData) {
