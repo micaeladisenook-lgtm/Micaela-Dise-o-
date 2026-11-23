@@ -245,6 +245,7 @@ model PedidoItem {
   bordadoTexto     String?
   bordadoUbicacion String?
   bordadoDetalle   String?    // dónde va exactamente el bordado (texto libre para el taller)
+  bordadoTipografia String?   // una de las tipografías de bordado (ver src/lib/tipografias.ts)
   bordadoFotos     String[]   @default([]) // fotos de referencia de la ubicación
   hilo             String?
   notas            String?

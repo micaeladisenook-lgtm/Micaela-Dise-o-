@@ -62,7 +62,7 @@ export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir 
 
   return (
     <div className="rounded-xl border border-dashed border-borde bg-acento-suave/40 p-3 space-y-2">
-      <p className="text-sm font-medium flex items-center gap-1.5"><MapPin size={15} className="text-acento" /> ¿Dónde va exactamente el bordado?</p>
+      <p className="text-sm font-medium flex items-center gap-1.5"><MapPin size={15} className="text-acento" /> ¿Dónde va exactamente el bordado? · Fotos o archivos</p>
       <textarea
         className="campo min-h-16"
         rows={2}

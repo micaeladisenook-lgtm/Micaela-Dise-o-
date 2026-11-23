@@ -12,6 +12,7 @@ import BotonRevisado from "../BotonRevisado";
 import LinkPago from "../LinkPago";
 import EnviarResumen from "../EnviarResumen";
 import LinkCompletar from "../LinkCompletar";
+import { tipografia } from "@/lib/tipografias";
 import Cotizador from "../../envios/Cotizador";
 import { linkResumen, linkCompletar } from "@/lib/resumen";
 import CasillaTarea from "../../talleres/CasillaTarea";
@@ -100,6 +101,11 @@ export default async function PedidoPage({
                   )}
                   {i.bordadoTexto && (
                     <p className="text-sm mt-1">– Bordado: <strong>&quot;{i.bordadoTexto}&quot;</strong>{i.bordadoUbicacion ? ` · ${i.bordadoUbicacion}` : ""}{i.hilo ? ` · hilo ${i.hilo.toLowerCase()}` : ""}</p>
+                  )}
+                  {i.bordadoTipografia && (
+                    <p className="text-sm mt-1">– Tipografía: <strong>{i.bordadoTipografia}</strong>
+                      {i.bordadoTexto && tipografia(i.bordadoTipografia) && <span className="ml-2 text-acento-oscuro" style={{ fontFamily: tipografia(i.bordadoTipografia)!.fuente, fontSize: tipografia(i.bordadoTipografia)!.tamano }}>{i.bordadoTexto}</span>}
+                    </p>
                   )}
                   {i.bordadoDetalle && <p className="text-sm mt-1">– Dónde va exactamente: <strong>{i.bordadoDetalle}</strong></p>}
                   {i.bordadoFotos.length > 0 && (

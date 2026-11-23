@@ -2,9 +2,10 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, X, Plus, Trash2, MessageCircle, Check, Users } from "lucide-react";
+import { Search, X, Plus, Trash2, MessageCircle, Check, Users, Shirt, Sparkles, StickyNote } from "lucide-react";
 import { buscarClientes, guardarPedido } from "./acciones";
 import BordadoUbicacion from "./BordadoUbicacion";
+import SelectorTipografia from "@/components/SelectorTipografia";
 import type { ClienteForm, ItemForm, PedidoForm, PrendaForm } from "./tipos";
 import { pesos, linkWhatsApp } from "@/lib/formato";
 import {
@@ -42,7 +43,7 @@ function prendasDe(p: Prod, eleccionId?: string | null): PrendaForm[] {
 function itemVacio(): ItemForm {
   return {
     key: nuevaKey(), productoId: null, nombre: "", persona: "", cantidad: 1, precioUnitario: 0,
-    bordadoTexto: "", bordadoUbicacion: "Espalda", bordadoDetalle: "", bordadoFotos: [], hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
+    bordadoTexto: "", bordadoUbicacion: "Espalda", bordadoDetalle: "", bordadoFotos: [], bordadoTipografia: "", hilo: "Dorado", notas: "", prendas: [], eleccionId: null,
   };
 }
 
@@ -374,7 +375,7 @@ export default function FormPedido({
                   </div>
 
                   {it.nombre && !esAdicional && (
-                    <div className="pl-7 mt-3 space-y-3">
+                    <div className="sm:pl-7 mt-4 space-y-4">
                       {opciones.length > 0 && (
                         <div>
                           <span className="etiqueta">A elección</span>
@@ -389,24 +390,60 @@ export default function FormPedido({
                         </div>
                       )}
                       {it.prendas.length > 0 && (
-                        <div className="space-y-2">
-                          {it.prendas.map((pr, k) => (
-                            <div key={k} className="grid grid-cols-[1fr] sm:grid-cols-[150px_1fr_110px] gap-2 items-center">
-                              <span className="text-sm font-medium">{pr.nombre}</span>
-                              <Opciones valor={pr.color} opciones={colores(pr)} onChange={(v) => setPrenda(it, k, { color: v })} placeholder="Color" />
-                              <Opciones valor={pr.talle} opciones={talles(pr)} onChange={(v) => setPrenda(it, k, { talle: v })} placeholder={talles(pr).length ? "Talle" : "Talle (opc.)"} />
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-texto-2 mb-1.5 flex items-center gap-1.5"><Shirt size={14} /> Prendas · color y talle de cada una</p>
+                          <div className="rounded-xl border border-borde divide-y divide-borde overflow-hidden">
+                            <div className="hidden sm:grid grid-cols-[180px_1fr_130px] gap-2 px-3 py-1.5 bg-menu/60 text-[11px] font-semibold uppercase tracking-wide text-texto-2">
+                              <span>Prenda</span><span>Color</span><span>Talle</span>
                             </div>
-                          ))}
+                            {it.prendas.map((pr, k) => (
+                              <div key={k} className="grid grid-cols-2 sm:grid-cols-[180px_1fr_130px] gap-2 items-center px-3 py-2.5 bg-white">
+                                <span className="col-span-2 sm:col-span-1 text-sm font-medium flex items-center gap-1.5">
+                                  {pr.nombre}
+                                  {pr.color && (pr.talle || !talles(pr).length) ? <Check size={14} className="text-estado-listo-txt shrink-0" aria-label="Completa" /> : null}
+                                </span>
+                                <div>
+                                  <span className="sm:hidden text-[11px] text-texto-2">Color</span>
+                                  <Opciones valor={pr.color} opciones={colores(pr)} onChange={(v) => setPrenda(it, k, { color: v })} placeholder="Elegí…" />
+                                </div>
+                                <div>
+                                  <span className="sm:hidden text-[11px] text-texto-2">Talle</span>
+                                  <Opciones valor={pr.talle} opciones={talles(pr)} onChange={(v) => setPrenda(it, k, { talle: v })} placeholder={talles(pr).length ? "Elegí…" : "(opcional)"} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
-                      <div className="grid sm:grid-cols-2 gap-2">
-                        <input className="campo" placeholder="Texto del bordado (ej: Mía Mis XV)" value={it.bordadoTexto} onChange={(e) => setItem(it.key, { bordadoTexto: e.target.value })} />
-                        <input className="campo" placeholder="Para quién es (opcional, ej: Mamá)" value={it.persona} onChange={(e) => setItem(it.key, { persona: e.target.value })} />
-                        <Opciones valor={it.bordadoUbicacion} opciones={UBICACIONES} onChange={(v) => setItem(it.key, { bordadoUbicacion: v })} placeholder="Ubicación del bordado" />
-                        <Opciones valor={it.hilo} opciones={HILOS} onChange={(v) => setItem(it.key, { hilo: v })} placeholder="Color del hilo" />
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-texto-2 mb-1.5 flex items-center gap-1.5"><Sparkles size={14} /> Bordado</p>
+                        <div className="rounded-xl border border-borde bg-white p-3 space-y-3">
+                          <div className="grid sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[11px] text-texto-2">Texto a bordar</label>
+                              <input className="campo" placeholder="Ej: Mía Mis XV" value={it.bordadoTexto} onChange={(e) => setItem(it.key, { bordadoTexto: e.target.value })} />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-texto-2">Para quién es (opcional)</label>
+                              <input className="campo" placeholder="Ej: Mamá" value={it.persona} onChange={(e) => setItem(it.key, { persona: e.target.value })} />
+                            </div>
+                            <div>
+                              <span className="text-[11px] text-texto-2">Dónde va</span>
+                              <Opciones valor={it.bordadoUbicacion} opciones={UBICACIONES} onChange={(v) => setItem(it.key, { bordadoUbicacion: v })} placeholder="Ubicación del bordado" />
+                            </div>
+                            <div>
+                              <span className="text-[11px] text-texto-2">Color del hilo</span>
+                              <Opciones valor={it.hilo} opciones={HILOS} onChange={(v) => setItem(it.key, { hilo: v })} placeholder="Color del hilo" />
+                            </div>
+                          </div>
+                          <SelectorTipografia valor={it.bordadoTipografia} texto={it.bordadoTexto} onChange={(v) => setItem(it.key, { bordadoTipografia: v })} />
+                          <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} puedeSubir={puedeFotos} textoBoton="Subir foto o archivo" onChange={(v) => setItem(it.key, v)} />
+                        </div>
                       </div>
-                      <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} puedeSubir={puedeFotos} onChange={(v) => setItem(it.key, v)} />
-                      <input className="campo" placeholder="Notas (medidas especiales, talle distinto arriba/abajo, etc.)" value={it.notas} onChange={(e) => setItem(it.key, { notas: e.target.value })} />
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-texto-2 mb-1.5 flex items-center gap-1.5"><StickyNote size={14} /> Detalles extras</p>
+                        <textarea className="campo py-2.5" rows={2} placeholder="Medidas especiales, talle distinto arriba/abajo, tipografía, algo para la tarjeta…" value={it.notas} onChange={(e) => setItem(it.key, { notas: e.target.value })} />
+                      </div>
                     </div>
                   )}
                 </div>

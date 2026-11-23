@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter, Alex_Brush, Bodoni_Moda } from "next/font/google";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -9,6 +9,9 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
 });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Tipografías de bordado (solo para mostrar la muestra; no se precargan en todas las páginas)
+const alex = Alex_Brush({ subsets: ["latin"], weight: "400", variable: "--font-alex", preload: false });
+const bodoni = Bodoni_Moda({ subsets: ["latin"], variable: "--font-bodoni", preload: false });
 
 export const metadata: Metadata = {
   title: "Micaela Diseño · Gestión",
@@ -23,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="es-AR" className={`${cormorant.variable} ${inter.variable} ${alex.variable} ${bodoni.variable}`}>
       <body className="antialiased min-h-screen">{children}</body>
     </html>
   );

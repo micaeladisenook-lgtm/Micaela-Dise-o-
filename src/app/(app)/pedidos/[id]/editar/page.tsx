@@ -22,7 +22,7 @@ export default async function EditarPedidoPage({ params }: { params: Promise<{ i
     items: p.items.map((i) => ({
       key: i.id, productoId: i.productoId, nombre: i.nombre, persona: i.persona ?? "", cantidad: i.cantidad,
       precioUnitario: i.precioUnitario, bordadoTexto: i.bordadoTexto ?? "", bordadoUbicacion: i.bordadoUbicacion ?? "",
-      bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [],
+      bordadoDetalle: i.bordadoDetalle ?? "", bordadoFotos: i.bordadoFotos ?? [], bordadoTipografia: i.bordadoTipografia ?? "",
       hilo: i.hilo ?? "", notas: i.notas ?? "",
       prendas: i.prendas.map((pr) => ({ productoId: pr.productoId, nombre: pr.nombre, color: pr.color ?? "", talle: pr.talle ?? "", bordada: pr.bordada })),
       eleccionId: i.prendas.find((pr) => datos.productos.find((x) => x.id === i.productoId)?.componentes.some((c) => c.aEleccion && c.componente.id === pr.productoId))?.productoId ?? null,

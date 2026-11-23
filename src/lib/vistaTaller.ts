@@ -9,6 +9,7 @@ export type ItemParaTaller = {
   bordadoUbicacion: string | null;
   bordadoDetalle?: string | null;
   bordadoFotos?: string[];
+  bordadoTipografia?: string | null;
   hilo: string | null;
   notas: string | null;
 };
@@ -23,7 +24,7 @@ export type TareaParaTaller = {
 };
 
 export type Dato = { etiqueta: string; valor: string; destacado?: boolean };
-export type VistaTarea = { accion: string; prenda: string; datos: Dato[]; notas: string[]; conDisenos: boolean; fotos: string[] };
+export type VistaTarea = { accion: string; prenda: string; datos: Dato[]; notas: string[]; conDisenos: boolean; fotos: string[]; tipografia?: string | null; textoBordado?: string | null };
 
 export const ACCION_FUNCION: Record<string, { verbo: string; empezar: string; terminar: string }> = {
   CONFECCION_ROPA: { verbo: "Confeccionar", empezar: "Tildá cuando empieces a cortar/coser", terminar: "Tildá cuando la prenda esté cosida" },
@@ -63,9 +64,10 @@ export function vistaTarea(funcion: string, t: TareaParaTaller, it: ItemParaTall
     add("Texto", it?.bordadoTexto ?? t.bordado, true);
     add("Ubicación", it?.bordadoUbicacion);
     add("Dónde exactamente", it?.bordadoDetalle, true);
+    add("Tipografía", it?.bordadoTipografia, true);
     add("Hilo", it?.hilo);
     add("Para", it?.persona);
-    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true, fotos: it?.bordadoFotos ?? [] };
+    return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true, fotos: it?.bordadoFotos ?? [], tipografia: it?.bordadoTipografia ?? null, textoBordado: it?.bordadoTexto ?? t.bordado };
   }
 
   if (funcion === "CONFECCION_PANTU" || funcion === "PEGADO_PANTU") {
@@ -78,6 +80,7 @@ export function vistaTarea(funcion: string, t: TareaParaTaller, it: ItemParaTall
     add("Bordado", it?.bordadoTexto ?? t.bordado ?? "Sin bordado");
     add("Ubicación del bordado", it?.bordadoUbicacion);
     add("Dónde exactamente", it?.bordadoDetalle);
+    add("Tipografía", it?.bordadoTexto ? it?.bordadoTipografia : null);
     add("Hilo", it?.bordadoTexto ? it?.hilo : null);
     add("Para", it?.persona);
     return { accion, prenda, datos, notas: notasUtiles(it?.notas ?? null, false), conDisenos: true, fotos: it?.bordadoFotos ?? [] };
