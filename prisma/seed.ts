@@ -151,10 +151,20 @@ async function main() {
     await db.producto.updateMany({ where: { nombre, pesoGramos: null }, data: { pesoGramos, altoCm, anchoCm, largoCm } });
   }
   // Prendas que también se venden por unidad (precio cargado solo si aún no tenían uno)
-  await db.producto.updateMany({ where: { nombre: "Pijama de tiras y short" }, data: { nombre: "Pijama de tiras regulables" } });
-  const sueltas: [string, number][] = [["Pijama de tiras regulables", 50000], ["Pijama camisero corto", 69900], ["Pijama camisero largo de satén", 69900], ["Camisolín", 50000]];
+  await db.producto.updateMany({ where: { nombre: { in: ["Pijama de tiras y short", "Pijama de tiras regulables"] } }, data: { nombre: "Pijama de tiras regulables y short" } });
+  const sueltas: [string, number][] = [["Pijama de tiras regulables y short", 50000], ["Pijama camisero corto", 69900], ["Pijama camisero largo de satén", 69900], ["Camisolín", 50000]];
   for (const [nombre, precio] of sueltas) {
     await db.producto.updateMany({ where: { nombre, tipo: "SUELTO", precio: null }, data: { precio, enListaPrecios: true, talleColorOpcional: true, descripcion: "Talle y color a elección (opcional)" } });
+  }
+  // Pantuflas sueltas: bordadas $40.000 / sin bordar $10.000 (mismo precio en satén y plush)
+  for (const [tela, base] of [["satén", "Pantufla de satén"], ["plush", "Pantufla de plush"]] as const) {
+    const molde = await db.producto.findFirst({ where: { nombre: base, tipo: "SUELTO" } });
+    if (!molde) continue;
+    for (const [sufijo, precio, desc, orden] of [["bordada", 40000, "Bordada a elección", 20], ["sin bordar", 10000, "Sin bordado", 21]] as const) {
+      const nombre = `Pantufla de ${tela} ${sufijo}`;
+      if (await db.producto.findFirst({ where: { nombre } })) continue;
+      await db.producto.create({ data: { nombre, tipo: "SUELTO", orden: orden + (tela === "plush" ? 2 : 0), colores: molde.colores, talles: molde.talles, precio, descripcion: desc, enListaPrecios: true } });
+    }
   }
   if ((await db.tarifaMoto.count()) === 0) {
     await db.tarifaMoto.createMany({ data: TARIFAS_MOTO_INICIALES, skipDuplicates: true });

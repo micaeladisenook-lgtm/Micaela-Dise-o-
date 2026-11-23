@@ -7,7 +7,7 @@ import { enviarPedidoPublico, subirFotoPublica } from "./acciones";
 import BordadoUbicacion from "@/app/(app)/pedidos/BordadoUbicacion";
 import SelectorTipografia from "@/components/SelectorTipografia";
 import { pesos } from "@/lib/formato";
-import { prendasDelProducto, esAccesorio, telaDe, PROVINCIAS_AR } from "@/lib/prendasProducto";
+import { prendasDelProducto, esAccesorio, esSinBordado, telaDe, PROVINCIAS_AR } from "@/lib/prendasProducto";
 import SelectorColor from "@/components/SelectorColor";
 
 type Comp = { componenteId: string; cantidad: number; aEleccion: boolean; componente: { id: string; nombre: string; colores: string[]; talles: string[] } };
@@ -76,6 +76,7 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
 }) {
   const p = productos.find((x) => x.id === box.productoId);
   const prendas = useMemo(() => (p ? prendasDelProducto(p, box.eleccion || null) : []), [p, box.eleccion]);
+  const sinB = !!p && esSinBordado(p.nombre);
   const opciones = p?.componentes.filter((c) => c.aEleccion) ?? [];
   const elegibles = prendas.map((pr, i) => ({ ...pr, i })).filter((pr) => !esAccesorio(pr.nombre));
   const regalos = prendas.filter((pr) => esAccesorio(pr.nombre));
@@ -185,6 +186,7 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
           )}
           <Campo etiqueta="¿Para quién es? (opcional)" ayuda="Ej: para mí, para mi mamá, para la novia"><input className="campo" value={box.persona} onChange={(e) => setBox({ persona: e.target.value })} /></Campo>
 
+          {!sinB && (<>
           <p className="font-medium pt-2">Bordado</p>
           <Campo etiqueta="Texto para bordar" ayuda="Ej: Mía Mis XV · Bride · tu nombre"><input className="campo" value={box.bordado} onChange={(e) => setBox({ bordado: e.target.value })} /></Campo>
           <SelectorTipografia valor={box.tipografia} texto={box.bordado} onChange={(v) => setBox({ tipografia: v })} />
@@ -210,9 +212,11 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
             ayuda="Si tenés un logo, un diseño o una foto de cómo lo querés, subila acá (JPG o PNG, hasta 6)."
             onChange={(v) => setBox({ ...(v.bordadoDetalle !== undefined ? { bordadoDetalle: v.bordadoDetalle } : {}), ...(v.bordadoFotos ? { fotos: v.bordadoFotos } : {}) })}
           />
+          </>)}
           <Campo etiqueta="Detalles extras de este box (opcional)" ayuda="Tamaño del bordado, colores especiales, algo para la tarjeta, medidas…">
             <textarea rows={3} className="campo py-2.5" value={box.extras} onChange={(e) => setBox({ extras: e.target.value })} />
           </Campo>
+          {!sinB && (<>
           <label className="flex items-center gap-3 rounded-xl border border-borde p-3 cursor-pointer min-h-11">
             <input type="checkbox" className="w-5 h-5 accent-acento" checked={box.conExtra} onChange={(e) => setBox({ conExtra: e.target.checked })} />
             <span className="text-sm">Quiero un bordado extra en otro lugar (+{pesos(precioBordadoExtra)})</span>
@@ -223,6 +227,7 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
               <select className="campo" value={box.ubicacionExtra} onChange={(e) => setBox({ ubicacionExtra: e.target.value })}><option>Adelante</option><option>Pantuflas</option><option>Antifaz</option><option>Otro lugar</option></select>
             </div>
           )}
+          </>)}
         </div>
       )}
     </div>

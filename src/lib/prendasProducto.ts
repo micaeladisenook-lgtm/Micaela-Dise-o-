@@ -16,6 +16,9 @@ export function prendasDelProducto(p: Prod, eleccionId?: string | null): PrendaD
     })));
 }
 
+// Productos que se venden sin bordado ("Pantufla de satén sin bordar"): no piden texto ni pasan por Héctor
+export const esSinBordado = (nombre: string) => /sin bordar/i.test(nombre);
+
 // Prendas que no se eligen por color/talle (regalos del box)
 export const esAccesorio = (nombre: string) => /scrunchie|tarjeta|caja|tubo|funda|cofia/i.test(nombre);
 

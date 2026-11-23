@@ -6,7 +6,7 @@ import { leerFecha } from "@/lib/pedidos";
 import { pesos } from "@/lib/formato";
 import { generarTareas } from "@/lib/produccion";
 import { aplicarConsumo } from "@/lib/stock";
-import { prendasDelProducto, esAccesorio } from "@/lib/prendasProducto";
+import { prendasDelProducto, esAccesorio, esSinBordado } from "@/lib/prendasProducto";
 import { guardarImagen, esUrlPropia } from "@/lib/archivos";
 import { tipografiaValida } from "@/lib/tipografias";
 
@@ -75,16 +75,17 @@ export async function enviarPedidoPublico(_prev: EstadoPublico, f: FormData): Pr
     });
     const falta = producto.talleColorOpcional ? -1 : lista.findIndex((pr, k) => !esAccesorio(pr.nombre) && (!prendas[k].color || (pr.talles.length > 0 && !prendas[k].talle)));
     if (falta >= 0) return { error: `Box ${n + 1}: falta el color o el talle de ${lista[falta].nombre}.` };
+    const sinBordado = esSinBordado(producto.nombre);
     const hilo = txt(b.hilo, 30) || null;
     items.push({
       productoId: producto.id, nombre: producto.nombre, precioUnitario: producto.precio ?? 0, orden: items.length,
-      bordadoTexto: txt(b.bordado) || null, hilo, bordadoUbicacion: txt(b.ubicacion, 60) || "Espalda",
-      bordadoDetalle: txt(b.bordadoDetalle, 500) || null, persona: txt(b.persona, 80) || null,
-      bordadoFotos: (Array.isArray(b.fotos) ? b.fotos : []).filter((u): u is string => typeof u === "string" && esUrlPropia(u)).slice(0, 6),
+      bordadoTexto: sinBordado ? null : txt(b.bordado) || null, hilo: sinBordado ? null : hilo, bordadoUbicacion: txt(b.ubicacion, 60) || "Espalda",
+      bordadoDetalle: sinBordado ? null : txt(b.bordadoDetalle, 500) || null, persona: txt(b.persona, 80) || null,
+      bordadoFotos: sinBordado ? [] : (Array.isArray(b.fotos) ? b.fotos : []).filter((u): u is string => typeof u === "string" && esUrlPropia(u)).slice(0, 6),
       notas: txt(b.extras, 1500) || null, bordadoTipografia: tipografiaValida(txt(b.tipografia, 40)),
       prendas: { create: prendas },
     });
-    if (b.conExtra && txt(b.bordadoExtra)) {
+    if (!sinBordado && b.conExtra && txt(b.bordadoExtra)) {
       items.push({
         productoId: extraProd?.id ?? null, nombre: extraProd?.nombre ?? "Bordado extra", precioUnitario: extraProd?.precio ?? 10000, orden: items.length,
         bordadoTexto: txt(b.bordadoExtra), hilo, bordadoUbicacion: txt(b.ubicacionExtra, 60) || "Adelante",
