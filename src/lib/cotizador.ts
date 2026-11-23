@@ -44,14 +44,22 @@ export async function bultosDePedido(pedidoId: string): Promise<Bulto[]> {
   return bultos;
 }
 
-const sinConfigurar = (empresa: Opcion["empresa"], que: string): Opcion => ({
-  empresa, servicio: "—", precio: null, plazo: null, aviso: `Falta conectar ${que}.`,
+// Sin credenciales: cotización manual en la web de la empresa (se carga el precio a mano)
+const WEB: Record<Opcion["empresa"], string> = {
+  "Correo Argentino": "https://www.correoargentino.com.ar/formularios/e-commerce",
+  Andreani: "https://www.andreani.com/",
+  "Vía Cargo": "https://www.viacargo.com.ar/",
+};
+const sinConfigurar = (empresa: Opcion["empresa"]): Opcion => ({
+  empresa, servicio: "Cotización manual", precio: null, plazo: null,
+  aviso: "Cotizá en su web y cargá el precio (la cotización automática se activa al conectar la cuenta).",
+  linkManual: WEB[empresa],
 });
 
 // ── Correo Argentino (API MiCorreo) ─────────────────────────────────────────
 async function correoArgentino(origen: string, destino: string, bultos: Bulto[]): Promise<Opcion[]> {
   const usuario = process.env.CORREO_AR_USUARIO, clave = process.env.CORREO_AR_CLAVE, cliente = process.env.CORREO_AR_CUSTOMER_ID;
-  if (!usuario || !clave || !cliente) return [sinConfigurar("Correo Argentino", "la cuenta MiCorreo")];
+  if (!usuario || !clave || !cliente) return [sinConfigurar("Correo Argentino")];
   const base = process.env.CORREO_AR_URL ?? "https://api.correoargentino.com.ar/micorreo/v1";
   try {
     const t = await fetch(`${base}/token`, { method: "POST", headers: { Authorization: `Basic ${Buffer.from(`${usuario}:${clave}`).toString("base64")}` }, cache: "no-store" });
@@ -93,7 +101,7 @@ async function andreani(destino: string, bultos: Bulto[]): Promise<Opcion[]> {
     ["A domicilio", process.env.ANDREANI_CONTRATO_DOMICILIO],
     ["A sucursal", process.env.ANDREANI_CONTRATO_SUCURSAL],
   ].filter(([, c]) => c) as [string, string][];
-  if (!usuario || !clave || !cliente || !contratos.length) return [sinConfigurar("Andreani", "el contrato de Andreani")];
+  if (!usuario || !clave || !cliente || !contratos.length) return [sinConfigurar("Andreani")];
   const base = process.env.ANDREANI_URL ?? "https://apis.andreani.com";
   try {
     const login = await fetch(`${base}/login`, { headers: { Authorization: `Basic ${Buffer.from(`${usuario}:${clave}`).toString("base64")}` }, cache: "no-store" });
@@ -134,13 +142,13 @@ export function estadoCorreos() {
   const ca = !!(e.CORREO_AR_USUARIO && e.CORREO_AR_CLAVE && e.CORREO_AR_CUSTOMER_ID);
   const an = !!(e.ANDREANI_USUARIO && e.ANDREANI_CLAVE && e.ANDREANI_CLIENTE && (e.ANDREANI_CONTRATO_DOMICILIO || e.ANDREANI_CONTRATO_SUCURSAL));
   return [
-    { empresa: "Correo Argentino", ok: ca, nota: ca ? "Conectado (MiCorreo)" : "Falta cargar las credenciales de MiCorreo" },
-    { empresa: "Andreani", ok: an, nota: an ? "Conectado (contrato propio)" : "Falta cargar usuario, contrato y cliente" },
+    { empresa: "Correo Argentino", ok: ca, nota: ca ? "Conectado (MiCorreo)" : "Cotización manual (falta conectar MiCorreo)" },
+    { empresa: "Andreani", ok: an, nota: an ? "Conectado (contrato propio)" : "Cotización manual (falta conectar el contrato)" },
     { empresa: "Vía Cargo", ok: false, nota: "Cotización manual (no tiene API pública)" },
     {
       empresa: "Correo Arg. · despacho (Paq.ar)",
       ok: !!(e.PAQAR_API_KEY && e.PAQAR_AGREEMENT),
-      nota: e.PAQAR_API_KEY && e.PAQAR_AGREEMENT ? "Conectado: genera envío, rótulo y seguimiento" : "Falta acuerdo comercial y API-Key",
+      nota: e.PAQAR_API_KEY && e.PAQAR_AGREEMENT ? "Conectado: genera envío, rótulo y seguimiento" : "Por ahora: rótulo propio y seguimiento a mano",
     },
   ];
 }

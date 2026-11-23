@@ -10,7 +10,7 @@ export default function Cotizador({ pedidoId, cpInicial }: { pedidoId: string; c
   const [cp, setCp] = useState(cpInicial ?? "");
   const [res, setRes] = useState<Resultado | null>(null);
   const [sumar, setSumar] = useState(true);
-  const [manual, setManual] = useState("");
+  const [manual, setManual] = useState<Record<number, string>>({});
   const [msg, setMsg] = useState<{ ok?: string; error?: string } | null>(null);
   const [cotizando, startC] = useTransition();
   const [eligiendo, startE] = useTransition();
@@ -45,8 +45,8 @@ export default function Cotizador({ pedidoId, cpInicial }: { pedidoId: string; c
                       {o.linkManual && (
                         <span className="inline-flex items-center gap-1">
                           <a href={o.linkManual} target="_blank" className="btn-suave min-h-9 px-3 text-xs"><ExternalLink size={13} /> Cotizar</a>
-                          <input value={manual} onChange={(e) => setManual(e.target.value)} inputMode="numeric" placeholder="$ precio" className="campo w-24 min-h-9 px-2 text-xs" />
-                          <button type="button" disabled={eligiendo || !manual} onClick={() => elegir(o.empresa, o.servicio, parseInt(manual.replace(/\D/g, "")) || 0)} className="btn-secundario min-h-9 px-3 text-xs">Elegir</button>
+                          <input value={manual[i] ?? ""} onChange={(e) => setManual({ ...manual, [i]: e.target.value })} inputMode="numeric" placeholder="$ precio" className="campo w-24 min-h-9 px-2 text-xs" />
+                          <button type="button" disabled={eligiendo || !manual[i]} onClick={() => elegir(o.empresa, o.servicio, parseInt((manual[i] ?? "").replace(/\D/g, "")) || 0)} className="btn-secundario min-h-9 px-3 text-xs">Elegir</button>
                         </span>
                       )}
                     </td>
