@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import BotonImprimir from "@/components/BotonImprimir";
 import { db } from "@/lib/db";
 import { requerirUsuario } from "@/lib/auth";
+import { permisosDe } from "@/lib/acceso";
 import { fecha } from "@/lib/formato";
 import { hoyAR } from "@/lib/pedidos";
 import { vistaTarea, itemDeTarea } from "@/lib/vistaTaller";
@@ -10,7 +11,7 @@ import { tareasDeSemana } from "@/lib/datosTalleres";
 export default async function ImprimirTallerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fecha?: string }> }) {
   const u = await requerirUsuario();
   const { id } = await params;
-  if (u.rol === "TALLER" && u.tallerId !== id) notFound();
+  if (u.rol === "TALLER" ? u.tallerId !== id : !(await permisosDe(u)).has("enviar_listas_talleres")) notFound();
   const sp = await searchParams;
   const taller = await db.taller.findUnique({ where: { id } });
   if (!taller) notFound();

@@ -6,11 +6,11 @@ import { db } from "@/lib/db";
 
 import { pesos } from "@/lib/formato";
 import { NOMBRE_TIPO, ORDEN_TIPOS } from "@/lib/catalogo";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function CatalogoPage() {
   const u = await requerirPermiso("ver_catalogo");
-  const esAdmin = (await permisosDeRol(u.rol)).has("editar_precios");
+  const esAdmin = (await permisosDe(u)).has("editar_precios");
   const productos = await db.producto.findMany({
     orderBy: [{ orden: "asc" }, { nombre: "asc" }],
     include: { componentes: { include: { componente: true } } },

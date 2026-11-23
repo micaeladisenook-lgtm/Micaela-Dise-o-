@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { fecha, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, atrasado, fechaGuia, hoyAR, saldo, semana, enSemana } from "@/lib/pedidos";
 import { tareasDeSemana } from "@/lib/datosTalleres";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 function saludo() {
   const h = parseInt(new Date().toLocaleString("es-AR", { hour: "numeric", hour12: false, timeZone: "America/Argentina/Buenos_Aires" }), 10);
@@ -19,7 +19,9 @@ function saludo() {
 export default async function PanelPage({ searchParams }: { searchParams: Promise<{ "sin-permiso"?: string }> }) {
   const u = await requerirPermiso("ver_panel");
   const sp = await searchParams;
-  const esAdmin = (await permisosDeRol(u.rol)).has("ver_gastos");
+  const permisos = await permisosDe(u);
+  const esAdmin = permisos.has("ver_gastos");
+  const verVentas = permisos.has("ver_panel_ventas");
   const hoy = hoyAR();
   const mesIso = hoy.toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).slice(0, 7);
   const inicioMes = new Date(`${mesIso}-01T00:00:00-03:00`);
@@ -57,8 +59,10 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
     .slice(0, 6);
 
   const tarjetas = [
-    { titulo: "Ventas del mes", valor: pesos(ventasMes), detalle: `${pedidosMes.length} pedidos cargados`, href: "/pedidos?estado=todos" },
-    { titulo: "Por cobrar", valor: pesos(porCobrar), detalle: `${conSaldo.length} pedidos · cobrado este mes ${pesos(pagosMes._sum.monto ?? 0)}`, href: "/pagos", alerta: true },
+    ...(verVentas ? [
+      { titulo: "Ventas del mes", valor: pesos(ventasMes), detalle: `${pedidosMes.length} pedidos cargados`, href: "/pedidos?estado=todos" },
+      { titulo: "Por cobrar", valor: pesos(porCobrar), detalle: `${conSaldo.length} pedidos · cobrado este mes ${pesos(pagosMes._sum.monto ?? 0)}`, href: "/pagos", alerta: true },
+    ] : []),
     ...(esAdmin ? [
       { titulo: "Gastos del mes", valor: pesos(gastos), detalle: "Ver detalle por categoría", href: "/gastos" },
       { titulo: "Ganancia estimada", valor: pesos(ventasMes - gastos), detalle: "ventas − gastos del mes", href: "/gastos" },
@@ -73,10 +77,10 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
           <p className="text-sm text-texto-2 capitalize">{hoy.toLocaleDateString("es-AR", { weekday: "long", timeZone: "America/Argentina/Buenos_Aires" })} {fecha(hoy)}</p>
           <h1 className="text-4xl md:text-5xl">{saludo()}, {u.nombre.split(" ")[0]}</h1>
         </div>
-        <Link href="/pedidos/nuevo" className="btn-primario self-start sm:self-auto">+ Nuevo pedido</Link>
+        {permisos.has("crear_pedidos") && <Link href="/pedidos/nuevo" className="btn-primario self-start sm:self-auto">+ Nuevo pedido</Link>}
       </div>
 
-      <div className={`grid grid-cols-2 ${esAdmin ? "xl:grid-cols-4" : ""} gap-3 md:gap-4 mb-6`}>
+      {tarjetas.length > 0 && <div className={`grid grid-cols-2 ${esAdmin ? "xl:grid-cols-4" : ""} gap-3 md:gap-4 mb-6`}>
         {tarjetas.map((t) => (
           <Link key={t.titulo} href={t.href} className="tarjeta p-4 md:p-5 hover:border-acento">
             <p className="text-xs md:text-sm text-texto-2">{t.titulo}</p>
@@ -84,7 +88,7 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
             <p className="text-[11px] md:text-xs text-texto-2 mt-1">{t.detalle}</p>
           </Link>
         ))}
-      </div>
+      </div>}
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_380px] gap-4 md:gap-6 items-start">
         <section className="tarjeta p-5">
@@ -112,6 +116,7 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
 
         <div className="space-y-4 md:space-y-6">
           {esAdmin && <SaldoMP />}
+          {verVentas && (
           <section className="tarjeta p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl">Pagos pendientes</h2>
@@ -135,6 +140,7 @@ export default async function PanelPage({ searchParams }: { searchParams: Promis
               </ul>
             )}
           </section>
+          )}
           <section className="tarjeta p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-2xl">Talleres esta semana</h2>

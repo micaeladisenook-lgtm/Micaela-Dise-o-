@@ -13,7 +13,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
   await requerirAdmin();
   const { quien } = await searchParams;
   const [usuarios, talleres, registros, vend, tall] = await Promise.all([
-    db.usuario.findMany({ include: { taller: true }, orderBy: [{ activo: "desc" }, { rol: "asc" }, { nombre: "asc" }] }),
+    db.usuario.findMany({ include: { taller: true, _count: { select: { permisos: true } } }, orderBy: [{ activo: "desc" }, { rol: "asc" }, { nombre: "asc" }] }),
     db.taller.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
     db.registro.findMany({ where: quien ? { usuarioId: quien === "sistema" ? null : quien } : {}, include: { usuario: true }, orderBy: { fecha: "desc" }, take: 150 }),
     permisosDeRol("VENDEDOR"),
@@ -34,7 +34,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
               {usuarios.map((u) => (
                 <tr key={u.id} className={u.activo ? "" : "opacity-50"}>
                   <td><span className="font-medium">{u.nombre}</span><span className="block text-xs text-texto-2">{u.login}</span></td>
-                  <td>{NOMBRE_ROL[u.rol]}{u.taller ? <span className="text-texto-2"> · {u.taller.nombre}</span> : null}</td>
+                  <td>{NOMBRE_ROL[u.rol]}{u.taller ? <span className="text-texto-2"> · {u.taller.nombre}</span> : null}{u._count.permisos > 0 && u.rol !== "ADMIN" && <span className="block text-[11px] text-acento">+ {u._count.permisos} permiso{u._count.permisos === 1 ? "" : "s"} personalizado{u._count.permisos === 1 ? "" : "s"}</span>}</td>
                   <td className="text-texto-2 text-xs">{u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : "Nunca"}</td>
                   <td>{u.activo ? <span className="chip bg-estado-listo text-estado-listo-txt">Activo</span> : <span className="chip bg-estado-entregado text-estado-entregado-txt">Inactivo</span>}{u.debeCambiarClave && u.activo && <span className="block text-[11px] text-texto-2 mt-1">contraseña provisoria</span>}</td>
                   <td className="text-right"><Link href={`/usuarios/${u.id}`} className="btn-suave min-h-10 px-4">Editar permisos</Link></td>
@@ -52,7 +52,7 @@ export default async function UsuariosPage({ searchParams }: { searchParams: Pro
       <section className="tarjeta mb-8" id="permisos">
         <div className="p-5 pb-2">
           <h2 className="text-2xl">Permisos por rol</h2>
-          <p className="text-sm text-texto-2">La administradora siempre tiene todo. Tildá lo que puede hacer cada rol.</p>
+          <p className="text-sm text-texto-2">La administradora siempre tiene todo. Tildá lo que puede hacer cada rol. Para cambiarle algo a una sola persona, entrá en <strong>Editar permisos</strong> de esa persona.</p>
         </div>
         <TablaPermisos permisos={PERMISOS.map((p) => ({ ...p }))} valores={valores} />
       </section>

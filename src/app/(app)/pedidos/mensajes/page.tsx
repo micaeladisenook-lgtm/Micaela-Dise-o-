@@ -4,13 +4,13 @@ import EditorPlantilla from "./EditorPlantilla";
 import { db } from "@/lib/db";
 
 import { VARIABLES_PLANTILLA } from "@/lib/pedidos";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 const ORDEN = ["confirmacion", "saldo", "listo", "envio", "taller"];
 
 export default async function MensajesPage() {
   const u = await requerirPermiso("ver_pedidos");
-  const editar = (await permisosDeRol(u.rol)).has("editar_mensajes");
+  const editar = (await permisosDe(u)).has("editar_mensajes");
   const plantillas = (await db.plantilla.findMany()).sort((a, b) => ORDEN.indexOf(a.clave) - ORDEN.indexOf(b.clave));
   return (
     <>

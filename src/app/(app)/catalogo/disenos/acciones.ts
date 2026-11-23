@@ -10,7 +10,7 @@ import { exigirPermiso } from "@/lib/acceso";
 export type EstadoForm = { error?: string; ok?: string } | null;
 
 export async function subirDiseno(_prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await exigirPermiso("ver_catalogo");
+  const u = await exigirPermiso("gestionar_disenos");
   const nombre = String(form.get("nombre") ?? "").trim();
   const categoria = String(form.get("categoria") ?? "BORDADO") as CategoriaDiseno;
   const productoId = String(form.get("productoId") ?? "") || null;
@@ -31,7 +31,7 @@ export async function subirDiseno(_prev: EstadoForm, form: FormData): Promise<Es
 }
 
 export async function borrarDiseno(id: string) {
-  const u = await exigirPermiso("ver_catalogo");
+  const u = await exigirPermiso("gestionar_disenos");
   const d = await db.diseno.delete({ where: { id } });
   await borrarImagen(d.imagen);
   await registrar(u.id, "Borró diseño", "Diseno", id, d.nombre);

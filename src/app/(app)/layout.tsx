@@ -1,10 +1,10 @@
 import MenuLateral from "@/components/MenuLateral";
 import { requerirUsuario, NOMBRE_ROL } from "@/lib/auth";
-import { permisosDeRol } from "@/lib/acceso";
+import { permisosDe } from "@/lib/acceso";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const u = await requerirUsuario();
-  const permisos = [...(await permisosDeRol(u.rol))];
+  const permisos = [...(await permisosDe(u))];
   if (u.rol === "ADMIN") permisos.push("admin");
   if (u.rol === "TALLER" || permisos.includes("ver_talleres")) permisos.push("talleres");
   return (

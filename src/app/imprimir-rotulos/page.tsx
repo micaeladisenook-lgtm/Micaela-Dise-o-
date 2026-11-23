@@ -4,7 +4,7 @@ import { requerirPermiso } from "@/lib/acceso";
 import { datosEnvio } from "@/lib/envios";
 
 export default async function RotulosPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
-  await requerirPermiso("ver_pedidos");
+  await requerirPermiso("ver_envios");
   const ids = ((await searchParams).ids ?? "").split(",").filter(Boolean).slice(0, 100);
   const pedidos = await db.pedido.findMany({ where: { id: { in: ids } }, include: { cliente: true }, orderBy: { numero: "asc" } });
   return (

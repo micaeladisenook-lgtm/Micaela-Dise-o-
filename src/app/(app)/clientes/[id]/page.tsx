@@ -11,7 +11,7 @@ import { fecha, linkWhatsApp, pesos, linkInstagram } from "@/lib/formato";
 import IconoInstagram from "@/components/IconoInstagram";
 import { saldo } from "@/lib/pedidos";
 import EstadoChip from "@/components/EstadoChip";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function FichaClientaPage({
   params, searchParams,
@@ -21,7 +21,8 @@ export default async function FichaClientaPage({
   const c = await db.cliente.findUnique({ where: { id }, include: { creadoPor: true, pedidos: { orderBy: { fechaPedido: "desc" }, include: { pagos: { select: { monto: true } }, items: { select: { nombre: true } } } } } });
   if (!c) notFound();
   const u = await requerirPermiso("ver_clientes");
-  const puedeBorrar = (await permisosDeRol(u.rol)).has("borrar_clientes");
+  const permisos = await permisosDe(u);
+  const puedeBorrar = permisos.has("borrar_clientes");
   const wa = linkWhatsApp(c.telefono, `¡Hola ${c.nombre.split(" ")[0]}! Te escribimos de Micaela Diseño 🌸`);
 
   return (
@@ -45,7 +46,11 @@ export default async function FichaClientaPage({
       <div className="grid lg:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
         <section className="tarjeta p-5 md:p-6">
           <h2 className="text-2xl mb-4">Datos</h2>
-          <ClienteForm accion={actualizarCliente.bind(null, c.id)} cliente={c} textoBoton="Guardar cambios" />
+          {permisos.has("editar_clientes") ? <ClienteForm accion={actualizarCliente.bind(null, c.id)} cliente={c} textoBoton="Guardar cambios" /> : (
+            <dl className="text-sm space-y-1">
+              {([["Nombre", c.nombre], ["WhatsApp", c.telefono], ["Instagram", c.instagram], ["Email", c.email]] as const).filter(([, v]) => v).map(([k, v]) => <div key={k}><dt className="inline text-texto-2">{k}: </dt><dd className="inline">{v}</dd></div>)}
+            </dl>
+          )}
         </section>
 
         <div className="space-y-6">

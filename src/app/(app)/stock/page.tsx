@@ -4,14 +4,14 @@ import Encabezado from "@/components/Encabezado";
 import { FormItem, FormConsumo, BorrarConsumo, BotonTelas } from "./Formularios";
 import { db } from "@/lib/db";
 
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 const fmt = (n: number) => n.toLocaleString("es-AR", { maximumFractionDigits: 2 });
 
 export default async function StockPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const u = await requerirPermiso("ver_stock");
-  const esAdmin = u.rol === "ADMIN";
-  const editar = (await permisosDeRol(u.rol)).has("editar_stock");
+  const esAdmin = (await permisosDe(u)).has("administrar_stock");
+  const editar = (await permisosDe(u)).has("editar_stock");
   const { tab = "insumos" } = await searchParams;
   const [items, productos, consumos, bata] = await Promise.all([
     db.itemStock.findMany({ orderBy: [{ categoria: "asc" }, { nombre: "asc" }] }),

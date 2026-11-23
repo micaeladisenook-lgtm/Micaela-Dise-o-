@@ -9,7 +9,7 @@ type Estado = { ok?: string; error?: string } | null;
 const t = (f: FormData, k: string) => String(f.get(k) ?? "").trim() || null;
 
 export async function guardarDatosEnvio(pedidoId: string, _prev: Estado, f: FormData): Promise<Estado> {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("gestionar_envios");
   const p = await db.pedido.update({
     where: { id: pedidoId },
     data: {
@@ -35,7 +35,7 @@ export async function guardarDatosEnvio(pedidoId: string, _prev: Estado, f: Form
 }
 
 export async function marcarDespachado(pedidoId: string, _prev: Estado, f: FormData): Promise<Estado> {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("gestionar_envios");
   const costo = leerPesos(String(f.get("costoEnvio") ?? ""));
   const p = await db.pedido.update({
     where: { id: pedidoId },
@@ -48,7 +48,7 @@ export async function marcarDespachado(pedidoId: string, _prev: Estado, f: FormD
 }
 
 export async function deshacerDespacho(pedidoId: string) {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("gestionar_envios");
   const p = await db.pedido.update({ where: { id: pedidoId }, data: { despachadoEn: null, estado: "LISTO", modificadoPorId: u.id } });
   await registrar(u.id, "Deshizo despacho", "Pedido", pedidoId, `N° ${p.numero}`);
   revalidatePath("/envios");

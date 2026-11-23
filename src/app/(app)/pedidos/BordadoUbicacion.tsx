@@ -22,9 +22,10 @@ async function achicar(archivo: File): Promise<File> {
   }
 }
 
-export default function BordadoUbicacion({ detalle, fotos, onChange }: {
+export default function BordadoUbicacion({ detalle, fotos, onChange, puedeSubir = true }: {
   detalle: string;
   fotos: string[];
+  puedeSubir?: boolean;
   onChange: (v: { bordadoDetalle?: string; bordadoFotos?: string[] }) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
@@ -63,16 +64,16 @@ export default function BordadoUbicacion({ detalle, fotos, onChange }: {
         {fotos.map((u) => (
           <div key={u} className="relative">
             <a href={u} target="_blank"><img src={u} alt="Referencia del bordado" className="w-16 h-16 rounded-lg object-cover border border-borde bg-white" /></a>
-            <button type="button" aria-label="Quitar foto" onClick={() => onChange({ bordadoFotos: fotos.filter((x) => x !== u) })}
+            {puedeSubir && <button type="button" aria-label="Quitar foto" onClick={() => onChange({ bordadoFotos: fotos.filter((x) => x !== u) })}
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-borde flex items-center justify-center text-texto-2 hover:text-estado-alerta-txt cursor-pointer shadow-sm">
               <X size={13} />
-            </button>
+            </button>}
           </div>
         ))}
         {Array.from({ length: subiendo }, (_, i) => (
           <div key={`s${i}`} className="w-16 h-16 rounded-lg border border-borde bg-white flex items-center justify-center text-texto-2"><Loader2 size={18} className="animate-spin" /></div>
         ))}
-        {fotos.length + subiendo < MAX_FOTOS && (
+        {puedeSubir && fotos.length + subiendo < MAX_FOTOS && (
           <button type="button" onClick={() => input.current?.click()} disabled={subiendo > 0} className="btn-suave min-h-10 px-3 text-sm">
             <Camera size={16} /> {fotos.length ? "Agregar otra foto" : "Agregar foto de referencia"}
           </button>

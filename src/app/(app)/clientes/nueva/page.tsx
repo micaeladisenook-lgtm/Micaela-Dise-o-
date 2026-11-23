@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requerirPermiso } from "@/lib/acceso";
 
 export default async function NuevaClientaPage() {
-  await requerirPermiso("ver_clientes");
+  await requerirPermiso("editar_clientes");
   const ultimo = await db.cliente.aggregate({ _max: { numero: true } });
   const proximo = (ultimo._max.numero ?? 0) + 1;
   return (

@@ -5,10 +5,11 @@ import { db } from "@/lib/db";
 import { fecha, linkWhatsApp, linkInstagram } from "@/lib/formato";
 import IconoInstagram from "@/components/IconoInstagram";
 import type { Prisma } from "@prisma/client";
-import { requerirPermiso } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requerirPermiso("ver_clientes");
+  const u = await requerirPermiso("ver_clientes");
+  const editar = (await permisosDe(u)).has("editar_clientes");
   const { q = "" } = await searchParams;
   const busqueda = q.trim();
   const numero = parseInt(busqueda.replace(/^n[°º]?\s*/i, ""), 10);
@@ -31,7 +32,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <Encabezado titulo="Clientes" subtitulo={`${total} clientas registradas`}>
-        <Link href="/clientes/nueva" className="btn-primario">+ Nueva clienta</Link>
+        {editar && <Link href="/clientes/nueva" className="btn-primario">+ Nueva clienta</Link>}
       </Encabezado>
 
       <form className="mb-4 relative max-w-md">

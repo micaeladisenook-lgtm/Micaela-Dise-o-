@@ -90,10 +90,10 @@ function Opciones({ valor, opciones, onChange, placeholder }: { valor: string; o
 }
 
 export default function FormPedido({
-  productos, disenos, vendedores, usuarioId, plantilla, inicial, pedidoId, numero,
+  productos, disenos, vendedores, usuarioId, plantilla, inicial, pedidoId, numero, puedeFotos = true, puedeEstado = true,
 }: {
   productos: Prod[]; disenos: Dis[]; vendedores: Vend[]; usuarioId: string; plantilla: string;
-  inicial?: Partial<PedidoForm>; pedidoId?: string; numero?: number;
+  inicial?: Partial<PedidoForm>; pedidoId?: string; numero?: number; puedeFotos?: boolean; puedeEstado?: boolean;
 }) {
   const router = useRouter();
   const [guardando, start] = useTransition();
@@ -405,7 +405,7 @@ export default function FormPedido({
                         <Opciones valor={it.bordadoUbicacion} opciones={UBICACIONES} onChange={(v) => setItem(it.key, { bordadoUbicacion: v })} placeholder="Ubicación del bordado" />
                         <Opciones valor={it.hilo} opciones={HILOS} onChange={(v) => setItem(it.key, { hilo: v })} placeholder="Color del hilo" />
                       </div>
-                      <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} onChange={(v) => setItem(it.key, v)} />
+                      <BordadoUbicacion detalle={it.bordadoDetalle} fotos={it.bordadoFotos} puedeSubir={puedeFotos} onChange={(v) => setItem(it.key, v)} />
                       <input className="campo" placeholder="Notas (medidas especiales, talle distinto arriba/abajo, etc.)" value={it.notas} onChange={(e) => setItem(it.key, { notas: e.target.value })} />
                     </div>
                   )}
@@ -505,7 +505,7 @@ export default function FormPedido({
                 {vendedores.map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}
               </select>
             </div>
-            {pedidoId && (
+            {pedidoId && puedeEstado && (
               <div>
                 <label className="etiqueta">Estado</label>
                 <select className="campo" value={f.estado} onChange={(e) => set("estado", e.target.value)}>

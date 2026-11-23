@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requerirAdmin, requerirUsuario, NOMBRE_ROL } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { PERMISOS } from "@/lib/permisos";
+import { permisosDeRol } from "@/lib/acceso";
 import type { Rol } from "@prisma/client";
 
 export type EstadoUsuario = { ok?: string; error?: string; clave?: string; login?: string; nombre?: string } | null;
@@ -73,6 +74,31 @@ export async function guardarPermisos(_prev: EstadoUsuario, f: FormData): Promis
   if (cambios.length) await registrar(admin.id, "Cambió permisos", "Permisos", null, cambios.slice(0, 20).join(" | "));
   revalidatePath("/", "layout");
   return { ok: cambios.length ? "Permisos guardados." : "No había cambios." };
+}
+
+// Permisos de UN usuario: se guarda solo lo que difiere de su rol (lo demás sigue al rol)
+export async function guardarPermisosUsuario(id: string, _prev: EstadoUsuario, f: FormData): Promise<EstadoUsuario> {
+  const admin = await requerirAdmin();
+  const u = await db.usuario.findUniqueOrThrow({ where: { id } });
+  if (u.rol === "ADMIN") return { error: "La administradora siempre tiene acceso total." };
+  const delRol = await permisosDeRol(u.rol);
+  const antes = new Map((await db.permisoUsuario.findMany({ where: { usuarioId: id } })).map((p) => [p.clave, p.permitido]));
+  const restablecer = f.get("restablecer") === "1";
+  const propios: { clave: string; permitido: boolean }[] = [];
+  const cambios: string[] = [];
+  for (const p of PERMISOS) {
+    const quiere = restablecer ? delRol.has(p.clave) : f.get(p.clave) === "on";
+    const tenia = antes.has(p.clave) ? antes.get(p.clave)! : delRol.has(p.clave);
+    if (quiere !== delRol.has(p.clave)) propios.push({ clave: p.clave, permitido: quiere });
+    if (quiere !== tenia) cambios.push(`${quiere ? "+" : "−"} ${p.texto}`);
+  }
+  await db.$transaction([
+    db.permisoUsuario.deleteMany({ where: { usuarioId: id } }),
+    db.permisoUsuario.createMany({ data: propios.map((p) => ({ usuarioId: id, ...p })) }),
+  ]);
+  if (cambios.length) await registrar(admin.id, restablecer ? "Restableció permisos del usuario" : "Cambió permisos del usuario", "Usuario", id, `${u.nombre}: ${cambios.slice(0, 15).join(" | ")}`);
+  revalidatePath("/", "layout");
+  return { ok: restablecer ? "Listo: ahora tiene los permisos de su rol." : cambios.length ? "Permisos guardados." : "No había cambios." };
 }
 
 export async function cambiarMiClave(_prev: EstadoUsuario, f: FormData): Promise<EstadoUsuario> {

@@ -2,12 +2,11 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { exigirPermiso } from "@/lib/acceso";
-import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import { crearEnvioPaqar } from "@/lib/paqar";
 
 export async function generarEnvioCorreo(pedidoId: string): Promise<{ ok?: string; error?: string }> {
-  const u = await exigirPermiso("crear_pedidos");
+  const u = await exigirPermiso("gestionar_envios");
   try {
     const tn = await crearEnvioPaqar(pedidoId);
     const p = await db.pedido.update({
@@ -26,7 +25,7 @@ export async function generarEnvioCorreo(pedidoId: string): Promise<{ ok?: strin
 const CAMPOS = ["nombre", "calle", "altura", "localidad", "provincia", "telefono", "email"] as const;
 
 export async function guardarRemitente(_prev: { ok?: string; error?: string } | null, f: FormData) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("configurar_envios");
   for (const c of CAMPOS) {
     const valor = String(f.get(c) ?? "").trim();
     await db.configuracion.upsert({ where: { clave: `remitente_${c}` }, update: { valor }, create: { clave: `remitente_${c}`, valor } });

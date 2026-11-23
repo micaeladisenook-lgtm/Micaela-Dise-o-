@@ -8,7 +8,7 @@ import { fecha, linkWhatsApp } from "@/lib/formato";
 import { hoyAR } from "@/lib/pedidos";
 import { bloqueadaPor, NOMBRE_FUNCION } from "@/lib/produccion";
 import { tareasDeSemana, lineaTarea, type TareaSemana } from "@/lib/datosTalleres";
-import { requerirPermiso, puede } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 import { vistaTarea, itemDeTarea, ACCION_FUNCION } from "@/lib/vistaTaller";
 
 
@@ -25,7 +25,8 @@ export default async function TalleresPage({ searchParams }: { searchParams: Pro
   ]);
   const textoSemana = `${fecha(sem.inicio)} al ${fecha(sem.fin)}`;
   const tal = talleres.find((t) => t.id === sp.taller) ?? talleres[0];
-  const verPedido = u.rol !== "TALLER" && (await puede("ver_pedidos"));
+  const permisos = await permisosDe(u);
+  const verPedido = u.rol !== "TALLER" && permisos.has("ver_pedidos");
   const url = (q: { fecha?: string; taller?: string }) => {
     const p = new URLSearchParams();
     const f = "fecha" in q ? q.fecha : sp.fecha;
@@ -98,9 +99,9 @@ export default async function TalleresPage({ searchParams }: { searchParams: Pro
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mb-3 no-imprimir">
-            {u.rol !== "TALLER" && <a href={wa} target="_blank" className="btn-primario min-h-10 px-4"><MessageCircle size={16} /> Enviar lista por WhatsApp</a>}
-            <Link href={`/imprimir-taller/${tal.id}?fecha=${iso(base)}`} target="_blank" className="btn-suave min-h-10 px-4"><Printer size={16} /> Imprimir</Link>
-            {u.rol === "ADMIN" && <Link href={`/talleres/${tal.id}`} className="btn-suave min-h-10 px-3" title="Editar datos del taller"><Pencil size={15} /></Link>}
+            {u.rol !== "TALLER" && permisos.has("enviar_listas_talleres") && <a href={wa} target="_blank" className="btn-primario min-h-10 px-4"><MessageCircle size={16} /> Enviar lista por WhatsApp</a>}
+            {(u.rol === "TALLER" || permisos.has("enviar_listas_talleres")) && <Link href={`/imprimir-taller/${tal.id}?fecha=${iso(base)}`} target="_blank" className="btn-suave min-h-10 px-4"><Printer size={16} /> Imprimir</Link>}
+            {permisos.has("editar_talleres") && <Link href={`/talleres/${tal.id}`} className="btn-suave min-h-10 px-3" title="Editar datos del taller"><Pencil size={15} /></Link>}
           </div>
           {u.rol !== "TALLER" && !tal.telefono && <p className="text-xs text-texto-2 mb-2">Sin WhatsApp cargado: el botón abre WhatsApp para que elijas el contacto.</p>}
           {propias.length === 0 ? <p className="text-sm text-texto-2 py-4">No hay trabajos para esta semana.</p> : <TableroTaller tarjetas={propias.map(tarjeta)} ayuda={ayuda} verPedido={verPedido} />}

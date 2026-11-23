@@ -88,6 +88,7 @@ model Usuario {
   pagosCargados   Pago[]
   tallerId        String?
   taller          Taller?    @relation(fields: [tallerId], references: [id], onDelete: SetNull)
+  permisos        PermisoUsuario[]
 }
 
 model Cliente {
@@ -400,6 +401,15 @@ model Permiso {
   clave     String
   permitido Boolean @default(false)
   @@id([rol, clave])
+}
+
+// Permisos personalizados de un usuario (pisan a los de su rol)
+model PermisoUsuario {
+  usuarioId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  clave     String
+  permitido Boolean
+  @@id([usuarioId, clave])
 }
 
 // Ajustes generales del sistema (ej: código postal de origen de los envíos)

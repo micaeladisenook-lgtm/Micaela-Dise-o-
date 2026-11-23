@@ -15,7 +15,7 @@ const ITEMS: Item[] = [
   { href: "/pedidos/nuevo", texto: "Nuevo pedido", icono: PlusCircle, clave: "crear_pedidos" },
   { href: "/calendario", texto: "Calendario", icono: CalendarDays, clave: "ver_calendario" },
   { href: "/talleres", texto: "Talleres", icono: Scissors, clave: "talleres" },
-  { href: "/envios", texto: "Envíos", icono: Truck, clave: "ver_pedidos" },
+  { href: "/envios", texto: "Envíos", icono: Truck, clave: "ver_envios" },
   { href: "/clientes", texto: "Clientes", icono: Users, clave: "ver_clientes" },
   { href: "/catalogo", texto: "Catálogo y precios", icono: Tags, clave: "ver_catalogo" },
   { href: "/stock", texto: "Stock", icono: Package, clave: "ver_stock" },

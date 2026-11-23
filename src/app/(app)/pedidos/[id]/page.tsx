@@ -22,7 +22,7 @@ import { includePedidoCompleto } from "@/lib/datosPedido";
 
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
 import { armarMensaje, conLinkResumen, atrasado, pagado, saldo, textoEntrega, NOMBRE_MEDIO, NOMBRE_TIPO_PEDIDO, fechaInput } from "@/lib/pedidos";
-import { requerirPermiso, permisosDeRol } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function PedidoPage({
   params, searchParams,
@@ -32,7 +32,7 @@ export default async function PedidoPage({
   const p = await db.pedido.findUnique({ where: { id }, include: includePedidoCompleto });
   if (!p) notFound();
   const u = await requerirPermiso("ver_pedidos");
-  const permisos = await permisosDeRol(u.rol);
+  const permisos = await permisosDe(u);
   const [plantillas, historial] = await Promise.all([
     db.plantilla.findMany(),
     db.registro.findMany({ where: { entidad: "Pedido", entidadId: id }, include: { usuario: true }, orderBy: { fecha: "desc" }, take: 30 }),
@@ -46,7 +46,7 @@ export default async function PedidoPage({
   return (
     <>
       <Encabezado titulo={`Pedido N° ${p.numero}`} subtitulo={`${NOMBRE_TIPO_PEDIDO[p.tipo]} · cargado el ${fecha(p.fechaPedido)}${p.vendedor ? ` · vendió ${p.vendedor.nombre}` : ""}`}>
-        <Link href={`/pedidos/${p.id}/editar`} className="btn-secundario"><Pencil size={16} /> Editar</Link>
+        {permisos.has("editar_pedidos") && <Link href={`/pedidos/${p.id}/editar`} className="btn-secundario"><Pencil size={16} /> Editar</Link>}
         <BotonImprimir texto="Imprimir orden" icono={<Printer size={16} />} />
       </Encabezado>
 
@@ -56,7 +56,7 @@ export default async function PedidoPage({
       {p.revisar && (
         <div className="mb-3 text-sm text-estado-produccion-txt bg-estado-produccion rounded-xl px-4 py-3 flex flex-wrap items-center gap-2 justify-between">
           <span className="flex gap-2"><AlertTriangle size={18} className="shrink-0" /> <span><strong>Revisar (importado):</strong> {p.revisar}. Si hace falta, corregilo con &quot;Editar&quot; o registrá el pago.</span></span>
-          <BotonRevisado id={p.id} />
+          {permisos.has("editar_pedidos") && <BotonRevisado id={p.id} />}
         </div>
       )}
 
@@ -70,7 +70,7 @@ export default async function PedidoPage({
                 {p.prioridad && <span className="chip bg-acento text-white">Prioridad</span>}
               </div>
             </div>
-            <div className="no-imprimir"><BotonesEstado pedidoId={p.id} estado={p.estado} /></div>
+            {permisos.has("cambiar_estado") && <div className="no-imprimir"><BotonesEstado pedidoId={p.id} estado={p.estado} /></div>}
           </section>
 
           <section className="tarjeta p-5">
@@ -158,7 +158,7 @@ export default async function PedidoPage({
               <p className="font-medium">{p.fechaEntrega ? fecha(p.fechaEntrega) : "Sin fecha"}</p>
               <p>{textoEntrega({ ...p, fechaEntrega: null })}</p>
             </div>
-            {p.envio && p.estado !== "ENTREGADO" && p.estado !== "CANCELADO" && permisos.has("crear_pedidos") && (
+            {p.envio && p.estado !== "ENTREGADO" && p.estado !== "CANCELADO" && permisos.has("gestionar_envios") && (
               <div className="sm:col-span-2 no-imprimir">
                 <p className="text-texto-2 mb-1">Cotizar envío {p.costoEnvio ? <span className="text-texto">· elegido: {p.formaEnvio} {pesos(p.costoEnvio)}</span> : null}</p>
                 <Cotizador pedidoId={p.id} cpInicial={p.codigoPostal ?? p.cliente.codigoPostal} localidadInicial={p.localidad ?? p.cliente.localidad} />
@@ -186,13 +186,13 @@ export default async function PedidoPage({
                 {p.pagos.map((pg) => (
                   <li key={pg.id} className="flex items-center justify-between gap-2">
                     <span>{fecha(pg.fecha)} · {NOMBRE_MEDIO[pg.medio]}{pg.esSena ? " · seña" : ""}{pg.nota ? <span className="text-texto-2"> · {pg.nota}</span> : null}</span>
-                    <span className="flex items-center gap-1 whitespace-nowrap">{pesos(pg.monto)}{permisos.has("registrar_pagos") && <BorrarPago id={pg.id} />}</span>
+                    <span className="flex items-center gap-1 whitespace-nowrap">{pesos(pg.monto)}{permisos.has("borrar_pagos") && <BorrarPago id={pg.id} />}</span>
                   </li>
                 ))}
               </ul>
             )}
             {sal > 0 && permisos.has("registrar_pagos") && <div className="mt-4 no-imprimir"><FormPago pedidoId={p.id} saldo={sal} hoy={fechaInput(new Date())} /></div>}
-            {sal > 0 && permisos.has("registrar_pagos") && (
+            {sal > 0 && permisos.has("links_pago") && (
               <div className="mt-4 pt-4 border-t border-borde no-imprimir">
                 <p className="text-sm font-medium mb-2">Link de Mercado Pago</p>
                 <LinkPago pedidoId={p.id} total={p.total} saldo={sal} linkActual={p.linkPago} montoActual={p.linkPagoMonto}

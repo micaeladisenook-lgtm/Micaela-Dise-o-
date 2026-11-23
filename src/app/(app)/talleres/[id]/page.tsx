@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import Encabezado from "@/components/Encabezado";
 import FormTaller from "./FormTaller";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
+import { requerirPermiso } from "@/lib/acceso";
 
 export default async function EditarTallerPage({ params }: { params: Promise<{ id: string }> }) {
-  await requerirAdmin();
+  await requerirPermiso("editar_talleres");
   const { id } = await params;
   const t = id === "nuevo" ? null : await db.taller.findUnique({ where: { id } });
   if (id !== "nuevo" && !t) notFound();

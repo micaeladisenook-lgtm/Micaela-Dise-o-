@@ -2,7 +2,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requerirAdmin } from "@/lib/auth";
 import { registrar } from "@/lib/registro";
 import type { TipoStock } from "@prisma/client";
 import { exigirPermiso } from "@/lib/acceso";
@@ -63,7 +62,7 @@ export async function moverStock(id: string, _prev: Estado, f: FormData): Promis
 }
 
 export async function borrarItem(id: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("administrar_stock");
   const it = await db.itemStock.delete({ where: { id } });
   await registrar(u.id, "Borró ítem de stock", "Stock", id, it.nombre);
   revalidatePath("/stock");
@@ -71,7 +70,7 @@ export async function borrarItem(id: string) {
 }
 
 export async function crearTelasPorColor(tela: string) {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("administrar_stock");
   const colores = (await db.producto.findFirst({ where: { nombre: { startsWith: "Bata diseñada de satén" } } }))?.colores ?? [];
   let n = 0;
   for (const color of colores) {
@@ -85,7 +84,7 @@ export async function crearTelasPorColor(tela: string) {
 }
 
 export async function agregarConsumo(_prev: Estado, f: FormData): Promise<Estado> {
-  const u = await requerirAdmin();
+  const u = await exigirPermiso("administrar_stock");
   const productoId = txt(f.get("productoId"));
   const origen = String(f.get("origen") ?? "");
   const cantidad = num(f.get("cantidad"));
@@ -98,7 +97,7 @@ export async function agregarConsumo(_prev: Estado, f: FormData): Promise<Estado
 }
 
 export async function borrarConsumo(id: string) {
-  await requerirAdmin();
+  await exigirPermiso("administrar_stock");
   await db.consumoProducto.delete({ where: { id } });
   revalidatePath("/stock");
 }

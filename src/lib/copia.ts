@@ -5,7 +5,7 @@ import { db } from "./db";
 const TABLAS = [
   "usuario", "taller", "producto", "componenteBox", "itemStock", "consumoProducto", "cliente", "diseno",
   "pedido", "pedidoItem", "prendaItem", "disenoPedido", "pago", "tarea", "movimientoStock", "gasto",
-  "plantilla", "permiso", "registro",
+  "plantilla", "permiso", "permisoUsuario", "registro",
 ] as const;
 
 type Delegado = { findMany: () => Promise<unknown[]>; deleteMany: () => Promise<unknown>; createMany: (a: { data: unknown[] }) => Promise<unknown> };

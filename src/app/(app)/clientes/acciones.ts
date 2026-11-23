@@ -42,7 +42,7 @@ async function telefonoRepetido(telefono: string | null, excluirId?: string) {
 }
 
 export async function crearCliente(_prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await exigirPermiso("ver_clientes");
+  const u = await exigirPermiso("editar_clientes");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const repetida = await telefonoRepetido(datos.telefono);
@@ -56,7 +56,7 @@ export async function crearCliente(_prev: EstadoForm, form: FormData): Promise<E
 }
 
 export async function actualizarCliente(id: string, _prev: EstadoForm, form: FormData): Promise<EstadoForm> {
-  const u = await exigirPermiso("ver_clientes");
+  const u = await exigirPermiso("editar_clientes");
   const datos = leer(form);
   if (!datos.nombre) return { error: "El nombre es obligatorio." };
   const c = await db.cliente.update({ where: { id }, data: datos });

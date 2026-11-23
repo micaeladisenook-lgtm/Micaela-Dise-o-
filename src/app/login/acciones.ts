@@ -16,7 +16,7 @@ export async function entrar(_prev: string | null, form: FormData): Promise<stri
   await iniciarSesion(u.id);
   await db.usuario.update({ where: { id: u.id }, data: { ultimoAcceso: new Date() } });
   if (u.debeCambiarClave) redirect("/cuenta?cambiar=1");
-  redirect(await inicioDe(u.rol));
+  redirect(await inicioDe(u));
 }
 
 export async function salir() {

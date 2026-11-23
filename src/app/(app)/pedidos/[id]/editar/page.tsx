@@ -7,10 +7,11 @@ import { datosFormularioPedido, includePedidoCompleto } from "@/lib/datosPedido"
 import { db } from "@/lib/db";
 import { fechaInput } from "@/lib/pedidos";
 import type { PedidoForm } from "../../tipos";
-import { requerirPermiso } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 
 export default async function EditarPedidoPage({ params }: { params: Promise<{ id: string }> }) {
-  const u = await requerirPermiso("crear_pedidos");
+  const u = await requerirPermiso("editar_pedidos");
+  const permisos = await permisosDe(u);
   const { id } = await params;
   const p = await db.pedido.findUnique({ where: { id }, include: includePedidoCompleto });
   if (!p) notFound();
@@ -37,7 +38,7 @@ export default async function EditarPedidoPage({ params }: { params: Promise<{ i
       <Encabezado titulo={`Editar pedido N° ${p.numero}`} subtitulo={p.cliente.nombre}>
         <Link href={`/pedidos/${p.id}`} className="btn-suave">Cancelar</Link>
       </Encabezado>
-      <FormPedido {...datos} usuarioId={u.id} inicial={inicial} pedidoId={p.id} numero={p.numero} />
+      <FormPedido {...datos} puedeFotos={permisos.has("subir_fotos_bordado")} puedeEstado={permisos.has("cambiar_estado")} usuarioId={u.id} inicial={inicial} pedidoId={p.id} numero={p.numero} />
     </>
   );
 }

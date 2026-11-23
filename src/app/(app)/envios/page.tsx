@@ -8,13 +8,14 @@ import MotoTarifas from "./MotoTarifas";
 import { cpOrigen, estadoCorreos } from "@/lib/cotizador";
 import { paqarConfigurado } from "@/lib/paqar";
 import { db } from "@/lib/db";
-import { requerirPermiso } from "@/lib/acceso";
+import { requerirPermiso, permisosDe } from "@/lib/acceso";
 import { fecha, fechaHora, pesos, linkWhatsApp } from "@/lib/formato";
 import { fechaGuia, atrasado } from "@/lib/pedidos";
 import { datosEnvio, faltantes, textoParaCopiar } from "@/lib/envios";
 
 export default async function EnviosPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const u = await requerirPermiso("ver_pedidos");
+  const u = await requerirPermiso("ver_envios");
+  const config = (await permisosDe(u)).has("configurar_envios");
   const origen = await cpOrigen();
   const remitente = Object.fromEntries((await db.configuracion.findMany({ where: { clave: { startsWith: "remitente_" } } })).map((c) => [c.clave.replace("remitente_", ""), c.valor]));
   const paqarActivo = paqarConfigurado();
@@ -43,8 +44,8 @@ export default async function EnviosPage({ searchParams }: { searchParams: Promi
           <a href={`/imprimir-rotulos?ids=${listos.join(",")}`} target="_blank" className="btn-primario"><Printer size={16} /> Rótulos de los listos ({listos.length})</a>
         )}
       </Encabezado>
-      <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={u.rol === "ADMIN"} remitente={remitente} />
-      <MotoTarifas tarifas={tarifasMoto} esAdmin={u.rol === "ADMIN"} />
+      <Configuracion cp={origen} estado={estadoCorreos()} esAdmin={config} remitente={remitente} />
+      <MotoTarifas tarifas={tarifasMoto} esAdmin={config} />
       <div className="inline-flex gap-1 bg-menu rounded-full p-1 mb-5">
         <Link href="/envios" className={chip(!despachados)}>Para despachar</Link>
         <Link href="/envios?tab=despachados" className={chip(despachados)}>Despachados</Link>
