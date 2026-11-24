@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Check, Truck, Store, Gift, Plus, Pencil, Trash2, PackageCheck } from "lucide-react";
+import { Check, Truck, Store, Gift, Plus, Pencil, Trash2, PackageCheck, RefreshCw, Shirt } from "lucide-react";
 import AvisoTexto from "@/components/AvisoTexto";
 import { useFormulario } from "@/lib/useFormulario";
 import { enviarPedidoPublico, subirFotoPublica } from "./acciones";
@@ -52,8 +52,9 @@ type Box = {
   productoId: string; eleccion: string; colores: Record<number, string>; talles: Record<number, string>; mismoColor: boolean;
   persona: string; bordado: string; tipografia: string; hilo: string; ubicacion: string; bordadoDetalle: string; fotos: string[];
   extras: string; conExtra: boolean; bordadoExtra: string; ubicacionExtra: string;
+  modo?: "todo" | "box" | "suelta"; // qué opciones se muestran al elegir (no se envía al servidor)
 };
-const boxVacio = (): Box => ({
+const boxVacio = (modo: Box["modo"] = "todo"): Box => ({ modo,
   productoId: "", eleccion: "", colores: {}, talles: {}, mismoColor: true, persona: "", bordado: "", tipografia: "", hilo: "Dorado",
   ubicacion: "Espalda", bordadoDetalle: "", fotos: [], extras: "", conExtra: false, bordadoExtra: "", ubicacionExtra: "Adelante",
 });
@@ -97,13 +98,14 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
   return (
     <div className="space-y-5">
       <div>
-        <p className="font-medium mb-2">Box {numero}: elegí cuál querés</p>
-        {TIPOS.map(([tipo, titulo]) => {
-          const lista = productos.filter((x) => x.tipo === tipo);
+        <p className="font-medium mb-2">{numero}. {box.modo === "suelta" ? "Elegí la prenda suelta" : box.modo === "box" ? "Elegí tu box" : "Elegí tu box o producto"}</p>
+        {TIPOS.filter(([tipo]) => (box.modo === "suelta" ? tipo === "SUELTO" : box.modo === "box" ? tipo !== "SUELTO" : true)).map(([tipo, titulo]) => {
+          // apenas elige uno, se ocultan los demás (se puede cambiar con "Cambiar")
+          const lista = productos.filter((x) => x.tipo === tipo && (!box.productoId || x.id === box.productoId));
           if (!lista.length) return null;
           return (
             <div key={tipo} className="mb-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-texto-2 mb-1.5">{titulo}</p>
+              {!box.productoId && <p className="text-xs font-semibold uppercase tracking-wide text-texto-2 mb-1.5">{titulo}</p>}
               <div className="space-y-2">
                 {lista.map((x) => {
                   const on = x.id === box.productoId;
@@ -128,6 +130,11 @@ function EditorBox({ box, setBox, productos, fotosColores, precioBordadoExtra, n
             </div>
           );
         })}
+        {box.productoId && (
+          <button type="button" onClick={() => setBox({ productoId: "", eleccion: "", colores: {}, talles: {} })} className="text-sm text-acento hover:underline flex items-center gap-1 cursor-pointer">
+            <RefreshCw size={13} /> Cambiar por otro
+          </button>
+        )}
       </div>
 
       {p && (
@@ -262,21 +269,21 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
 
   const precioBox = (b: Box) => (productos.find((x) => x.id === b.productoId)?.precio ?? 0) + (b.conExtra ? precioBordadoExtra : 0);
   const nombreBox = (b: Box) => productos.find((x) => x.id === b.productoId)?.nombre ?? "";
+  const esBox = (b: Box) => productos.find((x) => x.id === b.productoId)?.tipo === "BOX";
   const total = boxes.reduce((s, b) => s + precioBox(b), 0);
 
   const confirmarBox = () => {
     if (!editando) return;
     const falta = faltaEnBox(editando, productos);
     if (falta) { setErrorBox(falta); return; }
-    const n = indiceEdicion === null ? boxes.length + 1 : indiceEdicion + 1;
     setBoxes((bs) => (indiceEdicion === null ? [...bs, editando] : bs.map((b, i) => (i === indiceEdicion ? editando : b))));
     setEditando(null); setIndiceEdicion(null); setErrorBox(null);
-    setAviso(`¡Box ${n} confirmado! ✓ Si querés, agregá otro box; si no, seguí con los datos de entrega.`);
+    setAviso(`¡Listo! Agregaste ${nombreBox(editando)} a tu pedido ✓ Podés agregar otro box o sumar una prenda suelta; si no, seguí con los datos de entrega.`);
     setTimeout(() => document.getElementById("tu-pedido")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
-  const nuevoBox = () => { setEditando(boxVacio()); setIndiceEdicion(null); setAviso(null); setErrorBox(null); };
+  const nuevoBox = (modo: Box["modo"]) => { setEditando(boxVacio(modo)); setIndiceEdicion(null); setAviso(null); setErrorBox(null); };
   const editarBox = (i: number) => { setEditando({ ...boxes[i] }); setIndiceEdicion(i); setAviso(null); setErrorBox(null); };
-  const quitarBox = (i: number) => { if (confirm(`¿Quitar el box ${i + 1} (${nombreBox(boxes[i])})?`)) { setBoxes((bs) => bs.filter((_, j) => j !== i)); setAviso(null); } };
+  const quitarBox = (i: number) => { if (confirm(`¿Quitar ${nombreBox(boxes[i])} del pedido?`)) { setBoxes((bs) => bs.filter((_, j) => j !== i)); setAviso(null); } };
   const cancelarEdicion = () => { setEditando(null); setIndiceEdicion(null); setErrorBox(null); };
 
   if (estado?.ok) {
@@ -310,7 +317,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
           <span className="w-8 h-8 shrink-0 rounded-full bg-acento text-white flex items-center justify-center text-sm font-semibold">2</span>
           <div>
             <h2 className="text-2xl leading-8">Tu pedido</h2>
-            <p className="text-xs text-texto-2">Armá tu box y confirmalo. Si querés más de uno, después podés agregar otro.</p>
+            <p className="text-xs text-texto-2">Elegí tu box y confirmalo. Después podés agregar otro box o sumar prendas sueltas.</p>
           </div>
         </div>
 
@@ -319,7 +326,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
         {boxes.map((b, i) => indiceEdicion === i ? null : (
           <div key={i} className="rounded-xl border border-estado-listo-txt/30 bg-white p-3">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <p className="font-medium flex items-center gap-1.5"><Check size={16} className="text-estado-listo-txt" /> Box {i + 1}: {nombreBox(b)}</p>
+              <p className="font-medium flex items-center gap-1.5"><Check size={16} className="text-estado-listo-txt" /> {i + 1}. {nombreBox(b)}</p>
               <p className="font-semibold shrink-0">{pesos(precioBox(b))}</p>
             </div>
             <ResumenBox box={b} productos={productos} />
@@ -338,12 +345,15 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
               precioBordadoExtra={precioBordadoExtra} numero={indiceEdicion === null ? boxes.length + 1 : indiceEdicion + 1} />
             {errorBox && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-3 py-2 mt-4">{errorBox}</p>}
             <div className="flex flex-wrap gap-2 mt-4">
-              <button type="button" onClick={confirmarBox} className="btn-primario flex-1 min-h-12"><Check size={18} /> {indiceEdicion === null ? "Confirmar este box" : "Guardar cambios del box"}</button>
+              <button type="button" onClick={confirmarBox} className="btn-primario flex-1 min-h-12"><Check size={18} /> {indiceEdicion !== null ? "Guardar cambios" : editando.modo === "suelta" || (editando.productoId && !esBox(editando)) ? "Confirmar esta prenda" : "Confirmar este box"}</button>
               {(boxes.length > 0 || indiceEdicion !== null) && <button type="button" onClick={cancelarEdicion} className="btn-suave min-h-12 px-4">Cancelar</button>}
             </div>
           </div>
         ) : (
-          <button type="button" onClick={nuevoBox} className="btn-secundario w-full min-h-12"><Plus size={18} /> Agregar otro box</button>
+          <div className="grid sm:grid-cols-2 gap-2">
+            <button type="button" onClick={() => nuevoBox("box")} className="btn-secundario w-full min-h-12"><Plus size={18} /> Agregar otro box</button>
+            <button type="button" onClick={() => nuevoBox("suelta")} className="btn-secundario w-full min-h-12"><Shirt size={18} /> Sumar prenda suelta</button>
+          </div>
         )}
       </section>
 
@@ -412,7 +422,7 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
             <h2 className="text-xl mb-1">Resumen</h2>
             {boxes.map((b, i) => (
               <div key={i}>
-                <p className="flex justify-between gap-2"><span>Box {i + 1}: {nombreBox(b)}</span><span>{productos.find((x) => x.id === b.productoId)?.precio ? pesos(productos.find((x) => x.id === b.productoId)!.precio!) : "A consultar"}</span></p>
+                <p className="flex justify-between gap-2"><span>{i + 1}. {nombreBox(b)}</span><span>{productos.find((x) => x.id === b.productoId)?.precio ? pesos(productos.find((x) => x.id === b.productoId)!.precio!) : "A consultar"}</span></p>
                 {b.conExtra && <p className="flex justify-between gap-2 text-texto-2"><span className="pl-3">+ Bordado extra</span><span>{pesos(precioBordadoExtra)}</span></p>}
               </div>
             ))}
@@ -430,9 +440,9 @@ export default function FormPublico({ productos, precioBordadoExtra, avisoEnvio 
         </>
       )}
       {estado?.error && <p className="text-sm text-estado-alerta-txt bg-estado-alerta rounded-xl px-4 py-3">{estado.error}</p>}
-      {editando && boxes.length > 0 && <p className="text-xs text-center text-texto-2">Confirmá o cancelá el box que estás armando para poder enviar el pedido.</p>}
+      {editando && boxes.length > 0 && <p className="text-xs text-center text-texto-2">Confirmá o cancelá lo que estás armando para poder enviar el pedido.</p>}
       <button className="btn-primario w-full text-base min-h-12" disabled={enviando || !listo}>
-        {enviando ? "Enviando…" : !boxes.length ? "Confirmá tu box para continuar" : editando ? "Terminá el box que estás armando" : `Enviar pedido (${boxes.length} box${boxes.length > 1 ? "es" : ""})`}
+        {enviando ? "Enviando…" : !boxes.length ? "Confirmá tu box para continuar" : editando ? "Confirmá o cancelá lo que estás armando" : `Enviar pedido (${boxes.length} producto${boxes.length > 1 ? "s" : ""})`}
       </button>
       <p className="text-xs text-center text-texto-2">Envíos a todo el país 📦</p>
     </form>
